@@ -15,6 +15,8 @@ from reportlab.lib.enums import TA_CENTER, TA_JUSTIFY
 from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont
 import json
+import subprocess
+import tempfile
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', secrets.token_hex(16))
@@ -23,8 +25,12 @@ app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['UPLOAD_FOLDER'] = 'static/uploads'
 app.config['GUESTBOOK_UPLOAD_FOLDER'] = 'static/uploads/guestbook'
 app.config['MESSAGE_UPLOAD_FOLDER'] = 'static/uploads/messages'
-app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # 16MB max file size
-app.config['ALLOWED_EXTENSIONS'] = {'png', 'jpg', 'jpeg', 'gif', 'webp'}
+app.config['VIDEO_FOLDER'] = 'static/uploads/videos'
+app.config['THUMBNAIL_FOLDER'] = 'static/uploads/thumbnails'
+app.config['MAX_CONTENT_LENGTH'] = 50 * 1024 * 1024  # Increased to 50MB for videos
+app.config['ALLOWED_IMAGE_EXTENSIONS'] = {'png', 'jpg', 'jpeg', 'gif', 'webp'}
+app.config['ALLOWED_VIDEO_EXTENSIONS'] = {'mp4', 'mov', 'avi', 'webm'}
+app.config['MAX_VIDEO_DURATION'] = 15  # seconds
 
 db = SQLAlchemy(app)
 
@@ -32,6 +38,8 @@ db = SQLAlchemy(app)
 os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
 os.makedirs(app.config['GUESTBOOK_UPLOAD_FOLDER'], exist_ok=True)
 os.makedirs(app.config['MESSAGE_UPLOAD_FOLDER'], exist_ok=True)
+os.makedirs(app.config['VIDEO_FOLDER'], exist_ok=True)
+os.makedirs(app.config['THUMBNAIL_FOLDER'], exist_ok=True)
 
 # Database Models
 class Photo(db.Model):
@@ -42,6 +50,9 @@ class Photo(db.Model):
     upload_date = db.Column(db.DateTime, default=datetime.utcnow)
     description = db.Column(db.Text)
     likes = db.Column(db.Integer, default=0)
+    media_type = db.Column(db.String(10), default='image')  # 'image' or 'video'
+    thumbnail_filename = db.Column(db.String(255))  # For video thumbnails
+    duration = db.Column(db.Float)  # Video duration in seconds
     comments = db.relationship('Comment', backref='photo', lazy=True, cascade='all, delete-orphan')
 
 class Comment(db.Model):
@@ -111,7 +122,45 @@ class Settings(db.Model):
         db.session.commit()
 
 def allowed_file(filename):
-    return '.' in filename and filename.rsplit('.', 1)[1].lower() in app.config['ALLOWED_EXTENSIONS']
+    """Check if file extension is allowed"""
+    return '.' in filename and filename.rsplit('.', 1)[1].lower() in (app.config['ALLOWED_IMAGE_EXTENSIONS'] | app.config['ALLOWED_VIDEO_EXTENSIONS'])
+
+def is_video(filename):
+    """Check if file is a video"""
+    return '.' in filename and filename.rsplit('.', 1)[1].lower() in app.config['ALLOWED_VIDEO_EXTENSIONS']
+
+def is_image(filename):
+    """Check if file is an image"""
+    return '.' in filename and filename.rsplit('.', 1)[1].lower() in app.config['ALLOWED_IMAGE_EXTENSIONS']
+
+def get_video_duration(filepath):
+    """Get video duration using ffprobe"""
+    try:
+        cmd = [
+            'ffprobe', '-v', 'error', '-show_entries',
+            'format=duration', '-of', 'default=noprint_wrappers=1:nokey=1',
+            filepath
+        ]
+        result = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+        if result.returncode == 0:
+            return float(result.stdout.strip())
+    except Exception as e:
+        print(f"Error getting video duration: {e}")
+    return None
+
+def create_video_thumbnail(video_path, thumbnail_path):
+    """Create thumbnail from video using ffmpeg"""
+    try:
+        cmd = [
+            'ffmpeg', '-i', video_path, '-ss', '00:00:01.000',
+            '-vframes', '1', '-vf', 'scale=400:-1', thumbnail_path,
+            '-y'  # Overwrite output file
+        ]
+        result = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        return result.returncode == 0
+    except Exception as e:
+        print(f"Error creating thumbnail: {e}")
+    return False
 
 @app.route('/')
 def index():
@@ -130,9 +179,9 @@ def index():
             'title': 'Welcome to Our Wedding Gallery!',
             'message': 'Thank you so much for celebrating with us! We\'d love to see the wedding through your eyes. Feel free to upload your photos and browse the gallery.',
             'instructions': [
-                'Click "Upload Photo" to share your pictures',
-                'Browse the gallery to see all photos',
-                'Click on any photo to like or comment',
+                'Click "Upload Photo/Video" to share your pictures or short videos',
+                'Browse the gallery to see all photos and videos',
+                'Click on any photo or video to like or comment',
                 'No login required - just add your name when uploading or commenting'
             ],
             'couple_photo': '',
@@ -160,19 +209,54 @@ def upload():
         if file and allowed_file(file.filename):
             filename = secure_filename(file.filename)
             timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
-            filename = f"{timestamp}_{filename}"
-            filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
-            file.save(filepath)
             
             uploader_name = request.form.get('uploader_name', 'Anonymous').strip() or 'Anonymous'
             description = request.form.get('description', '')
             
-            photo = Photo(
-                filename=filename,
-                original_filename=file.filename,
-                uploader_name=uploader_name,
-                description=description
-            )
+            if is_video(filename):
+                # Handle video upload
+                filename = f"{timestamp}_{filename}"
+                filepath = os.path.join(app.config['VIDEO_FOLDER'], filename)
+                file.save(filepath)
+                
+                # Check video duration
+                duration = get_video_duration(filepath)
+                if duration and duration > app.config['MAX_VIDEO_DURATION']:
+                    os.remove(filepath)
+                    return render_template('upload.html', 
+                                         user_name=request.cookies.get('user_name', ''),
+                                         error=f'Video must be {app.config["MAX_VIDEO_DURATION"]} seconds or less')
+                
+                # Create thumbnail
+                thumbnail_filename = f"thumb_{timestamp}_{os.path.splitext(filename)[0]}.jpg"
+                thumbnail_path = os.path.join(app.config['THUMBNAIL_FOLDER'], thumbnail_filename)
+                
+                if not create_video_thumbnail(filepath, thumbnail_path):
+                    thumbnail_filename = None
+                
+                photo = Photo(
+                    filename=filename,
+                    original_filename=file.filename,
+                    uploader_name=uploader_name,
+                    description=description,
+                    media_type='video',
+                    thumbnail_filename=thumbnail_filename,
+                    duration=duration
+                )
+            else:
+                # Handle image upload
+                filename = f"{timestamp}_{filename}"
+                filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+                file.save(filepath)
+                
+                photo = Photo(
+                    filename=filename,
+                    original_filename=file.filename,
+                    uploader_name=uploader_name,
+                    description=description,
+                    media_type='image'
+                )
+            
             db.session.add(photo)
             db.session.commit()
             
@@ -468,7 +552,12 @@ def delete_photo(photo_id):
     
     # Delete the file
     try:
-        os.remove(os.path.join(app.config['UPLOAD_FOLDER'], photo.filename))
+        if photo.media_type == 'video':
+            os.remove(os.path.join(app.config['VIDEO_FOLDER'], photo.filename))
+            if photo.thumbnail_filename:
+                os.remove(os.path.join(app.config['THUMBNAIL_FOLDER'], photo.thumbnail_filename))
+        else:
+            os.remove(os.path.join(app.config['UPLOAD_FOLDER'], photo.filename))
     except:
         pass
     
@@ -732,7 +821,7 @@ def generate_qr_pdf():
 
 @app.errorhandler(413)
 def too_large(e):
-    return "File is too large. Maximum size is 16MB.", 413
+    return "File is too large. Maximum size is 50MB.", 413
 
 if __name__ == '__main__':
     with app.app_context():

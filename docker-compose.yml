@@ -7,7 +7,7 @@ services:
     ports:
       - "5000:5000"
     volumes:
-      # Mount uploads directory to persist photos
+      # Mount uploads directory to persist photos and videos
       - ./uploads:/app/static/uploads
       # Mount database to persist data
       - ./data:/app/data

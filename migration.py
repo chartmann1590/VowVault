@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 """
-Database migration script to add message board tables and photo_filename column to guestbook_entry table
+Database migration script to add video support to the photo table
 """
 import sqlite3
 import os
@@ -20,6 +20,47 @@ def check_table_exists(cursor, table_name):
         WHERE type='table' AND name=?
     """, (table_name,))
     return cursor.fetchone() is not None
+
+def migrate_photo_table_for_videos(cursor):
+    """Add video-related columns to photo table"""
+    if not check_table_exists(cursor, 'photo'):
+        print("Table 'photo' does not exist. Skipping photo migration.")
+        return True
+    
+    # Add media_type column
+    if not check_column_exists(cursor, 'photo', 'media_type'):
+        print("Adding 'media_type' column to 'photo' table...")
+        cursor.execute("""
+            ALTER TABLE photo 
+            ADD COLUMN media_type VARCHAR(10) DEFAULT 'image'
+        """)
+        print("Added 'media_type' column successfully!")
+    else:
+        print("Column 'media_type' already exists in 'photo' table.")
+    
+    # Add thumbnail_filename column
+    if not check_column_exists(cursor, 'photo', 'thumbnail_filename'):
+        print("Adding 'thumbnail_filename' column to 'photo' table...")
+        cursor.execute("""
+            ALTER TABLE photo 
+            ADD COLUMN thumbnail_filename VARCHAR(255)
+        """)
+        print("Added 'thumbnail_filename' column successfully!")
+    else:
+        print("Column 'thumbnail_filename' already exists in 'photo' table.")
+    
+    # Add duration column
+    if not check_column_exists(cursor, 'photo', 'duration'):
+        print("Adding 'duration' column to 'photo' table...")
+        cursor.execute("""
+            ALTER TABLE photo 
+            ADD COLUMN duration REAL
+        """)
+        print("Added 'duration' column successfully!")
+    else:
+        print("Column 'duration' already exists in 'photo' table.")
+    
+    return True
 
 def migrate_guestbook(cursor):
     """Add photo_filename column to guestbook_entry table if it doesn't exist"""
@@ -101,7 +142,9 @@ def create_directories():
     directories = [
         os.path.join('static', 'uploads'),
         os.path.join('static', 'uploads', 'guestbook'),
-        os.path.join('static', 'uploads', 'messages')
+        os.path.join('static', 'uploads', 'messages'),
+        os.path.join('static', 'uploads', 'videos'),
+        os.path.join('static', 'uploads', 'thumbnails')
     ]
     
     for directory in directories:
@@ -133,6 +176,10 @@ def migrate_database(db_path='wedding_photos.db'):
         # Run migrations
         success = True
         
+        # Migrate photo table for video support
+        if not migrate_photo_table_for_videos(cursor):
+            success = False
+        
         # Migrate guestbook
         if not migrate_guestbook(cursor):
             success = False
@@ -161,7 +208,7 @@ def migrate_database(db_path='wedding_photos.db'):
 
 def main():
     """Main migration function"""
-    print("=== Wedding Gallery Database Migration ===")
+    print("=== Wedding Gallery Database Migration (with Video Support) ===")
     print(f"Migration started at: {datetime.now()}")
     print("")
     

@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 
-{% block title %}Photo by {{ photo.uploader_name }} - Wedding Gallery{% endblock %}
+{% block title %}{{ "Video" if photo.media_type == "video" else "Photo" }} by {{ photo.uploader_name }} - Wedding Gallery{% endblock %}
 
 {% block extra_styles %}
 <style>
@@ -32,6 +32,41 @@
         object-fit: contain;
     }
 
+    .video-container {
+        width: 100%;
+        max-height: 70vh;
+        position: relative;
+    }
+
+    .video-container video {
+        width: 100%;
+        max-height: 70vh;
+        object-fit: contain;
+    }
+
+    .media-type-indicator {
+        position: absolute;
+        top: 20px;
+        left: 20px;
+        background: rgba(139, 115, 85, 0.9);
+        color: white;
+        padding: 8px 16px;
+        border-radius: 25px;
+        font-size: 0.9rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .media-type-indicator svg {
+        width: 20px;
+        height: 20px;
+        fill: white;
+    }
+
     .photo-info-section {
         padding: 2rem;
     }
@@ -59,6 +94,12 @@
     .upload-time {
         color: #999;
         font-size: 0.95rem;
+    }
+
+    .media-duration {
+        color: #666;
+        font-size: 0.9rem;
+        margin-top: 0.3rem;
     }
 
     .photo-description {
@@ -213,6 +254,11 @@
         fill: currentColor;
     }
 
+    /* Video controls styling */
+    video::-webkit-media-controls-panel {
+        background: linear-gradient(to top, rgba(0,0,0,0.7) 0%, transparent 100%);
+    }
+
     @media (max-width: 768px) {
         .photo-info-section {
             padding: 1.5rem;
@@ -224,6 +270,13 @@
 
         .comment-form {
             padding: 1.5rem;
+        }
+
+        .media-type-indicator {
+            top: 10px;
+            left: 10px;
+            font-size: 0.8rem;
+            padding: 6px 12px;
         }
     }
 </style>
@@ -240,8 +293,25 @@
 
     <div class="photo-section">
         <div class="photo-display">
-            <img src="{{ url_for('static', filename='uploads/' + photo.filename) }}" 
-                 alt="Photo by {{ photo.uploader_name }}">
+            {% if photo.media_type == 'video' %}
+                <div class="video-container">
+                    <video controls autoplay muted loop playsinline>
+                        <source src="{{ url_for('static', filename='uploads/videos/' + photo.filename) }}" type="video/mp4">
+                        <source src="{{ url_for('static', filename='uploads/videos/' + photo.filename) }}" type="video/webm">
+                        <source src="{{ url_for('static', filename='uploads/videos/' + photo.filename) }}" type="video/mov">
+                        Your browser does not support the video tag.
+                    </video>
+                </div>
+                <div class="media-type-indicator">
+                    <svg viewBox="0 0 24 24">
+                        <path d="M17,10.5V7A1,1 0 0,0 16,6H4A1,1 0 0,0 3,7V17A1,1 0 0,0 4,18H16A1,1 0 0,0 17,17V13.5L21,17.5V6.5L17,10.5Z"/>
+                    </svg>
+                    Video
+                </div>
+            {% else %}
+                <img src="{{ url_for('static', filename='uploads/' + photo.filename) }}" 
+                     alt="Photo by {{ photo.uploader_name }}">
+            {% endif %}
         </div>
         
         <div class="photo-info-section">
@@ -249,6 +319,9 @@
                 <div class="photo-meta">
                     <div class="uploader-info">Shared by {{ photo.uploader_name }}</div>
                     <div class="upload-time">{{ photo.upload_date.strftime('%B %d, %Y at %I:%M %p') }}</div>
+                    {% if photo.media_type == 'video' and photo.duration %}
+                    <div class="media-duration">Duration: {{ '%d:%02d' | format((photo.duration // 60)|int, (photo.duration % 60)|int) }}</div>
+                    {% endif %}
                 </div>
             </div>
 
@@ -287,7 +360,7 @@
                     <label for="comment_content">Comment</label>
                     <textarea id="comment_content" 
                               name="comment_content" 
-                              placeholder="Share your thoughts about this photo..."
+                              placeholder="Share your thoughts about this {{ 'video' if photo.media_type == 'video' else 'photo' }}..."
                               required></textarea>
                 </div>
                 <button type="submit" class="btn">Post Comment</button>
@@ -398,5 +471,19 @@
             console.error('Error posting comment:', error);
         }
     });
+
+    // Video-specific features
+    {% if photo.media_type == 'video' %}
+    const video = document.querySelector('video');
+    if (video) {
+        // Ensure video doesn't play too loud initially
+        video.volume = 0.5;
+        
+        // Handle video errors gracefully
+        video.addEventListener('error', function(e) {
+            console.error('Video playback error:', e);
+        });
+    }
+    {% endif %}
 </script>
 {% endblock %}

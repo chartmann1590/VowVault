@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 
-{% block title %}Upload Photo - Wedding Gallery{% endblock %}
+{% block title %}Upload Photo/Video - Wedding Gallery{% endblock %}
 
 {% block extra_styles %}
 <style>
@@ -77,17 +77,41 @@
         display: block;
     }
 
+    .file-formats {
+        display: flex;
+        gap: 1rem;
+        justify-content: center;
+        margin-top: 1rem;
+    }
+
+    .format-badge {
+        background: #f9f5f0;
+        padding: 0.3rem 0.8rem;
+        border-radius: 15px;
+        font-size: 0.85rem;
+        color: #6b5d54;
+    }
+
     .preview-section {
         margin-top: 2rem;
         display: none;
     }
 
-    .preview-image {
+    .preview-image, .preview-video {
         width: 100%;
         max-height: 400px;
         object-fit: cover;
         border-radius: 15px;
         box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+    }
+
+    .video-info {
+        background: #f9f5f0;
+        padding: 1rem;
+        border-radius: 10px;
+        margin-top: 1rem;
+        font-size: 0.9rem;
+        color: #6b5d54;
     }
 
     .form-actions {
@@ -114,6 +138,49 @@
         margin: 0;
     }
 
+    .error-message {
+        background-color: #f8d7da;
+        color: #721c24;
+        padding: 1rem;
+        border-radius: 10px;
+        margin-bottom: 1.5rem;
+        border: 1px solid #f5c6cb;
+    }
+
+    .upload-tips {
+        background: #f9f5f0;
+        padding: 1.5rem;
+        border-radius: 15px;
+        margin-bottom: 2rem;
+    }
+
+    .upload-tips h3 {
+        color: #8b7355;
+        font-size: 1.2rem;
+        margin-bottom: 1rem;
+    }
+
+    .upload-tips ul {
+        list-style: none;
+        padding: 0;
+    }
+
+    .upload-tips li {
+        display: flex;
+        align-items: flex-start;
+        gap: 0.5rem;
+        margin-bottom: 0.5rem;
+        color: #6b5d54;
+        font-size: 0.95rem;
+    }
+
+    .upload-tips li::before {
+        content: "✓";
+        color: #8b7355;
+        font-weight: bold;
+        margin-top: 0.1rem;
+    }
+
     @media (max-width: 768px) {
         .upload-form {
             padding: 1.5rem;
@@ -121,6 +188,10 @@
 
         .form-actions {
             flex-direction: column;
+        }
+
+        .file-formats {
+            flex-wrap: wrap;
         }
     }
 </style>
@@ -134,15 +205,32 @@
     </div>
 
     <form method="POST" enctype="multipart/form-data" class="upload-form" id="uploadForm">
+        {% if error %}
+        <div class="error-message">{{ error }}</div>
+        {% endif %}
+
+        <div class="upload-tips">
+            <h3>Upload Guidelines</h3>
+            <ul>
+                <li>Photos: PNG, JPG, JPEG, GIF, or WEBP formats</li>
+                <li>Videos: MP4, MOV, AVI, or WEBM formats (max 15 seconds)</li>
+                <li>Maximum file size: 50MB</li>
+                <li>Videos will be automatically muted when viewed</li>
+            </ul>
+        </div>
+
         <div class="form-group">
             <div class="file-input-wrapper">
-                <input type="file" name="photo" id="photo" accept="image/*" required>
+                <input type="file" name="photo" id="photo" accept="image/*,video/*" required>
                 <label for="photo" class="file-input-label">
                     <svg viewBox="0 0 24 24">
                         <path d="M19,13H13V19H11V13H5V11H11V5H13V11H19V13Z"/>
                     </svg>
-                    <p>Click to select a photo</p>
-                    <small>PNG, JPG, JPEG, GIF, or WEBP (Max 16MB)</small>
+                    <p>Click to select a photo or video</p>
+                    <div class="file-formats">
+                        <span class="format-badge">📷 Photos</span>
+                        <span class="format-badge">🎥 Videos (≤15s)</span>
+                    </div>
                 </label>
             </div>
             <div class="selected-file" id="selectedFile">
@@ -151,7 +239,11 @@
         </div>
 
         <div class="preview-section" id="previewSection">
-            <img id="previewImage" class="preview-image" alt="Preview">
+            <img id="previewImage" class="preview-image" alt="Preview" style="display: none;">
+            <video id="previewVideo" class="preview-video" controls style="display: none;"></video>
+            <div class="video-info" id="videoInfo" style="display: none;">
+                <strong>Video Duration:</strong> <span id="videoDuration"></span>
+            </div>
         </div>
 
         <div class="form-group">
@@ -171,7 +263,7 @@
         </div>
 
         <div class="form-actions">
-            <button type="submit" class="btn">Upload Photo</button>
+            <button type="submit" class="btn" id="submitBtn">Upload</button>
             <a href="{{ url_for('index') }}" class="btn btn-secondary">Cancel</a>
         </div>
     </form>
@@ -183,9 +275,17 @@
     const fileInput = document.getElementById('photo');
     const previewSection = document.getElementById('previewSection');
     const previewImage = document.getElementById('previewImage');
+    const previewVideo = document.getElementById('previewVideo');
     const selectedFile = document.getElementById('selectedFile');
     const fileName = document.getElementById('fileName');
     const uploadForm = document.getElementById('uploadForm');
+    const submitBtn = document.getElementById('submitBtn');
+    const videoInfo = document.getElementById('videoInfo');
+    const videoDuration = document.getElementById('videoDuration');
+
+    const imageExtensions = ['png', 'jpg', 'jpeg', 'gif', 'webp'];
+    const videoExtensions = ['mp4', 'mov', 'avi', 'webm'];
+    const maxVideoDuration = 15; // seconds
 
     fileInput.addEventListener('change', function(e) {
         const file = e.target.files[0];
@@ -194,20 +294,52 @@
             fileName.textContent = file.name;
             selectedFile.style.display = 'block';
 
-            // Show preview
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                previewImage.src = e.target.result;
+            const extension = file.name.split('.').pop().toLowerCase();
+            const isImage = imageExtensions.includes(extension);
+            const isVideo = videoExtensions.includes(extension);
+
+            if (isImage) {
+                // Show image preview
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    previewImage.src = e.target.result;
+                    previewImage.style.display = 'block';
+                    previewVideo.style.display = 'none';
+                    videoInfo.style.display = 'none';
+                    previewSection.style.display = 'block';
+                };
+                reader.readAsDataURL(file);
+            } else if (isVideo) {
+                // Show video preview
+                const videoURL = URL.createObjectURL(file);
+                previewVideo.src = videoURL;
+                previewVideo.style.display = 'block';
+                previewImage.style.display = 'none';
                 previewSection.style.display = 'block';
-            };
-            reader.readAsDataURL(file);
+
+                // Check video duration
+                previewVideo.addEventListener('loadedmetadata', function() {
+                    const duration = previewVideo.duration;
+                    const minutes = Math.floor(duration / 60);
+                    const seconds = Math.floor(duration % 60);
+                    videoDuration.textContent = `${minutes}:${seconds.toString().padStart(2, '0')}`;
+                    videoInfo.style.display = 'block';
+
+                    if (duration > maxVideoDuration) {
+                        alert(`Video must be ${maxVideoDuration} seconds or less. This video is ${Math.round(duration)} seconds.`);
+                        fileInput.value = '';
+                        previewSection.style.display = 'none';
+                        selectedFile.style.display = 'none';
+                        URL.revokeObjectURL(videoURL);
+                    }
+                });
+            }
         }
     });
 
     uploadForm.addEventListener('submit', function(e) {
-        const submitButton = e.target.querySelector('button[type="submit"]');
-        submitButton.textContent = 'Uploading...';
-        submitButton.disabled = true;
+        submitBtn.textContent = 'Uploading...';
+        submitBtn.disabled = true;
     });
 </script>
 {% endblock %}

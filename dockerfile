@@ -3,9 +3,10 @@ FROM python:3.11-slim
 # Set working directory
 WORKDIR /app
 
-# Install system dependencies
+# Install system dependencies including ffmpeg
 RUN apt-get update && apt-get install -y \
     gcc \
+    ffmpeg \
     && rm -rf /var/lib/apt/lists/*
 
 # Copy requirements first for better caching
@@ -21,7 +22,7 @@ COPY templates/ templates/
 COPY static/ static/
 
 # Create upload directories
-RUN mkdir -p static/uploads static/uploads/guestbook
+RUN mkdir -p static/uploads static/uploads/guestbook static/uploads/messages static/uploads/videos static/uploads/thumbnails
 
 # Make migration script executable
 RUN chmod +x migration.py
