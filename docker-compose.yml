@@ -1,0 +1,41 @@
+version: '3.8'
+
+services:
+  wedding-gallery:
+    build: .
+    container_name: wedding-gallery-app
+    ports:
+      - "5000:5000"
+    volumes:
+      # Mount uploads directory to persist photos
+      - ./uploads:/app/static/uploads
+      # Mount database to persist data
+      - ./data:/app/data
+    environment:
+      - FLASK_ENV=production
+      - DATABASE_URL=sqlite:////app/data/wedding_photos.db
+    restart: unless-stopped
+    
+    # Health check
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5000/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  # Optional: Add nginx for production
+  nginx:
+    image: nginx:alpine
+    container_name: wedding-gallery-nginx
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./uploads:/app/static/uploads:ro
+      # Add SSL certificates here if using HTTPS
+      # - ./ssl:/etc/nginx/ssl:ro
+    depends_on:
+      - wedding-gallery
+    restart: unless-stopped

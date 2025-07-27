@@ -1,0 +1,213 @@
+{% extends "base.html" %}
+
+{% block title %}Upload Photo - Wedding Gallery{% endblock %}
+
+{% block extra_styles %}
+<style>
+    .upload-container {
+        max-width: 600px;
+        margin: 0 auto;
+    }
+
+    .upload-header {
+        text-align: center;
+        margin-bottom: 3rem;
+    }
+
+    .upload-header h2 {
+        font-family: 'Playfair Display', serif;
+        font-size: 2.5rem;
+        color: #8b7355;
+        margin-bottom: 1rem;
+    }
+
+    .upload-form {
+        background: white;
+        padding: 2.5rem;
+        border-radius: 20px;
+        box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+    }
+
+    .file-input-wrapper {
+        position: relative;
+        overflow: hidden;
+        display: inline-block;
+        width: 100%;
+    }
+
+    .file-input-wrapper input[type=file] {
+        position: absolute;
+        left: -9999px;
+    }
+
+    .file-input-label {
+        display: block;
+        padding: 2rem;
+        background: linear-gradient(135deg, #f5e6d3 0%, #f9f5f0 100%);
+        border: 2px dashed #8b7355;
+        border-radius: 15px;
+        text-align: center;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+
+    .file-input-label:hover {
+        background: linear-gradient(135deg, #f0dcc5 0%, #f5ebe0 100%);
+        border-color: #6b5d54;
+    }
+
+    .file-input-label svg {
+        width: 60px;
+        height: 60px;
+        fill: #8b7355;
+        margin-bottom: 1rem;
+        display: block;
+        margin-left: auto;
+        margin-right: auto;
+    }
+
+    .file-input-label p {
+        color: #6b5d54;
+        font-size: 1.1rem;
+        margin-bottom: 0.5rem;
+    }
+
+    .file-input-label small {
+        color: #999;
+        display: block;
+    }
+
+    .preview-section {
+        margin-top: 2rem;
+        display: none;
+    }
+
+    .preview-image {
+        width: 100%;
+        max-height: 400px;
+        object-fit: cover;
+        border-radius: 15px;
+        box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+    }
+
+    .form-actions {
+        display: flex;
+        gap: 1rem;
+        margin-top: 2rem;
+    }
+
+    .form-actions .btn {
+        flex: 1;
+    }
+
+    .selected-file {
+        margin-top: 1rem;
+        padding: 1rem;
+        background-color: #f9f5f0;
+        border-radius: 10px;
+        display: none;
+    }
+
+    .selected-file p {
+        color: #6b5d54;
+        font-size: 0.95rem;
+        margin: 0;
+    }
+
+    @media (max-width: 768px) {
+        .upload-form {
+            padding: 1.5rem;
+        }
+
+        .form-actions {
+            flex-direction: column;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="upload-container">
+    <div class="upload-header">
+        <h2>Share Your Memory</h2>
+        <p>Upload your favorite moments from our wedding</p>
+    </div>
+
+    <form method="POST" enctype="multipart/form-data" class="upload-form" id="uploadForm">
+        <div class="form-group">
+            <div class="file-input-wrapper">
+                <input type="file" name="photo" id="photo" accept="image/*" required>
+                <label for="photo" class="file-input-label">
+                    <svg viewBox="0 0 24 24">
+                        <path d="M19,13H13V19H11V13H5V11H11V5H13V11H19V13Z"/>
+                    </svg>
+                    <p>Click to select a photo</p>
+                    <small>PNG, JPG, JPEG, GIF, or WEBP (Max 16MB)</small>
+                </label>
+            </div>
+            <div class="selected-file" id="selectedFile">
+                <p>Selected: <strong id="fileName"></strong></p>
+            </div>
+        </div>
+
+        <div class="preview-section" id="previewSection">
+            <img id="previewImage" class="preview-image" alt="Preview">
+        </div>
+
+        <div class="form-group">
+            <label for="uploader_name">Your Name</label>
+            <input type="text" 
+                   id="uploader_name" 
+                   name="uploader_name" 
+                   placeholder="Enter your name (optional)"
+                   value="{{ user_name }}">
+        </div>
+
+        <div class="form-group">
+            <label for="description">Description</label>
+            <textarea id="description" 
+                      name="description" 
+                      placeholder="Share a memory or describe this moment... (optional)"></textarea>
+        </div>
+
+        <div class="form-actions">
+            <button type="submit" class="btn">Upload Photo</button>
+            <a href="{{ url_for('index') }}" class="btn btn-secondary">Cancel</a>
+        </div>
+    </form>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    const fileInput = document.getElementById('photo');
+    const previewSection = document.getElementById('previewSection');
+    const previewImage = document.getElementById('previewImage');
+    const selectedFile = document.getElementById('selectedFile');
+    const fileName = document.getElementById('fileName');
+    const uploadForm = document.getElementById('uploadForm');
+
+    fileInput.addEventListener('change', function(e) {
+        const file = e.target.files[0];
+        if (file) {
+            // Show selected file name
+            fileName.textContent = file.name;
+            selectedFile.style.display = 'block';
+
+            // Show preview
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                previewImage.src = e.target.result;
+                previewSection.style.display = 'block';
+            };
+            reader.readAsDataURL(file);
+        }
+    });
+
+    uploadForm.addEventListener('submit', function(e) {
+        const submitButton = e.target.querySelector('button[type="submit"]');
+        submitButton.textContent = 'Uploading...';
+        submitButton.disabled = true;
+    });
+</script>
+{% endblock %}

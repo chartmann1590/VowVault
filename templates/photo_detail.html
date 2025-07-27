@@ -1,0 +1,402 @@
+{% extends "base.html" %}
+
+{% block title %}Photo by {{ photo.uploader_name }} - Wedding Gallery{% endblock %}
+
+{% block extra_styles %}
+<style>
+    .photo-detail-container {
+        max-width: 1000px;
+        margin: 0 auto;
+    }
+
+    .photo-section {
+        background: white;
+        border-radius: 20px;
+        overflow: hidden;
+        box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+        margin-bottom: 2rem;
+    }
+
+    .photo-display {
+        position: relative;
+        background: #000;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        max-height: 70vh;
+    }
+
+    .photo-display img {
+        max-width: 100%;
+        max-height: 70vh;
+        object-fit: contain;
+    }
+
+    .photo-info-section {
+        padding: 2rem;
+    }
+
+    .photo-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: start;
+        margin-bottom: 1.5rem;
+        flex-wrap: wrap;
+        gap: 1rem;
+    }
+
+    .photo-meta {
+        flex: 1;
+    }
+
+    .uploader-info {
+        font-size: 1.2rem;
+        color: #8b7355;
+        font-weight: 600;
+        margin-bottom: 0.5rem;
+    }
+
+    .upload-time {
+        color: #999;
+        font-size: 0.95rem;
+    }
+
+    .photo-description {
+        color: #666;
+        line-height: 1.8;
+        margin-bottom: 2rem;
+        padding: 1.5rem;
+        background: #f9f5f0;
+        border-radius: 15px;
+    }
+
+    .interaction-section {
+        display: flex;
+        gap: 1rem;
+        padding: 1.5rem 0;
+        border-top: 1px solid #f0f0f0;
+        border-bottom: 1px solid #f0f0f0;
+        margin-bottom: 2rem;
+    }
+
+    .like-button {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.75rem 1.5rem;
+        background: white;
+        border: 2px solid #e8ddd3;
+        border-radius: 30px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        font-size: 1rem;
+        color: #6b5d54;
+    }
+
+    .like-button:hover {
+        border-color: #8b7355;
+        transform: translateY(-2px);
+    }
+
+    .like-button.liked {
+        background: #8b7355;
+        color: white;
+        border-color: #8b7355;
+    }
+
+    .like-button svg {
+        width: 24px;
+        height: 24px;
+        fill: currentColor;
+        transition: transform 0.3s ease;
+    }
+
+    .like-button:hover svg {
+        transform: scale(1.1);
+    }
+
+    .like-button.liked svg {
+        animation: heartbeat 0.5s ease;
+    }
+
+    @keyframes heartbeat {
+        0% { transform: scale(1); }
+        50% { transform: scale(1.3); }
+        100% { transform: scale(1); }
+    }
+
+    .comments-section {
+        background: white;
+        border-radius: 20px;
+        padding: 2rem;
+        box-shadow: 0 5px 20px rgba(0,0,0,0.05);
+    }
+
+    .comments-header {
+        font-family: 'Playfair Display', serif;
+        font-size: 1.8rem;
+        color: #8b7355;
+        margin-bottom: 2rem;
+    }
+
+    .comment-form {
+        background: #f9f5f0;
+        padding: 2rem;
+        border-radius: 15px;
+        margin-bottom: 2rem;
+    }
+
+    .comment-form h3 {
+        color: #6b5d54;
+        margin-bottom: 1.5rem;
+        font-size: 1.2rem;
+    }
+
+    .comments-list {
+        display: flex;
+        flex-direction: column;
+        gap: 1.5rem;
+    }
+
+    .comment {
+        padding: 1.5rem;
+        background: #faf9f7;
+        border-radius: 15px;
+        border-left: 4px solid #8b7355;
+    }
+
+    .comment-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 0.75rem;
+    }
+
+    .comment-author {
+        font-weight: 600;
+        color: #8b7355;
+    }
+
+    .comment-time {
+        color: #999;
+        font-size: 0.85rem;
+    }
+
+    .comment-content {
+        color: #555;
+        line-height: 1.6;
+    }
+
+    .no-comments {
+        text-align: center;
+        padding: 3rem;
+        color: #999;
+    }
+
+    .back-link {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        color: #8b7355;
+        text-decoration: none;
+        margin-bottom: 2rem;
+        transition: color 0.3s ease;
+    }
+
+    .back-link:hover {
+        color: #6b5d54;
+    }
+
+    .back-link svg {
+        width: 20px;
+        height: 20px;
+        fill: currentColor;
+    }
+
+    @media (max-width: 768px) {
+        .photo-info-section {
+            padding: 1.5rem;
+        }
+
+        .comments-section {
+            padding: 1.5rem;
+        }
+
+        .comment-form {
+            padding: 1.5rem;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="photo-detail-container">
+    <a href="{{ url_for('index') }}" class="back-link">
+        <svg viewBox="0 0 24 24">
+            <path d="M20,11V13H8L13.5,18.5L12.08,19.92L4.16,12L12.08,4.08L13.5,5.5L8,11H20Z"/>
+        </svg>
+        Back to Gallery
+    </a>
+
+    <div class="photo-section">
+        <div class="photo-display">
+            <img src="{{ url_for('static', filename='uploads/' + photo.filename) }}" 
+                 alt="Photo by {{ photo.uploader_name }}">
+        </div>
+        
+        <div class="photo-info-section">
+            <div class="photo-header">
+                <div class="photo-meta">
+                    <div class="uploader-info">Shared by {{ photo.uploader_name }}</div>
+                    <div class="upload-time">{{ photo.upload_date.strftime('%B %d, %Y at %I:%M %p') }}</div>
+                </div>
+            </div>
+
+            {% if photo.description %}
+            <div class="photo-description">
+                {{ photo.description }}
+            </div>
+            {% endif %}
+
+            <div class="interaction-section">
+                <button class="like-button {% if has_liked %}liked{% endif %}" id="likeButton" data-photo-id="{{ photo.id }}">
+                    <svg viewBox="0 0 24 24">
+                        <path d="M12,21.35L10.55,20.03C5.4,15.36 2,12.27 2,8.5C2,5.41 4.42,3 7.5,3C9.24,3 10.91,3.81 12,5.08C13.09,3.81 14.76,3 16.5,3C19.58,3 22,5.41 22,8.5C22,12.27 18.6,15.36 13.45,20.03L12,21.35Z"/>
+                    </svg>
+                    <span id="likeCount">{{ photo.likes }}</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div class="comments-section">
+        <h2 class="comments-header">Comments</h2>
+        
+        <div class="comment-form">
+            <h3>Leave a Comment</h3>
+            <form id="commentForm">
+                <div class="form-group">
+                    <label for="commenter_name">Your Name</label>
+                    <input type="text" 
+                           id="commenter_name" 
+                           name="commenter_name" 
+                           placeholder="Enter your name (optional)"
+                           value="{{ user_name }}">
+                </div>
+                <div class="form-group">
+                    <label for="comment_content">Comment</label>
+                    <textarea id="comment_content" 
+                              name="comment_content" 
+                              placeholder="Share your thoughts about this photo..."
+                              required></textarea>
+                </div>
+                <button type="submit" class="btn">Post Comment</button>
+            </form>
+        </div>
+
+        <div class="comments-list" id="commentsList">
+            {% if photo.comments %}
+                {% for comment in photo.comments|sort(attribute='created_at', reverse=True) %}
+                <div class="comment">
+                    <div class="comment-header">
+                        <span class="comment-author">{{ comment.commenter_name }}</span>
+                        <span class="comment-time">{{ comment.created_at.strftime('%B %d, %Y at %I:%M %p') }}</span>
+                    </div>
+                    <div class="comment-content">{{ comment.content }}</div>
+                </div>
+                {% endfor %}
+            {% else %}
+                <div class="no-comments" id="noComments">
+                    <p>No comments yet. Be the first to share your thoughts!</p>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // Like functionality
+    const likeButton = document.getElementById('likeButton');
+    const likeCount = document.getElementById('likeCount');
+
+    likeButton.addEventListener('click', async function() {
+        const photoId = this.dataset.photoId;
+        
+        try {
+            const response = await fetch(`/api/like/${photoId}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            });
+
+            if (response.ok) {
+                const data = await response.json();
+                likeCount.textContent = data.likes;
+                
+                if (data.liked) {
+                    this.classList.add('liked');
+                } else {
+                    this.classList.remove('liked');
+                }
+            }
+        } catch (error) {
+            console.error('Error toggling like:', error);
+        }
+    });
+
+    // Comment functionality
+    const commentForm = document.getElementById('commentForm');
+    const commentsList = document.getElementById('commentsList');
+    const noComments = document.getElementById('noComments');
+
+    commentForm.addEventListener('submit', async function(e) {
+        e.preventDefault();
+        
+        const formData = {
+            commenter_name: document.getElementById('commenter_name').value,
+            content: document.getElementById('comment_content').value
+        };
+
+        try {
+            const response = await fetch(`/api/comment/{{ photo.id }}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(formData)
+            });
+
+            if (response.ok) {
+                const comment = await response.json();
+                
+                // Remove no comments message if it exists
+                if (noComments) {
+                    noComments.remove();
+                }
+
+                // Create new comment element
+                const commentDiv = document.createElement('div');
+                commentDiv.className = 'comment';
+                commentDiv.innerHTML = `
+                    <div class="comment-header">
+                        <span class="comment-author">${comment.commenter_name}</span>
+                        <span class="comment-time">${comment.created_at}</span>
+                    </div>
+                    <div class="comment-content">${comment.content}</div>
+                `;
+
+                // Add to top of comments list
+                commentsList.insertBefore(commentDiv, commentsList.firstChild);
+
+                // Clear comment form
+                document.getElementById('comment_content').value = '';
+            }
+        } catch (error) {
+            console.error('Error posting comment:', error);
+        }
+    });
+</script>
+{% endblock %}
