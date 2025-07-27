@@ -16,18 +16,31 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 # Copy application files
 COPY app.py .
+COPY migration.py .
 COPY templates/ templates/
 COPY static/ static/
 
-# Create upload directory
-RUN mkdir -p static/uploads
+# Create upload directories
+RUN mkdir -p static/uploads static/uploads/guestbook
+
+# Make migration script executable
+RUN chmod +x migration.py
 
 # Set environment variables
 ENV FLASK_APP=app.py
 ENV PYTHONUNBUFFERED=1
 
+# Create entrypoint script
+RUN echo '#!/bin/sh\n\
+echo "Running database migrations..."\n\
+python migration.py\n\
+echo "Starting Flask application..."\n\
+python app.py' > /app/entrypoint.sh
+
+RUN chmod +x /app/entrypoint.sh
+
 # Expose port
 EXPOSE 5000
 
-# Run the application
-CMD ["python", "app.py"]
+# Run migrations and then the application
+ENTRYPOINT ["/app/entrypoint.sh"]

@@ -557,6 +557,7 @@
                         <th>Message</th>
                         <th>Location</th>
                         <th>Date</th>
+                        <th>Photo</th>
                         <th>Actions</th>
                     </tr>
                 </thead>
@@ -573,6 +574,17 @@
                             {% endif %}
                         </td>
                         <td>{{ entry.created_at.strftime('%b %d, %Y') }}</td>
+                        <td>
+                            {% if entry.photo_filename %}
+                            <img src="{{ url_for('static', filename='uploads/guestbook/' + entry.photo_filename) }}" 
+                                 alt="Photo" 
+                                 class="photo-thumbnail"
+                                 style="cursor: pointer;"
+                                 onclick="window.open(this.src, '_blank')">
+                            {% else %}
+                            -
+                            {% endif %}
+                        </td>
                         <td>
                             <button class="edit-btn" 
                                     onclick="editGuestbookEntry({{ entry.id }}, '{{ entry.name|e }}', '{{ entry.message|e }}', '{{ entry.location|e if entry.location else '' }}')">

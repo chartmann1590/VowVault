@@ -13,13 +13,16 @@ A beautiful, self-hosted wedding photo gallery application that allows wedding g
 - 📸 **Easy Photo Upload** - No login required, just upload and share
 - ❤️ **Like Photos** - Show appreciation for beautiful moments
 - 💬 **Leave Comments** - Share memories and messages
+- 📖 **Virtual Guestbook** - Sign a digital guestbook with wishes and optional photos
 - 📱 **Mobile Responsive** - Works perfectly on all devices
 - 🎉 **Welcome Modal** - Greet guests with a personalized message
 
 ### For Admins
 - 🔐 **Admin Dashboard** - Secure admin area with simple key authentication
-- 📊 **Statistics** - View total photos, likes, and comments
-- 🗑️ **Photo Management** - Delete inappropriate photos
+- 📊 **Statistics** - View total photos, likes, comments, and guestbook entries
+- 🗑️ **Content Management** - Delete inappropriate photos or guestbook entries
+- ✏️ **Edit Guestbook** - Modify guestbook entries when needed
+- 🖼️ **Guestbook Photos** - View and manage photos attached to guestbook entries
 - 📄 **QR Code Generator** - Create beautiful PDFs with QR codes for easy sharing
 - ✏️ **Customizable Content** - Edit welcome messages and QR code content
 
@@ -43,6 +46,8 @@ mkdir -p uploads data
 docker-compose up -d
 ```
 
+The migration script will run automatically when the container starts.
+
 4. Access the application:
 - Gallery: http://localhost
 - Admin: http://localhost/admin?key=wedding2024
@@ -58,9 +63,14 @@ source venv/bin/activate  # On Windows: venv\Scripts\activate
 pip install -r requirements.txt
 ```
 
-2. Create templates directory and copy all template files
+2. Run the migration script:
+```bash
+python migration.py
+```
 
-3. Run the application:
+3. Create templates directory and copy all template files
+
+4. Run the application:
 ```bash
 python app.py
 ```
@@ -97,7 +107,9 @@ wedding-photo-gallery/
 │   ├── index.html       # Gallery page
 │   ├── upload.html      # Upload page
 │   ├── photo_detail.html # Photo detail page
-│   └── admin.html       # Admin dashboard
+│   ├── admin.html       # Admin dashboard
+│   ├── guestbook.html   # View guestbook
+│   └── sign_guestbook.html # Sign guestbook
 ├── static/              # Static files
 │   └── uploads/        # Uploaded photos (created automatically)
 └── data/               # Database files (created automatically)
@@ -160,6 +172,7 @@ tar -xzf backup-20240101.tar.gz
 1. **Visit the Gallery**
    - Scan the QR code or visit the URL
    - View the welcome message
+   - Choose to sign the guestbook or enter the gallery
 
 2. **Upload Photos**
    - Click "Upload Photo"
@@ -173,14 +186,26 @@ tar -xzf backup-20240101.tar.gz
    - Click the heart to like
    - Leave comments with your name
 
+4. **Sign the Guestbook**
+   - Click "Guestbook" in navigation
+   - Click "Sign the Guestbook"
+   - Enter your name and location (optional)
+   - Write your message
+   - Submit your entry
+
 ### For Administrators
 
 1. **Access Admin Panel**
    - Visit `/admin?key=your-key`
    - View statistics
-   - Manage photos
+   - Manage photos and guestbook entries
 
-2. **Generate QR Codes**
+2. **Manage Guestbook**
+   - View all guestbook entries
+   - Edit entries to fix typos
+   - Delete inappropriate entries
+
+3. **Generate QR Codes**
    - Enter your public URL
    - Customize the message
    - Download PDF
@@ -202,6 +227,10 @@ tar -xzf backup-20240101.tar.gz
 **Docker issues:**
 - Ensure ports 80/5000 are available
 - Check Docker logs: `docker-compose logs`
+
+**Guestbook not saving:**
+- Ensure database is writable
+- Check that name and message fields are filled
 
 ## 🤝 Contributing
 

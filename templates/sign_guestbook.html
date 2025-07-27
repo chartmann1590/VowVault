@@ -100,6 +100,96 @@
         white-space: pre-wrap;
     }
 
+    .photo-upload-section {
+        margin-top: 2rem;
+        padding-top: 2rem;
+        border-top: 2px dashed #e8ddd3;
+    }
+
+    .photo-upload-label {
+        font-weight: 500;
+        color: #6b5d54;
+        display: block;
+        margin-bottom: 0.5rem;
+    }
+
+    .file-input-wrapper {
+        position: relative;
+        overflow: hidden;
+        display: inline-block;
+        width: 100%;
+    }
+
+    .file-input-wrapper input[type=file] {
+        position: absolute;
+        left: -9999px;
+    }
+
+    .file-input-label {
+        display: block;
+        padding: 1.5rem;
+        background: linear-gradient(135deg, #f5e6d3 0%, #f9f5f0 100%);
+        border: 2px dashed #8b7355;
+        border-radius: 15px;
+        text-align: center;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+
+    .file-input-label:hover {
+        background: linear-gradient(135deg, #f0dcc5 0%, #f5ebe0 100%);
+        border-color: #6b5d54;
+    }
+
+    .file-input-label svg {
+        width: 40px;
+        height: 40px;
+        fill: #8b7355;
+        margin-bottom: 0.5rem;
+        display: block;
+        margin-left: auto;
+        margin-right: auto;
+    }
+
+    .file-input-label p {
+        color: #6b5d54;
+        font-size: 0.95rem;
+        margin-bottom: 0.3rem;
+    }
+
+    .file-input-label small {
+        color: #999;
+        display: block;
+        font-size: 0.85rem;
+    }
+
+    .selected-file {
+        margin-top: 1rem;
+        padding: 0.75rem;
+        background-color: #f9f5f0;
+        border-radius: 10px;
+        display: none;
+    }
+
+    .selected-file p {
+        color: #6b5d54;
+        font-size: 0.9rem;
+        margin: 0;
+    }
+
+    .photo-preview {
+        margin-top: 1rem;
+        display: none;
+    }
+
+    .photo-preview img {
+        width: 100%;
+        max-height: 300px;
+        object-fit: cover;
+        border-radius: 10px;
+        box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+    }
+
     @media (max-width: 768px) {
         .sign-form {
             padding: 1.5rem;
@@ -119,7 +209,7 @@
         <p>Leave your wishes and memories for us to cherish</p>
     </div>
 
-    <form method="POST" class="sign-form" id="guestbookForm">
+    <form method="POST" class="sign-form" id="guestbookForm" enctype="multipart/form-data">
         {% if error %}
         <div class="error-message">{{ error }}</div>
         {% endif %}
@@ -155,6 +245,32 @@
                       required></textarea>
         </div>
 
+        <div class="photo-upload-section">
+            <label class="photo-upload-label">Add a Photo (Optional)</label>
+            <p style="color: #999; font-size: 0.9rem; margin-bottom: 1rem;">
+                Share a photo with your message - perhaps one from the wedding or a memory you'd like to share!
+            </p>
+            
+            <div class="file-input-wrapper">
+                <input type="file" name="photo" id="photo" accept="image/*">
+                <label for="photo" class="file-input-label">
+                    <svg viewBox="0 0 24 24">
+                        <path d="M4,4H7L9,2H15L17,4H20A2,2 0 0,1 22,6V18A2,2 0 0,1 20,20H4A2,2 0 0,1 2,18V6A2,2 0 0,1 4,4M12,7A5,5 0 0,0 7,12A5,5 0 0,0 12,17A5,5 0 0,0 17,12A5,5 0 0,0 12,7M12,9A3,3 0 0,1 15,12A3,3 0 0,1 12,15A3,3 0 0,1 9,12A3,3 0 0,1 12,9Z"/>
+                    </svg>
+                    <p>Click to add a photo</p>
+                    <small>PNG, JPG, JPEG, GIF, or WEBP (Max 16MB)</small>
+                </label>
+            </div>
+            
+            <div class="selected-file" id="selectedFile">
+                <p>Selected: <strong id="fileName"></strong></p>
+            </div>
+            
+            <div class="photo-preview" id="photoPreview">
+                <img id="previewImage" alt="Photo preview">
+            </div>
+        </div>
+
         <div class="preview-section" id="previewSection">
             <h3 class="preview-title">Preview</h3>
             <div class="preview-content">
@@ -178,6 +294,11 @@
     const previewSection = document.getElementById('previewSection');
     const previewName = document.getElementById('previewName');
     const previewMessage = document.getElementById('previewMessage');
+    const fileInput = document.getElementById('photo');
+    const selectedFile = document.getElementById('selectedFile');
+    const fileName = document.getElementById('fileName');
+    const photoPreview = document.getElementById('photoPreview');
+    const previewImage = document.getElementById('previewImage');
 
     function updatePreview() {
         const name = nameInput.value.trim();
@@ -194,6 +315,27 @@
 
     nameInput.addEventListener('input', updatePreview);
     messageInput.addEventListener('input', updatePreview);
+
+    // Photo upload preview
+    fileInput.addEventListener('change', function(e) {
+        const file = e.target.files[0];
+        if (file) {
+            // Show selected file name
+            fileName.textContent = file.name;
+            selectedFile.style.display = 'block';
+
+            // Show preview
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                previewImage.src = e.target.result;
+                photoPreview.style.display = 'block';
+            };
+            reader.readAsDataURL(file);
+        } else {
+            selectedFile.style.display = 'none';
+            photoPreview.style.display = 'none';
+        }
+    });
 
     // Form submission
     document.getElementById('guestbookForm').addEventListener('submit', function(e) {

@@ -61,6 +61,22 @@
         box-shadow: 0 10px 30px rgba(0,0,0,0.1);
     }
 
+    .entry-card.has-photo {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 1.5rem;
+    }
+
+    @media (min-width: 768px) {
+        .entry-card.has-photo {
+            grid-template-columns: 1fr 200px;
+        }
+    }
+
+    .entry-content {
+        flex: 1;
+    }
+
     .entry-header {
         display: flex;
         justify-content: space-between;
@@ -96,6 +112,20 @@
         white-space: pre-wrap;
     }
 
+    .entry-photo {
+        width: 100%;
+        height: 200px;
+        object-fit: cover;
+        border-radius: 10px;
+        box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        cursor: pointer;
+        transition: transform 0.3s ease;
+    }
+
+    .entry-photo:hover {
+        transform: scale(1.02);
+    }
+
     .empty-state {
         text-align: center;
         padding: 4rem 0;
@@ -121,6 +151,52 @@
         font-size: 1.5rem;
     }
 
+    /* Photo Modal */
+    .photo-modal {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0, 0, 0, 0.9);
+        z-index: 1000;
+        padding: 20px;
+        cursor: pointer;
+    }
+
+    .photo-modal-content {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        max-width: 90%;
+        max-height: 90%;
+    }
+
+    .photo-modal img {
+        width: 100%;
+        height: 100%;
+        object-fit: contain;
+    }
+
+    .photo-modal-close {
+        position: absolute;
+        top: 20px;
+        right: 40px;
+        color: white;
+        font-size: 40px;
+        font-weight: bold;
+        cursor: pointer;
+        background: none;
+        border: none;
+        padding: 0;
+    }
+
+    .photo-modal-close:hover {
+        color: #8b7355;
+    }
+
     @media (max-width: 768px) {
         .guestbook-header h2 {
             font-size: 2rem;
@@ -132,6 +208,16 @@
 
         .entry-name {
             font-size: 1.25rem;
+        }
+
+        .entry-photo {
+            height: 150px;
+        }
+
+        .photo-modal-close {
+            top: 10px;
+            right: 20px;
+            font-size: 30px;
         }
     }
 </style>
@@ -147,17 +233,27 @@
 <div class="entries-container">
     {% if entries %}
         {% for entry in entries %}
-        <div class="entry-card">
-            <div class="entry-header">
-                <div>
-                    <span class="entry-name">{{ entry.name }}</span>
-                    {% if entry.location %}
-                    <span class="entry-location">from {{ entry.location }}</span>
-                    {% endif %}
+        <div class="entry-card {% if entry.photo_filename %}has-photo{% endif %}">
+            <div class="entry-content">
+                <div class="entry-header">
+                    <div>
+                        <span class="entry-name">{{ entry.name }}</span>
+                        {% if entry.location %}
+                        <span class="entry-location">from {{ entry.location }}</span>
+                        {% endif %}
+                    </div>
+                    <span class="entry-date">{{ entry.created_at.strftime('%B %d, %Y') }}</span>
                 </div>
-                <span class="entry-date">{{ entry.created_at.strftime('%B %d, %Y') }}</span>
+                <div class="entry-message">{{ entry.message }}</div>
             </div>
-            <div class="entry-message">{{ entry.message }}</div>
+            {% if entry.photo_filename %}
+            <div class="entry-photo-container">
+                <img src="{{ url_for('static', filename='uploads/guestbook/' + entry.photo_filename) }}" 
+                     alt="Photo by {{ entry.name }}"
+                     class="entry-photo"
+                     onclick="openPhotoModal(this.src, '{{ entry.name }}')">
+            </div>
+            {% endif %}
         </div>
         {% endfor %}
         
@@ -170,4 +266,38 @@
         </div>
     {% endif %}
 </div>
+
+<!-- Photo Modal -->
+<div class="photo-modal" id="photoModal" onclick="closePhotoModal()">
+    <button class="photo-modal-close" onclick="closePhotoModal()">&times;</button>
+    <div class="photo-modal-content">
+        <img id="modalImage" src="" alt="">
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    function openPhotoModal(imageSrc, name) {
+        const modal = document.getElementById('photoModal');
+        const modalImage = document.getElementById('modalImage');
+        modalImage.src = imageSrc;
+        modalImage.alt = 'Photo by ' + name;
+        modal.style.display = 'block';
+        document.body.style.overflow = 'hidden';
+    }
+
+    function closePhotoModal() {
+        const modal = document.getElementById('photoModal');
+        modal.style.display = 'none';
+        document.body.style.overflow = 'auto';
+    }
+
+    // Close modal on escape key
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') {
+            closePhotoModal();
+        }
+    });
+</script>
 {% endblock %}

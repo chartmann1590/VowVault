@@ -21,13 +21,15 @@ app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', secrets.token_hex(16))
 app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL', 'sqlite:///wedding_photos.db')
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['UPLOAD_FOLDER'] = 'static/uploads'
+app.config['GUESTBOOK_UPLOAD_FOLDER'] = 'static/uploads/guestbook'
 app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # 16MB max file size
 app.config['ALLOWED_EXTENSIONS'] = {'png', 'jpg', 'jpeg', 'gif', 'webp'}
 
 db = SQLAlchemy(app)
 
-# Ensure upload directory exists
+# Ensure upload directories exist
 os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
+os.makedirs(app.config['GUESTBOOK_UPLOAD_FOLDER'], exist_ok=True)
 
 # Database Models
 class Photo(db.Model):
@@ -58,6 +60,7 @@ class GuestbookEntry(db.Model):
     name = db.Column(db.String(100), nullable=False)
     message = db.Column(db.Text, nullable=False)
     location = db.Column(db.String(100))
+    photo_filename = db.Column(db.String(255))  # New field for optional photo
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
 class Settings(db.Model):
@@ -181,10 +184,23 @@ def sign_guestbook():
         location = request.form.get('location', '').strip()
         
         if name and message:
+            # Handle optional photo upload
+            photo_filename = None
+            if 'photo' in request.files:
+                file = request.files['photo']
+                if file and file.filename != '' and allowed_file(file.filename):
+                    filename = secure_filename(file.filename)
+                    timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+                    filename = f"guestbook_{timestamp}_{filename}"
+                    filepath = os.path.join(app.config['GUESTBOOK_UPLOAD_FOLDER'], filename)
+                    file.save(filepath)
+                    photo_filename = filename
+            
             entry = GuestbookEntry(
                 name=name,
                 message=message,
-                location=location
+                location=location,
+                photo_filename=photo_filename
             )
             db.session.add(entry)
             db.session.commit()
@@ -319,6 +335,14 @@ def delete_guestbook_entry(entry_id):
         return "Unauthorized", 401
     
     entry = GuestbookEntry.query.get_or_404(entry_id)
+    
+    # Delete the photo file if exists
+    if entry.photo_filename:
+        try:
+            os.remove(os.path.join(app.config['GUESTBOOK_UPLOAD_FOLDER'], entry.photo_filename))
+        except:
+            pass
+    
     db.session.delete(entry)
     db.session.commit()
     
