@@ -1,0 +1,338 @@
+{% extends "base.html" %}
+
+{% block title %}New Message - Wedding Gallery{% endblock %}
+
+{% block extra_styles %}
+<style>
+    .new-message-container {
+        max-width: 600px;
+        margin: 0 auto;
+    }
+
+    .new-message-header {
+        text-align: center;
+        margin-bottom: 3rem;
+    }
+
+    .new-message-header h2 {
+        font-family: 'Playfair Display', serif;
+        font-size: 2.5rem;
+        color: #8b7355;
+        margin-bottom: 1rem;
+    }
+
+    .new-message-header p {
+        color: #6b5d54;
+        font-size: 1.1rem;
+    }
+
+    .message-form {
+        background: white;
+        padding: 2.5rem;
+        border-radius: 20px;
+        box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+    }
+
+    .form-intro {
+        text-align: center;
+        margin-bottom: 2rem;
+        padding: 1.5rem;
+        background: #f9f5f0;
+        border-radius: 15px;
+    }
+
+    .form-intro p {
+        color: #6b5d54;
+        font-style: italic;
+        line-height: 1.6;
+    }
+
+    .photo-upload-section {
+        margin-top: 2rem;
+        padding-top: 2rem;
+        border-top: 2px dashed #e8ddd3;
+    }
+
+    .photo-upload-label {
+        font-weight: 500;
+        color: #6b5d54;
+        display: block;
+        margin-bottom: 0.5rem;
+    }
+
+    .file-input-wrapper {
+        position: relative;
+        overflow: hidden;
+        display: inline-block;
+        width: 100%;
+    }
+
+    .file-input-wrapper input[type=file] {
+        position: absolute;
+        left: -9999px;
+    }
+
+    .file-input-label {
+        display: block;
+        padding: 1.5rem;
+        background: linear-gradient(135deg, #f5e6d3 0%, #f9f5f0 100%);
+        border: 2px dashed #8b7355;
+        border-radius: 15px;
+        text-align: center;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+
+    .file-input-label:hover {
+        background: linear-gradient(135deg, #f0dcc5 0%, #f5ebe0 100%);
+        border-color: #6b5d54;
+    }
+
+    .file-input-label svg {
+        width: 40px;
+        height: 40px;
+        fill: #8b7355;
+        margin-bottom: 0.5rem;
+        display: block;
+        margin-left: auto;
+        margin-right: auto;
+    }
+
+    .file-input-label p {
+        color: #6b5d54;
+        font-size: 0.95rem;
+        margin-bottom: 0.3rem;
+    }
+
+    .file-input-label small {
+        color: #999;
+        display: block;
+        font-size: 0.85rem;
+    }
+
+    .selected-file {
+        margin-top: 1rem;
+        padding: 0.75rem;
+        background-color: #f9f5f0;
+        border-radius: 10px;
+        display: none;
+    }
+
+    .selected-file p {
+        color: #6b5d54;
+        font-size: 0.9rem;
+        margin: 0;
+    }
+
+    .photo-preview {
+        margin-top: 1rem;
+        display: none;
+    }
+
+    .photo-preview img {
+        width: 100%;
+        max-height: 300px;
+        object-fit: cover;
+        border-radius: 10px;
+        box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+    }
+
+    .preview-section {
+        margin-top: 2rem;
+        padding: 1.5rem;
+        background: #f9f5f0;
+        border-radius: 15px;
+        display: none;
+    }
+
+    .preview-title {
+        font-family: 'Playfair Display', serif;
+        color: #8b7355;
+        font-size: 1.2rem;
+        margin-bottom: 1rem;
+    }
+
+    .preview-content {
+        background: white;
+        padding: 1.5rem;
+        border-radius: 10px;
+        border-left: 4px solid #8b7355;
+    }
+
+    .preview-name {
+        font-weight: 600;
+        color: #8b7355;
+        margin-bottom: 0.5rem;
+    }
+
+    .preview-message {
+        color: #555;
+        line-height: 1.6;
+        white-space: pre-wrap;
+    }
+
+    .form-actions {
+        display: flex;
+        gap: 1rem;
+        margin-top: 2rem;
+    }
+
+    .form-actions .btn {
+        flex: 1;
+    }
+
+    .error-message {
+        background-color: #f8d7da;
+        color: #721c24;
+        padding: 1rem;
+        border-radius: 10px;
+        margin-bottom: 1.5rem;
+        border: 1px solid #f5c6cb;
+    }
+
+    @media (max-width: 768px) {
+        .message-form {
+            padding: 1.5rem;
+        }
+
+        .form-actions {
+            flex-direction: column;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="new-message-container">
+    <div class="new-message-header">
+        <h2>Leave a Message</h2>
+        <p>Share your thoughts, wishes, or a special memory</p>
+    </div>
+
+    <form method="POST" class="message-form" id="messageForm" enctype="multipart/form-data">
+        {% if error %}
+        <div class="error-message">{{ error }}</div>
+        {% endif %}
+
+        <div class="form-intro">
+            <p>Your message will be shared on our wedding message board where other guests can see, like, and comment on it.</p>
+        </div>
+
+        <div class="form-group">
+            <label for="author_name">Your Name</label>
+            <input type="text" 
+                   id="author_name" 
+                   name="author_name" 
+                   placeholder="Enter your name (optional)"
+                   value="{{ user_name }}">
+        </div>
+
+        <div class="form-group">
+            <label for="content">Your Message *</label>
+            <textarea id="content" 
+                      name="content" 
+                      rows="6"
+                      placeholder="Share your wishes, a memory, or thoughts about the happy couple..."
+                      required></textarea>
+        </div>
+
+        <div class="photo-upload-section">
+            <label class="photo-upload-label">Add a Photo (Optional)</label>
+            <p style="color: #999; font-size: 0.9rem; margin-bottom: 1rem;">
+                Share a photo with your message - it could be from the wedding or a special memory!
+            </p>
+            
+            <div class="file-input-wrapper">
+                <input type="file" name="photo" id="photo" accept="image/*">
+                <label for="photo" class="file-input-label">
+                    <svg viewBox="0 0 24 24">
+                        <path d="M4,4H7L9,2H15L17,4H20A2,2 0 0,1 22,6V18A2,2 0 0,1 20,20H4A2,2 0 0,1 2,18V6A2,2 0 0,1 4,4M12,7A5,5 0 0,0 7,12A5,5 0 0,0 12,17A5,5 0 0,0 17,12A5,5 0 0,0 12,7M12,9A3,3 0 0,1 15,12A3,3 0 0,1 12,15A3,3 0 0,1 9,12A3,3 0 0,1 12,9Z"/>
+                    </svg>
+                    <p>Click to add a photo</p>
+                    <small>PNG, JPG, JPEG, GIF, or WEBP (Max 16MB)</small>
+                </label>
+            </div>
+            
+            <div class="selected-file" id="selectedFile">
+                <p>Selected: <strong id="fileName"></strong></p>
+            </div>
+            
+            <div class="photo-preview" id="photoPreview">
+                <img id="previewImage" alt="Photo preview">
+            </div>
+        </div>
+
+        <div class="preview-section" id="previewSection">
+            <h3 class="preview-title">Preview</h3>
+            <div class="preview-content">
+                <div class="preview-name" id="previewName"></div>
+                <div class="preview-message" id="previewMessage"></div>
+            </div>
+        </div>
+
+        <div class="form-actions">
+            <button type="submit" class="btn">Post Message</button>
+            <a href="{{ url_for('message_board') }}" class="btn btn-secondary">Cancel</a>
+        </div>
+    </form>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    const nameInput = document.getElementById('author_name');
+    const contentInput = document.getElementById('content');
+    const previewSection = document.getElementById('previewSection');
+    const previewName = document.getElementById('previewName');
+    const previewMessage = document.getElementById('previewMessage');
+    const fileInput = document.getElementById('photo');
+    const selectedFile = document.getElementById('selectedFile');
+    const fileName = document.getElementById('fileName');
+    const photoPreview = document.getElementById('photoPreview');
+    const previewImage = document.getElementById('previewImage');
+
+    function updatePreview() {
+        const name = nameInput.value.trim();
+        const content = contentInput.value.trim();
+
+        if (name || content) {
+            previewSection.style.display = 'block';
+            previewName.textContent = name || 'Anonymous';
+            previewMessage.textContent = content || '';
+        } else {
+            previewSection.style.display = 'none';
+        }
+    }
+
+    nameInput.addEventListener('input', updatePreview);
+    contentInput.addEventListener('input', updatePreview);
+
+    // Photo upload preview
+    fileInput.addEventListener('change', function(e) {
+        const file = e.target.files[0];
+        if (file) {
+            // Show selected file name
+            fileName.textContent = file.name;
+            selectedFile.style.display = 'block';
+
+            // Show preview
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                previewImage.src = e.target.result;
+                photoPreview.style.display = 'block';
+            };
+            reader.readAsDataURL(file);
+        } else {
+            selectedFile.style.display = 'none';
+            photoPreview.style.display = 'none';
+        }
+    });
+
+    // Form submission
+    document.getElementById('messageForm').addEventListener('submit', function(e) {
+        const submitButton = e.target.querySelector('button[type="submit"]');
+        submitButton.textContent = 'Posting...';
+        submitButton.disabled = true;
+    });
+</script>
+{% endblock %}

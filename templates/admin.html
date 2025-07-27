@@ -131,7 +131,7 @@
         margin-top: 1rem;
     }
 
-    .photos-table, .guestbook-table {
+    .photos-table, .guestbook-table, .messages-table {
         background: white;
         border-radius: 15px;
         overflow: hidden;
@@ -143,6 +143,9 @@
         background: #f9f5f0;
         padding: 1.5rem 2rem;
         border-bottom: 1px solid #e8ddd3;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
     }
 
     .table-header h3 {
@@ -150,6 +153,31 @@
         font-family: 'Playfair Display', serif;
         font-size: 1.8rem;
         margin: 0;
+    }
+
+    .tab-buttons {
+        display: flex;
+        gap: 1rem;
+    }
+
+    .tab-btn {
+        background: #e8ddd3;
+        color: #6b5d54;
+        border: none;
+        padding: 0.5rem 1rem;
+        border-radius: 20px;
+        cursor: pointer;
+        font-size: 0.9rem;
+        transition: all 0.3s ease;
+    }
+
+    .tab-btn.active {
+        background: #8b7355;
+        color: white;
+    }
+
+    .tab-btn:hover {
+        transform: translateY(-2px);
     }
 
     table {
@@ -182,7 +210,7 @@
         border-radius: 10px;
     }
 
-    .delete-btn {
+    .delete-btn, .hide-btn, .show-btn {
         background: #dc3545;
         color: white;
         border: none;
@@ -191,11 +219,29 @@
         cursor: pointer;
         font-size: 0.9rem;
         transition: all 0.3s ease;
+        margin-right: 0.5rem;
     }
 
     .delete-btn:hover {
         background: #c82333;
         transform: translateY(-2px);
+    }
+
+    .hide-btn {
+        background: #ffc107;
+        color: #212529;
+    }
+
+    .hide-btn:hover {
+        background: #e0a800;
+    }
+
+    .show-btn {
+        background: #28a745;
+    }
+
+    .show-btn:hover {
+        background: #218838;
     }
 
     .edit-btn {
@@ -249,7 +295,7 @@
         display: none;
     }
 
-    .guestbook-message {
+    .guestbook-message, .message-content {
         max-width: 300px;
         line-height: 1.5;
         color: #666;
@@ -258,6 +304,37 @@
     .guestbook-location {
         color: #999;
         font-style: italic;
+        font-size: 0.9rem;
+    }
+
+    .hidden-indicator {
+        background: #ffc107;
+        color: #212529;
+        padding: 0.25rem 0.5rem;
+        border-radius: 10px;
+        font-size: 0.75rem;
+        margin-left: 0.5rem;
+    }
+
+    .tab-content {
+        display: none;
+    }
+
+    .tab-content.active {
+        display: block;
+    }
+
+    .message-comments {
+        margin-top: 0.5rem;
+        padding-left: 1rem;
+        border-left: 2px solid #e8ddd3;
+    }
+
+    .comment-item {
+        background: #f9f5f0;
+        padding: 0.5rem;
+        margin-bottom: 0.5rem;
+        border-radius: 5px;
         font-size: 0.9rem;
     }
 
@@ -327,8 +404,12 @@
             overflow-x: auto;
         }
 
-        .guestbook-message {
+        .guestbook-message, .message-content {
             max-width: 200px;
+        }
+
+        .tab-buttons {
+            flex-wrap: wrap;
         }
     }
 </style>
@@ -337,7 +418,7 @@
 {% block content %}
 <div class="admin-header">
     <h2>Admin Dashboard</h2>
-    <p>Manage wedding gallery photos and statistics</p>
+    <p>Manage wedding gallery photos, messages, and statistics</p>
 </div>
 
 <div class="container">
@@ -361,11 +442,19 @@
         </div>
         <div class="stat-card">
             <div class="stat-value">{{ total_comments }}</div>
-            <div class="stat-label">Total Comments</div>
+            <div class="stat-label">Photo Comments</div>
         </div>
         <div class="stat-card">
             <div class="stat-value">{{ total_guestbook }}</div>
             <div class="stat-label">Guestbook Entries</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-value">{{ total_messages }}</div>
+            <div class="stat-label">Message Board Posts</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-value">{{ total_message_comments }}</div>
+            <div class="stat-label">Message Comments</div>
         </div>
     </div>
 
@@ -544,6 +633,130 @@
         </div>
     </div>
 
+    <!-- Message Board Management -->
+    <div class="messages-table">
+        <div class="table-header">
+            <h3>Message Board</h3>
+            <div class="tab-buttons">
+                <button class="tab-btn active" onclick="showMessageTab('visible')">Visible ({{ visible_messages|length }})</button>
+                <button class="tab-btn" onclick="showMessageTab('hidden')">Hidden ({{ hidden_messages|length }})</button>
+            </div>
+        </div>
+        <div class="table-responsive">
+            <!-- Visible Messages -->
+            <div id="visible-messages" class="tab-content active">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Author</th>
+                            <th>Message</th>
+                            <th>Photo</th>
+                            <th>Date</th>
+                            <th>Likes</th>
+                            <th>Comments</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for message in visible_messages %}
+                        <tr>
+                            <td>{{ message.author_name }}</td>
+                            <td class="message-content">
+                                {{ message.content[:100] }}{% if message.content|length > 100 %}...{% endif %}
+                                {% if message.message_comments %}
+                                <div class="message-comments">
+                                    {% for comment in message.message_comments[:2] %}
+                                        {% if not comment.is_hidden %}
+                                        <div class="comment-item">
+                                            <strong>{{ comment.commenter_name }}:</strong> {{ comment.content[:50] }}{% if comment.content|length > 50 %}...{% endif %}
+                                        </div>
+                                        {% endif %}
+                                    {% endfor %}
+                                    {% if message.message_comments|length > 2 %}
+                                    <small style="color: #999;">... and {{ message.message_comments|length - 2 }} more</small>
+                                    {% endif %}
+                                </div>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if message.photo_filename %}
+                                <img src="{{ url_for('static', filename='uploads/messages/' + message.photo_filename) }}" 
+                                     alt="Photo" 
+                                     class="photo-thumbnail"
+                                     style="cursor: pointer;"
+                                     onclick="window.open(this.src, '_blank')">
+                                {% else %}
+                                -
+                                {% endif %}
+                            </td>
+                            <td>{{ message.created_at.strftime('%b %d, %Y') }}</td>
+                            <td>{{ message.likes }}</td>
+                            <td>{{ message.message_comments|selectattr('is_hidden', 'false')|list|length }}</td>
+                            <td>
+                                <button class="hide-btn" 
+                                        onclick="toggleMessageVisibility({{ message.id }})">
+                                    Hide
+                                </button>
+                                <button class="delete-btn" 
+                                        onclick="confirmDeleteMessage({{ message.id }}, '{{ message.author_name|e }}')">
+                                    Delete
+                                </button>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Hidden Messages -->
+            <div id="hidden-messages" class="tab-content">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Author</th>
+                            <th>Message</th>
+                            <th>Photo</th>
+                            <th>Date</th>
+                            <th>Reason Hidden</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for message in hidden_messages %}
+                        <tr>
+                            <td>{{ message.author_name }}</td>
+                            <td class="message-content">{{ message.content[:100] }}{% if message.content|length > 100 %}...{% endif %}</td>
+                            <td>
+                                {% if message.photo_filename %}
+                                <img src="{{ url_for('static', filename='uploads/messages/' + message.photo_filename) }}" 
+                                     alt="Photo" 
+                                     class="photo-thumbnail"
+                                     style="cursor: pointer;"
+                                     onclick="window.open(this.src, '_blank')">
+                                {% else %}
+                                -
+                                {% endif %}
+                            </td>
+                            <td>{{ message.created_at.strftime('%b %d, %Y') }}</td>
+                            <td>Hidden by admin</td>
+                            <td>
+                                <button class="show-btn" 
+                                        onclick="toggleMessageVisibility({{ message.id }})">
+                                    Show
+                                </button>
+                                <button class="delete-btn" 
+                                        onclick="confirmDeleteMessage({{ message.id }}, '{{ message.author_name|e }}')">
+                                    Delete
+                                </button>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
     <!-- Guestbook Management -->
     <div class="guestbook-table">
         <div class="table-header">
@@ -676,6 +889,19 @@
 
 {% block scripts %}
 <script>
+    // Tab functionality for messages
+    function showMessageTab(tabName) {
+        document.querySelectorAll('.tab-content').forEach(tab => {
+            tab.classList.remove('active');
+        });
+        document.querySelectorAll('.tab-btn').forEach(btn => {
+            btn.classList.remove('active');
+        });
+        
+        document.getElementById(tabName + '-messages').classList.add('active');
+        event.target.classList.add('active');
+    }
+
     // Preview updates for QR settings
     document.getElementById('qr_title').addEventListener('input', function(e) {
         document.getElementById('previewTitle').textContent = e.target.value || 'Share Your Wedding Photos!';
@@ -797,6 +1023,20 @@
             const urlParams = new URLSearchParams(window.location.search);
             const key = urlParams.get('key');
             window.location.href = `/admin/delete-guestbook/${entryId}?key=${key}`;
+        }
+    }
+
+    function toggleMessageVisibility(messageId) {
+        const urlParams = new URLSearchParams(window.location.search);
+        const key = urlParams.get('key');
+        window.location.href = `/admin/toggle-message/${messageId}?key=${key}`;
+    }
+
+    function confirmDeleteMessage(messageId, authorName) {
+        if (confirm(`Are you sure you want to delete the message by ${authorName}? This action cannot be undone.`)) {
+            const urlParams = new URLSearchParams(window.location.search);
+            const key = urlParams.get('key');
+            window.location.href = `/admin/delete-message/${messageId}?key=${key}`;
         }
     }
 

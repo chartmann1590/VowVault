@@ -1,0 +1,507 @@
+{% extends "base.html" %}
+
+{% block title %}Message Board - Wedding Gallery{% endblock %}
+
+{% block extra_styles %}
+<style>
+    .message-board-header {
+        text-align: center;
+        margin-bottom: 3rem;
+    }
+
+    .message-board-header h2 {
+        font-family: 'Playfair Display', serif;
+        font-size: 3rem;
+        color: #8b7355;
+        margin-bottom: 1rem;
+    }
+
+    .message-board-header p {
+        color: #6b5d54;
+        font-size: 1.2rem;
+        margin-bottom: 2rem;
+    }
+
+    .new-message-btn {
+        display: inline-block;
+        padding: 1rem 3rem;
+        background-color: #8b7355;
+        color: white;
+        text-decoration: none;
+        border-radius: 30px;
+        font-size: 1.1rem;
+        font-weight: 500;
+        transition: all 0.3s ease;
+        margin-bottom: 3rem;
+    }
+
+    .new-message-btn:hover {
+        background-color: #6b5d54;
+        transform: translateY(-2px);
+        box-shadow: 0 5px 20px rgba(139, 115, 85, 0.3);
+    }
+
+    .messages-container {
+        max-width: 800px;
+        margin: 0 auto;
+    }
+
+    .message-card {
+        background: white;
+        border-radius: 15px;
+        padding: 2rem;
+        margin-bottom: 2rem;
+        box-shadow: 0 5px 20px rgba(0,0,0,0.05);
+        transition: all 0.3s ease;
+        border-left: 4px solid #8b7355;
+    }
+
+    .message-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+    }
+
+    .message-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: baseline;
+        margin-bottom: 1rem;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+    }
+
+    .message-author {
+        font-family: 'Playfair Display', serif;
+        font-size: 1.3rem;
+        color: #8b7355;
+        font-weight: 600;
+    }
+
+    .message-date {
+        color: #999;
+        font-size: 0.9rem;
+    }
+
+    .message-content {
+        color: #555;
+        line-height: 1.8;
+        font-size: 1.05rem;
+        margin-bottom: 1rem;
+        white-space: pre-wrap;
+    }
+
+    .message-photo {
+        width: 100%;
+        max-height: 400px;
+        object-fit: cover;
+        border-radius: 10px;
+        margin: 1rem 0;
+        cursor: pointer;
+        transition: transform 0.3s ease;
+    }
+
+    .message-photo:hover {
+        transform: scale(1.02);
+    }
+
+    .message-interactions {
+        display: flex;
+        gap: 1rem;
+        padding: 1rem 0;
+        border-top: 1px solid #f0f0f0;
+        margin-bottom: 1rem;
+    }
+
+    .like-btn, .comment-btn {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.5rem 1rem;
+        background: white;
+        border: 2px solid #e8ddd3;
+        border-radius: 20px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        font-size: 0.9rem;
+        color: #6b5d54;
+    }
+
+    .like-btn:hover, .comment-btn:hover {
+        border-color: #8b7355;
+        transform: translateY(-2px);
+    }
+
+    .like-btn.liked {
+        background: #8b7355;
+        color: white;
+        border-color: #8b7355;
+    }
+
+    .like-btn svg, .comment-btn svg {
+        width: 20px;
+        height: 20px;
+        fill: currentColor;
+    }
+
+    .comments-section {
+        margin-top: 1rem;
+        display: none;
+    }
+
+    .comments-section.show {
+        display: block;
+    }
+
+    .comment {
+        background: #f9f5f0;
+        padding: 1rem;
+        border-radius: 10px;
+        margin-bottom: 0.5rem;
+    }
+
+    .comment-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 0.5rem;
+    }
+
+    .comment-author {
+        font-weight: 600;
+        color: #8b7355;
+        font-size: 0.9rem;
+    }
+
+    .comment-time {
+        color: #999;
+        font-size: 0.8rem;
+    }
+
+    .comment-content {
+        color: #555;
+        font-size: 0.95rem;
+        line-height: 1.5;
+    }
+
+    .comment-form {
+        background: #f9f5f0;
+        padding: 1rem;
+        border-radius: 10px;
+        margin-top: 1rem;
+    }
+
+    .comment-form input, .comment-form textarea {
+        width: 100%;
+        padding: 0.5rem;
+        border: 1px solid #e8ddd3;
+        border-radius: 5px;
+        margin-bottom: 0.5rem;
+        font-size: 0.9rem;
+    }
+
+    .comment-form button {
+        background: #8b7355;
+        color: white;
+        border: none;
+        padding: 0.5rem 1.5rem;
+        border-radius: 20px;
+        cursor: pointer;
+        font-size: 0.9rem;
+        transition: all 0.3s ease;
+    }
+
+    .comment-form button:hover {
+        background: #6b5d54;
+    }
+
+    .empty-state {
+        text-align: center;
+        padding: 4rem 0;
+    }
+
+    .empty-state h3 {
+        font-family: 'Playfair Display', serif;
+        font-size: 2rem;
+        color: #8b7355;
+        margin-bottom: 1rem;
+    }
+
+    .empty-state p {
+        color: #6b5d54;
+        font-size: 1.1rem;
+        margin-bottom: 2rem;
+    }
+
+    /* Photo Modal */
+    .photo-modal {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0, 0, 0, 0.9);
+        z-index: 1000;
+        padding: 20px;
+        cursor: pointer;
+    }
+
+    .photo-modal-content {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        max-width: 90%;
+        max-height: 90%;
+    }
+
+    .photo-modal img {
+        width: 100%;
+        height: 100%;
+        object-fit: contain;
+    }
+
+    .photo-modal-close {
+        position: absolute;
+        top: 20px;
+        right: 40px;
+        color: white;
+        font-size: 40px;
+        font-weight: bold;
+        cursor: pointer;
+        background: none;
+        border: none;
+        padding: 0;
+    }
+
+    .photo-modal-close:hover {
+        color: #8b7355;
+    }
+
+    @media (max-width: 768px) {
+        .message-board-header h2 {
+            font-size: 2rem;
+        }
+
+        .message-card {
+            padding: 1.5rem;
+        }
+
+        .message-author {
+            font-size: 1.1rem;
+        }
+
+        .message-interactions {
+            flex-wrap: wrap;
+        }
+
+        .photo-modal-close {
+            top: 10px;
+            right: 20px;
+            font-size: 30px;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="message-board-header">
+    <h2>Wedding Message Board</h2>
+    <p>Share your thoughts, wishes, and memories with everyone</p>
+    <a href="{{ url_for('new_message') }}" class="new-message-btn">Leave a Message</a>
+</div>
+
+<div class="messages-container">
+    {% if messages %}
+        {% for message in messages %}
+        <div class="message-card">
+            <div class="message-header">
+                <span class="message-author">{{ message.author_name }}</span>
+                <span class="message-date">{{ message.created_at.strftime('%B %d, %Y at %I:%M %p') }}</span>
+            </div>
+            
+            <div class="message-content">{{ message.content }}</div>
+            
+            {% if message.photo_filename %}
+            <img src="{{ url_for('static', filename='uploads/messages/' + message.photo_filename) }}" 
+                 alt="Photo by {{ message.author_name }}"
+                 class="message-photo"
+                 onclick="openPhotoModal(this.src, '{{ message.author_name }}')">
+            {% endif %}
+            
+            <div class="message-interactions">
+                <button class="like-btn {% if message.id in liked_messages %}liked{% endif %}" 
+                        data-message-id="{{ message.id }}">
+                    <svg viewBox="0 0 24 24">
+                        <path d="M12,21.35L10.55,20.03C5.4,15.36 2,12.27 2,8.5C2,5.41 4.42,3 7.5,3C9.24,3 10.91,3.81 12,5.08C13.09,3.81 14.76,3 16.5,3C19.58,3 22,5.41 22,8.5C22,12.27 18.6,15.36 13.45,20.03L12,21.35Z"/>
+                    </svg>
+                    <span class="like-count">{{ message.likes }}</span>
+                </button>
+                
+                <button class="comment-btn" onclick="toggleComments({{ message.id }})">
+                    <svg viewBox="0 0 24 24">
+                        <path d="M9,22A1,1 0 0,1 8,21V18H4A2,2 0 0,1 2,16V4C2,2.89 2.9,2 4,2H20A2,2 0 0,1 22,4V16A2,2 0 0,1 20,18H13.9L10.2,21.71C10,21.9 9.75,22 9.5,22V22H9Z"/>
+                    </svg>
+                    <span>{{ message.message_comments|selectattr('is_hidden', 'false')|list|length }}</span>
+                </button>
+            </div>
+            
+            <div class="comments-section" id="comments-{{ message.id }}">
+                <div class="comments-list">
+                    {% for comment in message.message_comments %}
+                        {% if not comment.is_hidden %}
+                        <div class="comment">
+                            <div class="comment-header">
+                                <span class="comment-author">{{ comment.commenter_name }}</span>
+                                <span class="comment-time">{{ comment.created_at.strftime('%b %d at %I:%M %p') }}</span>
+                            </div>
+                            <div class="comment-content">{{ comment.content }}</div>
+                        </div>
+                        {% endif %}
+                    {% endfor %}
+                </div>
+                
+                <form class="comment-form" onsubmit="submitComment(event, {{ message.id }})">
+                    <input type="text" 
+                           name="commenter_name" 
+                           placeholder="Your name (optional)"
+                           value="{{ user_name }}">
+                    <textarea name="content" 
+                              placeholder="Add a comment..." 
+                              rows="2" 
+                              required></textarea>
+                    <button type="submit">Post Comment</button>
+                </form>
+            </div>
+        </div>
+        {% endfor %}
+    {% else %}
+        <div class="empty-state">
+            <h3>No messages yet!</h3>
+            <p>Be the first to leave a message for the happy couple</p>
+            <a href="{{ url_for('new_message') }}" class="btn">Leave First Message</a>
+        </div>
+    {% endif %}
+</div>
+
+<!-- Photo Modal -->
+<div class="photo-modal" id="photoModal" onclick="closePhotoModal()">
+    <button class="photo-modal-close" onclick="closePhotoModal()">&times;</button>
+    <div class="photo-modal-content">
+        <img id="modalImage" src="" alt="">
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // Like functionality
+    document.querySelectorAll('.like-btn').forEach(btn => {
+        btn.addEventListener('click', async function() {
+            const messageId = this.dataset.messageId;
+            const likeCount = this.querySelector('.like-count');
+            
+            try {
+                const response = await fetch(`/api/message/${messageId}/like`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    likeCount.textContent = data.likes;
+                    
+                    if (data.liked) {
+                        this.classList.add('liked');
+                    } else {
+                        this.classList.remove('liked');
+                    }
+                }
+            } catch (error) {
+                console.error('Error toggling like:', error);
+            }
+        });
+    });
+
+    // Toggle comments visibility
+    function toggleComments(messageId) {
+        const commentsSection = document.getElementById(`comments-${messageId}`);
+        commentsSection.classList.toggle('show');
+    }
+
+    // Submit comment
+    async function submitComment(event, messageId) {
+        event.preventDefault();
+        const form = event.target;
+        const formData = new FormData(form);
+        
+        const data = {
+            commenter_name: formData.get('commenter_name') || 'Anonymous',
+            content: formData.get('content')
+        };
+        
+        try {
+            const response = await fetch(`/api/message/${messageId}/comment`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(data)
+            });
+            
+            if (response.ok) {
+                const comment = await response.json();
+                
+                // Add new comment to the list
+                const commentsList = form.parentElement.querySelector('.comments-list');
+                const commentDiv = document.createElement('div');
+                commentDiv.className = 'comment';
+                commentDiv.innerHTML = `
+                    <div class="comment-header">
+                        <span class="comment-author">${comment.commenter_name}</span>
+                        <span class="comment-time">${comment.created_at}</span>
+                    </div>
+                    <div class="comment-content">${comment.content}</div>
+                `;
+                commentsList.appendChild(commentDiv);
+                
+                // Clear form
+                form.reset();
+                form.querySelector('input[name="commenter_name"]').value = data.commenter_name;
+                
+                // Update comment count
+                const commentBtn = document.querySelector(`.comment-btn[onclick="toggleComments(${messageId})"]`);
+                const countSpan = commentBtn.querySelector('span');
+                countSpan.textContent = parseInt(countSpan.textContent) + 1;
+            }
+        } catch (error) {
+            console.error('Error posting comment:', error);
+        }
+    }
+
+    // Photo modal functions
+    function openPhotoModal(imageSrc, name) {
+        const modal = document.getElementById('photoModal');
+        const modalImage = document.getElementById('modalImage');
+        modalImage.src = imageSrc;
+        modalImage.alt = 'Photo by ' + name;
+        modal.style.display = 'block';
+        document.body.style.overflow = 'hidden';
+    }
+
+    function closePhotoModal() {
+        const modal = document.getElementById('photoModal');
+        modal.style.display = 'none';
+        document.body.style.overflow = 'auto';
+    }
+
+    // Close modal on escape key
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') {
+            closePhotoModal();
+        }
+    });
+</script>
+{% endblock %}

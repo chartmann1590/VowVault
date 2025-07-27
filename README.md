@@ -12,17 +12,19 @@ A beautiful, self-hosted wedding photo gallery application that allows wedding g
 ### For Guests
 - 📸 **Easy Photo Upload** - No login required, just upload and share
 - ❤️ **Like Photos** - Show appreciation for beautiful moments
-- 💬 **Leave Comments** - Share memories and messages
+- 💬 **Leave Comments** - Share memories and messages on photos
+- 💌 **Message Board** - Post messages with optional photos that everyone can see, like, and comment on
 - 📖 **Virtual Guestbook** - Sign a digital guestbook with wishes and optional photos
 - 📱 **Mobile Responsive** - Works perfectly on all devices
 - 🎉 **Welcome Modal** - Greet guests with a personalized message
 
 ### For Admins
 - 🔐 **Admin Dashboard** - Secure admin area with simple key authentication
-- 📊 **Statistics** - View total photos, likes, comments, and guestbook entries
-- 🗑️ **Content Management** - Delete inappropriate photos or guestbook entries
+- 📊 **Statistics** - View total photos, likes, comments, messages, and guestbook entries
+- 🗑️ **Content Management** - Delete inappropriate photos, messages, or guestbook entries
+- 👁️ **Hide/Show Messages** - Hide inappropriate messages without deleting them
 - ✏️ **Edit Guestbook** - Modify guestbook entries when needed
-- 🖼️ **Guestbook Photos** - View and manage photos attached to guestbook entries
+- 🖼️ **Media Management** - View and manage photos attached to messages and guestbook entries
 - 📄 **QR Code Generator** - Create beautiful PDFs with QR codes for easy sharing
 - ✏️ **Customizable Content** - Edit welcome messages and QR code content
 
@@ -99,6 +101,7 @@ app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://user:pass@localhost/dbname
 wedding-photo-gallery/
 ├── app.py                  # Main Flask application
 ├── requirements.txt        # Python dependencies
+├── migration.py           # Database migration script
 ├── Dockerfile             # Docker container definition
 ├── docker-compose.yml     # Docker Compose configuration
 ├── nginx.conf            # Nginx configuration for production
@@ -107,11 +110,15 @@ wedding-photo-gallery/
 │   ├── index.html       # Gallery page
 │   ├── upload.html      # Upload page
 │   ├── photo_detail.html # Photo detail page
+│   ├── message_board.html # Message board
+│   ├── new_message.html  # Post new message
 │   ├── admin.html       # Admin dashboard
 │   ├── guestbook.html   # View guestbook
 │   └── sign_guestbook.html # Sign guestbook
 ├── static/              # Static files
 │   └── uploads/        # Uploaded photos (created automatically)
+│       ├── guestbook/  # Guestbook photos
+│       └── messages/   # Message board photos
 └── data/               # Database files (created automatically)
 ```
 
@@ -172,7 +179,7 @@ tar -xzf backup-20240101.tar.gz
 1. **Visit the Gallery**
    - Scan the QR code or visit the URL
    - View the welcome message
-   - Choose to sign the guestbook or enter the gallery
+   - Choose to sign the guestbook, post a message, or enter the gallery
 
 2. **Upload Photos**
    - Click "Upload Photo"
@@ -186,26 +193,44 @@ tar -xzf backup-20240101.tar.gz
    - Click the heart to like
    - Leave comments with your name
 
-4. **Sign the Guestbook**
+4. **Post on Message Board**
+   - Click "Message Board" in navigation
+   - Click "Leave a Message"
+   - Enter your name (optional)
+   - Write your message
+   - Add a photo (optional)
+   - Submit your message
+   - Like and comment on other messages
+
+5. **Sign the Guestbook**
    - Click "Guestbook" in navigation
    - Click "Sign the Guestbook"
    - Enter your name and location (optional)
    - Write your message
+   - Add a photo (optional)
    - Submit your entry
 
 ### For Administrators
 
 1. **Access Admin Panel**
    - Visit `/admin?key=your-key`
-   - View statistics
-   - Manage photos and guestbook entries
+   - View statistics including message board activity
+   - Manage photos, messages, and guestbook entries
 
-2. **Manage Guestbook**
+2. **Manage Message Board**
+   - View all messages with their comments
+   - Hide inappropriate messages (they remain in database but hidden from public)
+   - Unhide previously hidden messages
+   - Delete messages permanently
+   - View and manage message comments
+
+3. **Manage Guestbook**
    - View all guestbook entries
    - Edit entries to fix typos
    - Delete inappropriate entries
+   - View photos attached to entries
 
-3. **Generate QR Codes**
+4. **Generate QR Codes**
    - Enter your public URL
    - Customize the message
    - Download PDF
@@ -220,6 +245,11 @@ tar -xzf backup-20240101.tar.gz
 - Ensure correct file format
 - Check disk space
 
+**Message board not loading:**
+- Ensure database migrations have run
+- Check that the `/static/uploads/messages` directory exists
+- Verify write permissions
+
 **Admin panel not accessible:**
 - Verify the admin key
 - Check URL format: `/admin?key=your-key`
@@ -228,9 +258,10 @@ tar -xzf backup-20240101.tar.gz
 - Ensure ports 80/5000 are available
 - Check Docker logs: `docker-compose logs`
 
-**Guestbook not saving:**
-- Ensure database is writable
-- Check that name and message fields are filled
+**Database migration errors:**
+- Ensure the migration script has run
+- Check database file permissions
+- Verify all directories exist
 
 ## 🤝 Contributing
 

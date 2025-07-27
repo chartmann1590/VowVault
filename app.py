@@ -22,6 +22,7 @@ app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL', 'sqlite:/
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['UPLOAD_FOLDER'] = 'static/uploads'
 app.config['GUESTBOOK_UPLOAD_FOLDER'] = 'static/uploads/guestbook'
+app.config['MESSAGE_UPLOAD_FOLDER'] = 'static/uploads/messages'
 app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # 16MB max file size
 app.config['ALLOWED_EXTENSIONS'] = {'png', 'jpg', 'jpeg', 'gif', 'webp'}
 
@@ -30,6 +31,7 @@ db = SQLAlchemy(app)
 # Ensure upload directories exist
 os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
 os.makedirs(app.config['GUESTBOOK_UPLOAD_FOLDER'], exist_ok=True)
+os.makedirs(app.config['MESSAGE_UPLOAD_FOLDER'], exist_ok=True)
 
 # Database Models
 class Photo(db.Model):
@@ -60,7 +62,32 @@ class GuestbookEntry(db.Model):
     name = db.Column(db.String(100), nullable=False)
     message = db.Column(db.Text, nullable=False)
     location = db.Column(db.String(100))
-    photo_filename = db.Column(db.String(255))  # New field for optional photo
+    photo_filename = db.Column(db.String(255))
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+# New Message Board Models
+class Message(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    author_name = db.Column(db.String(100), nullable=False, default='Anonymous')
+    content = db.Column(db.Text, nullable=False)
+    photo_filename = db.Column(db.String(255))
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    likes = db.Column(db.Integer, default=0)
+    is_hidden = db.Column(db.Boolean, default=False)
+    message_comments = db.relationship('MessageComment', backref='message', lazy=True, cascade='all, delete-orphan')
+
+class MessageComment(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    message_id = db.Column(db.Integer, db.ForeignKey('message.id'), nullable=False)
+    commenter_name = db.Column(db.String(100), default='Anonymous')
+    content = db.Column(db.Text, nullable=False)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    is_hidden = db.Column(db.Boolean, default=False)
+
+class MessageLike(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    message_id = db.Column(db.Integer, db.ForeignKey('message.id'), nullable=False)
+    user_identifier = db.Column(db.String(100), nullable=False)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
 class Settings(db.Model):
@@ -217,6 +244,119 @@ def sign_guestbook():
     user_name = request.cookies.get('user_name', '')
     return render_template('sign_guestbook.html', user_name=user_name)
 
+# Message Board Routes
+@app.route('/messages')
+def message_board():
+    user_name = request.cookies.get('user_name', '')
+    user_identifier = request.cookies.get('user_identifier', '')
+    
+    # Get all visible messages
+    messages = Message.query.filter_by(is_hidden=False).order_by(Message.created_at.desc()).all()
+    
+    # Check which messages the user has liked
+    liked_messages = set()
+    if user_identifier:
+        likes = MessageLike.query.filter_by(user_identifier=user_identifier).all()
+        liked_messages = {like.message_id for like in likes}
+    
+    return render_template('message_board.html', 
+                         user_name=user_name, 
+                         messages=messages,
+                         liked_messages=liked_messages)
+
+@app.route('/messages/new', methods=['GET', 'POST'])
+def new_message():
+    if request.method == 'POST':
+        author_name = request.form.get('author_name', '').strip() or 'Anonymous'
+        content = request.form.get('content', '').strip()
+        
+        if content:
+            # Handle optional photo upload
+            photo_filename = None
+            if 'photo' in request.files:
+                file = request.files['photo']
+                if file and file.filename != '' and allowed_file(file.filename):
+                    filename = secure_filename(file.filename)
+                    timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+                    filename = f"message_{timestamp}_{filename}"
+                    filepath = os.path.join(app.config['MESSAGE_UPLOAD_FOLDER'], filename)
+                    file.save(filepath)
+                    photo_filename = filename
+            
+            message = Message(
+                author_name=author_name,
+                content=content,
+                photo_filename=photo_filename
+            )
+            db.session.add(message)
+            db.session.commit()
+            
+            # Save user name in cookie
+            resp = make_response(redirect(url_for('message_board')))
+            resp.set_cookie('user_name', author_name, max_age=30*24*60*60)  # 30 days
+            return resp
+        else:
+            return render_template('new_message.html', 
+                                 user_name=request.cookies.get('user_name', ''),
+                                 error='Message content is required')
+    
+    user_name = request.cookies.get('user_name', '')
+    return render_template('new_message.html', user_name=user_name)
+
+@app.route('/api/message/<int:message_id>/like', methods=['POST'])
+def toggle_message_like(message_id):
+    message = Message.query.get_or_404(message_id)
+    user_identifier = request.cookies.get('user_identifier', '')
+    
+    if not user_identifier:
+        user_identifier = secrets.token_hex(16)
+    
+    existing_like = MessageLike.query.filter_by(message_id=message_id, user_identifier=user_identifier).first()
+    
+    if existing_like:
+        db.session.delete(existing_like)
+        message.likes = max(0, message.likes - 1)
+        liked = False
+    else:
+        new_like = MessageLike(message_id=message_id, user_identifier=user_identifier)
+        db.session.add(new_like)
+        message.likes += 1
+        liked = True
+    
+    db.session.commit()
+    
+    resp = jsonify({'likes': message.likes, 'liked': liked})
+    resp.set_cookie('user_identifier', user_identifier, max_age=365*24*60*60)  # 1 year
+    return resp
+
+@app.route('/api/message/<int:message_id>/comment', methods=['POST'])
+def add_message_comment(message_id):
+    message = Message.query.get_or_404(message_id)
+    data = request.get_json()
+    
+    commenter_name = data.get('commenter_name', 'Anonymous').strip() or 'Anonymous'
+    content = data.get('content', '').strip()
+    
+    if not content:
+        return jsonify({'error': 'Comment cannot be empty'}), 400
+    
+    comment = MessageComment(
+        message_id=message_id,
+        commenter_name=commenter_name,
+        content=content
+    )
+    db.session.add(comment)
+    db.session.commit()
+    
+    resp = jsonify({
+        'id': comment.id,
+        'commenter_name': comment.commenter_name,
+        'content': comment.content,
+        'created_at': comment.created_at.strftime('%B %d, %Y at %I:%M %p')
+    })
+    resp.set_cookie('user_name', commenter_name, max_age=30*24*60*60)  # 30 days
+    return resp
+
 @app.route('/api/like/<int:photo_id>', methods=['POST'])
 def toggle_like(photo_id):
     photo = Photo.query.get_or_404(photo_id)
@@ -289,6 +429,12 @@ def admin():
     total_comments = Comment.query.count()
     guestbook_entries = GuestbookEntry.query.order_by(GuestbookEntry.created_at.desc()).all()
     
+    # Get messages for admin
+    all_messages = Message.query.order_by(Message.created_at.desc()).all()
+    visible_messages = [m for m in all_messages if not m.is_hidden]
+    hidden_messages = [m for m in all_messages if m.is_hidden]
+    total_message_comments = MessageComment.query.count()
+    
     # Get saved settings
     public_url = Settings.get('public_url', '')
     qr_settings = Settings.get('qr_settings', '{}')
@@ -304,6 +450,10 @@ def admin():
                          total_comments=total_comments,
                          guestbook_entries=guestbook_entries,
                          total_guestbook=len(guestbook_entries),
+                         visible_messages=visible_messages,
+                         hidden_messages=hidden_messages,
+                         total_messages=len(visible_messages),
+                         total_message_comments=total_message_comments,
                          public_url=public_url,
                          qr_settings=qr_settings,
                          welcome_settings=welcome_settings)
@@ -344,6 +494,62 @@ def delete_guestbook_entry(entry_id):
             pass
     
     db.session.delete(entry)
+    db.session.commit()
+    
+    return redirect(url_for('admin', key=admin_key))
+
+@app.route('/admin/toggle-message/<int:message_id>')
+def toggle_message_visibility(message_id):
+    admin_key = request.args.get('key', '')
+    if admin_key != 'wedding2024':
+        return "Unauthorized", 401
+    
+    message = Message.query.get_or_404(message_id)
+    message.is_hidden = not message.is_hidden
+    db.session.commit()
+    
+    return redirect(url_for('admin', key=admin_key))
+
+@app.route('/admin/delete-message/<int:message_id>')
+def delete_message(message_id):
+    admin_key = request.args.get('key', '')
+    if admin_key != 'wedding2024':
+        return "Unauthorized", 401
+    
+    message = Message.query.get_or_404(message_id)
+    
+    # Delete the photo file if exists
+    if message.photo_filename:
+        try:
+            os.remove(os.path.join(app.config['MESSAGE_UPLOAD_FOLDER'], message.photo_filename))
+        except:
+            pass
+    
+    db.session.delete(message)
+    db.session.commit()
+    
+    return redirect(url_for('admin', key=admin_key))
+
+@app.route('/admin/toggle-message-comment/<int:comment_id>')
+def toggle_message_comment_visibility(comment_id):
+    admin_key = request.args.get('key', '')
+    if admin_key != 'wedding2024':
+        return "Unauthorized", 401
+    
+    comment = MessageComment.query.get_or_404(comment_id)
+    comment.is_hidden = not comment.is_hidden
+    db.session.commit()
+    
+    return redirect(url_for('admin', key=admin_key))
+
+@app.route('/admin/delete-message-comment/<int:comment_id>')
+def delete_message_comment(comment_id):
+    admin_key = request.args.get('key', '')
+    if admin_key != 'wedding2024':
+        return "Unauthorized", 401
+    
+    comment = MessageComment.query.get_or_404(comment_id)
+    db.session.delete(comment)
     db.session.commit()
     
     return redirect(url_for('admin', key=admin_key))
