@@ -29,8 +29,8 @@ A beautiful, self-hosted wedding photo gallery application that allows wedding g
 
 1. Clone the repository:
 ```bash
-git clone https://github.com/yourusername/wedding-photo-gallery.git
-cd wedding-photo-gallery
+git clone https://github.com/chartmann1590/WeddingShare.git
+cd WeddingShare
 ```
 
 2. Create necessary directories:
@@ -51,8 +51,8 @@ docker-compose up -d
 
 1. Clone and setup:
 ```bash
-git clone https://github.com/yourusername/wedding-photo-gallery.git
-cd wedding-photo-gallery
+git clone https://github.com/chartmann1590/WeddingShare.git
+cd WeddingShare
 python -m venv venv
 source venv/bin/activate  # On Windows: venv\Scripts\activate
 pip install -r requirements.txt
