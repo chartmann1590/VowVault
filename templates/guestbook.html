@@ -1,0 +1,173 @@
+{% extends "base.html" %}
+
+{% block title %}Guestbook - Wedding Gallery{% endblock %}
+
+{% block extra_styles %}
+<style>
+    .guestbook-header {
+        text-align: center;
+        margin-bottom: 3rem;
+    }
+
+    .guestbook-header h2 {
+        font-family: 'Playfair Display', serif;
+        font-size: 3rem;
+        color: #8b7355;
+        margin-bottom: 1rem;
+    }
+
+    .guestbook-header p {
+        color: #6b5d54;
+        font-size: 1.2rem;
+        margin-bottom: 2rem;
+    }
+
+    .sign-guestbook-btn {
+        display: inline-block;
+        padding: 1rem 3rem;
+        background-color: #8b7355;
+        color: white;
+        text-decoration: none;
+        border-radius: 30px;
+        font-size: 1.1rem;
+        font-weight: 500;
+        transition: all 0.3s ease;
+        margin-bottom: 3rem;
+    }
+
+    .sign-guestbook-btn:hover {
+        background-color: #6b5d54;
+        transform: translateY(-2px);
+        box-shadow: 0 5px 20px rgba(139, 115, 85, 0.3);
+    }
+
+    .entries-container {
+        max-width: 800px;
+        margin: 0 auto;
+    }
+
+    .entry-card {
+        background: white;
+        border-radius: 15px;
+        padding: 2rem;
+        margin-bottom: 1.5rem;
+        box-shadow: 0 5px 20px rgba(0,0,0,0.05);
+        transition: all 0.3s ease;
+        border-left: 4px solid #8b7355;
+    }
+
+    .entry-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+    }
+
+    .entry-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: baseline;
+        margin-bottom: 1rem;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+    }
+
+    .entry-name {
+        font-family: 'Playfair Display', serif;
+        font-size: 1.5rem;
+        color: #8b7355;
+        font-weight: 600;
+    }
+
+    .entry-location {
+        color: #999;
+        font-size: 0.95rem;
+        font-style: italic;
+    }
+
+    .entry-date {
+        color: #999;
+        font-size: 0.85rem;
+    }
+
+    .entry-message {
+        color: #555;
+        line-height: 1.8;
+        font-size: 1.05rem;
+        margin-top: 1rem;
+        white-space: pre-wrap;
+    }
+
+    .empty-state {
+        text-align: center;
+        padding: 4rem 0;
+    }
+
+    .empty-state h3 {
+        font-family: 'Playfair Display', serif;
+        font-size: 2rem;
+        color: #8b7355;
+        margin-bottom: 1rem;
+    }
+
+    .empty-state p {
+        color: #6b5d54;
+        font-size: 1.1rem;
+        margin-bottom: 2rem;
+    }
+
+    .decorative-divider {
+        text-align: center;
+        margin: 3rem 0;
+        color: #8b7355;
+        font-size: 1.5rem;
+    }
+
+    @media (max-width: 768px) {
+        .guestbook-header h2 {
+            font-size: 2rem;
+        }
+
+        .entry-card {
+            padding: 1.5rem;
+        }
+
+        .entry-name {
+            font-size: 1.25rem;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="guestbook-header">
+    <h2>Our Wedding Guestbook</h2>
+    <p>Thank you for your warm wishes and memories</p>
+    <a href="{{ url_for('sign_guestbook') }}" class="sign-guestbook-btn">Sign the Guestbook</a>
+</div>
+
+<div class="entries-container">
+    {% if entries %}
+        {% for entry in entries %}
+        <div class="entry-card">
+            <div class="entry-header">
+                <div>
+                    <span class="entry-name">{{ entry.name }}</span>
+                    {% if entry.location %}
+                    <span class="entry-location">from {{ entry.location }}</span>
+                    {% endif %}
+                </div>
+                <span class="entry-date">{{ entry.created_at.strftime('%B %d, %Y') }}</span>
+            </div>
+            <div class="entry-message">{{ entry.message }}</div>
+        </div>
+        {% endfor %}
+        
+        <div class="decorative-divider">❤️ ❤️ ❤️</div>
+    {% else %}
+        <div class="empty-state">
+            <h3>Be the first to sign!</h3>
+            <p>Leave your wishes for the happy couple</p>
+            <a href="{{ url_for('sign_guestbook') }}" class="btn">Sign the Guestbook</a>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}

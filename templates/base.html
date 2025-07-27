@@ -188,6 +188,8 @@
 
             nav ul {
                 gap: 1rem;
+                flex-wrap: wrap;
+                justify-content: center;
             }
         }
     </style>
@@ -202,6 +204,7 @@
                     <ul>
                         <li><a href="{{ url_for('index') }}">Gallery</a></li>
                         <li><a href="{{ url_for('upload') }}">Upload Photo</a></li>
+                        <li><a href="{{ url_for('guestbook') }}">Guestbook</a></li>
                     </ul>
                 </nav>
             </div>

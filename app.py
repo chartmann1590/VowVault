@@ -53,6 +53,13 @@ class Like(db.Model):
     user_identifier = db.Column(db.String(100), nullable=False)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
+class GuestbookEntry(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(100), nullable=False)
+    message = db.Column(db.Text, nullable=False)
+    location = db.Column(db.String(100))
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
 class Settings(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     key = db.Column(db.String(50), unique=True, nullable=False)
@@ -160,6 +167,40 @@ def view_photo(photo_id):
     
     return render_template('photo_detail.html', photo=photo, user_name=user_name, has_liked=has_liked)
 
+@app.route('/guestbook')
+def guestbook():
+    user_name = request.cookies.get('user_name', '')
+    entries = GuestbookEntry.query.order_by(GuestbookEntry.created_at.desc()).all()
+    return render_template('guestbook.html', user_name=user_name, entries=entries)
+
+@app.route('/guestbook/sign', methods=['GET', 'POST'])
+def sign_guestbook():
+    if request.method == 'POST':
+        name = request.form.get('name', '').strip()
+        message = request.form.get('message', '').strip()
+        location = request.form.get('location', '').strip()
+        
+        if name and message:
+            entry = GuestbookEntry(
+                name=name,
+                message=message,
+                location=location
+            )
+            db.session.add(entry)
+            db.session.commit()
+            
+            # Save user name in cookie
+            resp = make_response(redirect(url_for('guestbook')))
+            resp.set_cookie('user_name', name, max_age=30*24*60*60)  # 30 days
+            return resp
+        else:
+            return render_template('sign_guestbook.html', 
+                                 user_name=request.cookies.get('user_name', ''),
+                                 error='Name and message are required')
+    
+    user_name = request.cookies.get('user_name', '')
+    return render_template('sign_guestbook.html', user_name=user_name)
+
 @app.route('/api/like/<int:photo_id>', methods=['POST'])
 def toggle_like(photo_id):
     photo = Photo.query.get_or_404(photo_id)
@@ -214,6 +255,12 @@ def add_comment(photo_id):
     resp.set_cookie('user_name', commenter_name, max_age=30*24*60*60)  # 30 days
     return resp
 
+@app.route('/api/mark-welcome-seen', methods=['POST'])
+def mark_welcome_seen():
+    resp = jsonify({'success': True})
+    resp.set_cookie('has_seen_welcome', 'true', max_age=365*24*60*60)  # 1 year
+    return resp
+
 @app.route('/admin')
 def admin():
     # Simple admin authentication - in production, use proper authentication
@@ -224,6 +271,7 @@ def admin():
     photos = Photo.query.order_by(Photo.upload_date.desc()).all()
     total_likes = sum(photo.likes for photo in photos)
     total_comments = Comment.query.count()
+    guestbook_entries = GuestbookEntry.query.order_by(GuestbookEntry.created_at.desc()).all()
     
     # Get saved settings
     public_url = Settings.get('public_url', '')
@@ -238,6 +286,8 @@ def admin():
                          total_photos=len(photos),
                          total_likes=total_likes,
                          total_comments=total_comments,
+                         guestbook_entries=guestbook_entries,
+                         total_guestbook=len(guestbook_entries),
                          public_url=public_url,
                          qr_settings=qr_settings,
                          welcome_settings=welcome_settings)
@@ -261,6 +311,35 @@ def delete_photo(photo_id):
     db.session.commit()
     
     return redirect(url_for('admin', key=admin_key))
+
+@app.route('/admin/delete-guestbook/<int:entry_id>')
+def delete_guestbook_entry(entry_id):
+    admin_key = request.args.get('key', '')
+    if admin_key != 'wedding2024':
+        return "Unauthorized", 401
+    
+    entry = GuestbookEntry.query.get_or_404(entry_id)
+    db.session.delete(entry)
+    db.session.commit()
+    
+    return redirect(url_for('admin', key=admin_key))
+
+@app.route('/admin/edit-guestbook/<int:entry_id>', methods=['POST'])
+def edit_guestbook_entry(entry_id):
+    admin_key = request.args.get('key', '')
+    if admin_key != 'wedding2024':
+        return "Unauthorized", 401
+    
+    entry = GuestbookEntry.query.get_or_404(entry_id)
+    data = request.get_json()
+    
+    entry.name = data.get('name', entry.name)
+    entry.message = data.get('message', entry.message)
+    entry.location = data.get('location', entry.location)
+    
+    db.session.commit()
+    
+    return jsonify({'success': True})
 
 @app.route('/admin/save-settings', methods=['POST'])
 def save_settings():

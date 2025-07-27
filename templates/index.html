@@ -247,6 +247,13 @@
         text-align: center;
     }
 
+    .modal-actions {
+        display: flex;
+        gap: 1rem;
+        justify-content: center;
+        flex-wrap: wrap;
+    }
+
     .close-modal-btn {
         background: #8b7355;
         color: white;
@@ -265,6 +272,26 @@
         box-shadow: 0 5px 20px rgba(139, 115, 85, 0.3);
     }
 
+    .guestbook-modal-btn {
+        background: #e8ddd3;
+        color: #6b5d54;
+        border: none;
+        padding: 1rem 2rem;
+        border-radius: 30px;
+        font-size: 1.1rem;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        font-weight: 500;
+        text-decoration: none;
+        display: inline-block;
+    }
+
+    .guestbook-modal-btn:hover {
+        background: #d4c4b5;
+        transform: translateY(-2px);
+        box-shadow: 0 5px 20px rgba(232, 221, 211, 0.3);
+    }
+
     @media (max-width: 768px) {
         .gallery-header h2 {
             font-size: 2rem;
@@ -281,6 +308,14 @@
 
         .modal-body {
             padding: 1.5rem;
+        }
+
+        .modal-actions {
+            flex-direction: column;
+        }
+
+        .modal-actions > * {
+            width: 100%;
         }
     }
 </style>
@@ -315,7 +350,10 @@
             {% endif %}
         </div>
         <div class="modal-footer">
-            <button class="close-modal-btn" onclick="closeWelcomeModal()">Enter Gallery</button>
+            <div class="modal-actions">
+                <a href="{{ url_for('sign_guestbook') }}" class="guestbook-modal-btn">Sign Our Guestbook</a>
+                <button class="close-modal-btn" onclick="closeWelcomeModal()">Enter Gallery</button>
+            </div>
         </div>
     </div>
 </div>

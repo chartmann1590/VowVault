@@ -1,0 +1,205 @@
+{% extends "base.html" %}
+
+{% block title %}Sign Guestbook - Wedding Gallery{% endblock %}
+
+{% block extra_styles %}
+<style>
+    .sign-container {
+        max-width: 600px;
+        margin: 0 auto;
+    }
+
+    .sign-header {
+        text-align: center;
+        margin-bottom: 3rem;
+    }
+
+    .sign-header h2 {
+        font-family: 'Playfair Display', serif;
+        font-size: 2.5rem;
+        color: #8b7355;
+        margin-bottom: 1rem;
+    }
+
+    .sign-header p {
+        color: #6b5d54;
+        font-size: 1.1rem;
+    }
+
+    .sign-form {
+        background: white;
+        padding: 2.5rem;
+        border-radius: 20px;
+        box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+    }
+
+    .form-intro {
+        text-align: center;
+        margin-bottom: 2rem;
+        padding: 1.5rem;
+        background: #f9f5f0;
+        border-radius: 15px;
+    }
+
+    .form-intro p {
+        color: #6b5d54;
+        font-style: italic;
+        line-height: 1.6;
+    }
+
+    .form-actions {
+        display: flex;
+        gap: 1rem;
+        margin-top: 2rem;
+    }
+
+    .form-actions .btn {
+        flex: 1;
+    }
+
+    .error-message {
+        background-color: #f8d7da;
+        color: #721c24;
+        padding: 1rem;
+        border-radius: 10px;
+        margin-bottom: 1.5rem;
+        border: 1px solid #f5c6cb;
+    }
+
+    .preview-section {
+        margin-top: 2rem;
+        padding: 1.5rem;
+        background: #f9f5f0;
+        border-radius: 15px;
+        display: none;
+    }
+
+    .preview-title {
+        font-family: 'Playfair Display', serif;
+        color: #8b7355;
+        font-size: 1.2rem;
+        margin-bottom: 1rem;
+    }
+
+    .preview-content {
+        background: white;
+        padding: 1.5rem;
+        border-radius: 10px;
+        border-left: 4px solid #8b7355;
+    }
+
+    .preview-name {
+        font-weight: 600;
+        color: #8b7355;
+        margin-bottom: 0.5rem;
+    }
+
+    .preview-message {
+        color: #555;
+        line-height: 1.6;
+        white-space: pre-wrap;
+    }
+
+    @media (max-width: 768px) {
+        .sign-form {
+            padding: 1.5rem;
+        }
+
+        .form-actions {
+            flex-direction: column;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="sign-container">
+    <div class="sign-header">
+        <h2>Sign Our Guestbook</h2>
+        <p>Leave your wishes and memories for us to cherish</p>
+    </div>
+
+    <form method="POST" class="sign-form" id="guestbookForm">
+        {% if error %}
+        <div class="error-message">{{ error }}</div>
+        {% endif %}
+
+        <div class="form-intro">
+            <p>Your message will become part of our wedding story. Share a memory, offer advice, or simply send your love.</p>
+        </div>
+
+        <div class="form-group">
+            <label for="name">Your Name *</label>
+            <input type="text" 
+                   id="name" 
+                   name="name" 
+                   placeholder="John Smith"
+                   value="{{ user_name }}"
+                   required>
+        </div>
+
+        <div class="form-group">
+            <label for="location">Location (Optional)</label>
+            <input type="text" 
+                   id="location" 
+                   name="location" 
+                   placeholder="New York, NY">
+        </div>
+
+        <div class="form-group">
+            <label for="message">Your Message *</label>
+            <textarea id="message" 
+                      name="message" 
+                      rows="6"
+                      placeholder="Wishing you both a lifetime of love and happiness..."
+                      required></textarea>
+        </div>
+
+        <div class="preview-section" id="previewSection">
+            <h3 class="preview-title">Preview</h3>
+            <div class="preview-content">
+                <div class="preview-name" id="previewName"></div>
+                <div class="preview-message" id="previewMessage"></div>
+            </div>
+        </div>
+
+        <div class="form-actions">
+            <button type="submit" class="btn">Sign Guestbook</button>
+            <a href="{{ url_for('guestbook') }}" class="btn btn-secondary">View Guestbook</a>
+        </div>
+    </form>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    const nameInput = document.getElementById('name');
+    const messageInput = document.getElementById('message');
+    const previewSection = document.getElementById('previewSection');
+    const previewName = document.getElementById('previewName');
+    const previewMessage = document.getElementById('previewMessage');
+
+    function updatePreview() {
+        const name = nameInput.value.trim();
+        const message = messageInput.value.trim();
+
+        if (name || message) {
+            previewSection.style.display = 'block';
+            previewName.textContent = name || 'Anonymous';
+            previewMessage.textContent = message || '';
+        } else {
+            previewSection.style.display = 'none';
+        }
+    }
+
+    nameInput.addEventListener('input', updatePreview);
+    messageInput.addEventListener('input', updatePreview);
+
+    // Form submission
+    document.getElementById('guestbookForm').addEventListener('submit', function(e) {
+        const submitButton = e.target.querySelector('button[type="submit"]');
+        submitButton.textContent = 'Signing...';
+        submitButton.disabled = true;
+    });
+</script>
+{% endblock %}

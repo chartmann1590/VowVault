@@ -1,263 +1,4 @@
-</div>
-
-    <!-- Welcome Modal Settings Section -->
-    <div class="section-card">
-        <div class="section-header">
-            <h3>Welcome Modal Settings</h3>
-        </div>
-        <div class="section-content">
-            <div class="qr-settings-grid">
-                <div class="qr-form-section">
-                    <h4 style="color: #8b7355; margin-bottom: 1.5rem;">Modal Content</h4>
-                    
-                    <div class="form-group">
-                        <label style="display: flex; align-items: center; gap: 0.5rem;">
-                            <input type="checkbox" 
-                                   id="modal_enabled" 
-                                   {% if welcome_settings.get('enabled', True) %}checked{% endif %}>
-                            Enable Welcome Modal
-                        </label>
-                    </div>
-
-                    <div class="form-group">
-                        <label style="display: flex; align-items: center; gap: 0.5rem;">
-                            <input type="checkbox" 
-                                   id="modal_show_once" 
-                                   {% if welcome_settings.get('show_once', True) %}checked{% endif %}>
-                            Show Only Once per User
-                        </label>
-                    </div>
-
-                    <div class="form-group">
-                        <label for="modal_title">Modal Title</label>
-                        <input type="text" 
-                               id="modal_title" 
-                               placeholder="Welcome to Our Wedding Gallery!"
-                               value="{{ welcome_settings.get('title', 'Welcome to Our Wedding Gallery!') }}">
-                    </div>
-
-                    <div class="form-group">
-                        <label for="modal_message">Welcome Message</label>
-                        <textarea id="modal_message" 
-                                  placeholder="Thank you for celebrating with us..."
-                                  rows="4">{{ welcome_settings.get('message', 'Thank you so much for celebrating with us! We\'d love to see the wedding through your eyes. Feel free to upload your photos and browse the gallery.') }}</textarea>
-                    </div>
-
-                    <div class="form-group">
-                        <label for="couple_photo_url">Couple Photo URL (optional)</label>
-                        <input type="text" 
-                               id="couple_photo_url" 
-                               placeholder="https://example.com/our-photo.jpg"
-                               value="{{ welcome_settings.get('couple_photo', '') }}">
-                        <small style="color: #666; display: block; margin-top: 0.5rem;">
-                            Enter a URL to your couple photo to display in the modal
-                        </small>
-                    </div>
-
-                    <div class="form-group">
-                        <label>Instructions (one per line)</label>
-                        <textarea id="modal_instructions" 
-                                  placeholder="Click Upload Photo to share your pictures&#10;Browse the gallery to see all photos"
-                                  rows="6">{% for inst in welcome_settings.get('instructions', ['Click "Upload Photo" to share your pictures', 'Browse the gallery to see all photos', 'Click on any photo to like or comment', 'No login required - just add your name when uploading or commenting']) %}{{ inst }}
-{% endfor %}</textarea>
-                    </div>
-                </div>
-
-                <div class="qr-preview">
-                    <h4>Preview</h4>
-                    <div class="preview-content" style="text-align: left;">
-                        <h3 class="preview-title" id="previewModalTitle" style="text-align: center;">Welcome to Our Wedding Gallery!</h3>
-                        
-                        <div id="previewPhotoContainer" style="margin: 1rem 0; text-align: center; {% if not welcome_settings.get('couple_photo') %}display: none;{% endif %}">
-                            <img id="previewCouplePhoto" 
-                                 src="{{ welcome_settings.get('couple_photo', '') }}" 
-                                 style="max-width: 100%; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1);">
-                        </div>
-                        
-                        <p class="preview-message" id="previewModalMessage" style="text-align: center;">Thank you so much for celebrating with us!</p>
-                        
-                        <div style="background: #f9f5f0; padding: 1rem; border-radius: 8px; margin-top: 1rem;">
-                            <strong style="color: #8b7355;">How to Use:</strong>
-                            <ul id="previewInstructions" style="margin: 0.5rem 0 0 1rem; padding-left: 1rem; color: #666;">
-                                <li>Click "Upload Photo" to share</li>
-                                <li>Browse the gallery</li>
-                            </ul>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="button-group">
-                <button class="btn" onclick="saveAllSettings()">Save All Settings</button>
-            </div>
-        </div>
-    </div>
-
-    <div class="photos-table">
-        <div class="table-header">
-            <h3>All Photos</h3>
-        </div>
-        <div class="table-responsive">
-            <table>
-                <thead>
-                    <tr>
-                        <th>Preview</th>
-                        <th>Uploader</th>
-                        <th>Upload Date</th>
-                        <th>Likes</th>
-                        <th>Comments</th>
-                        <th>Actions</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for photo in photos %}
-                    <tr>
-                        <td>
-                            <img src="{{ url_for('static', filename='uploads/' + photo.filename) }}" 
-                                 alt="Thumbnail" 
-                                 class="photo-thumbnail">
-                        </td>
-                        <td>{{ photo.uploader_name }}</td>
-                        <td>{{ photo.upload_date.strftime('%b %d, %Y') }}</td>
-                        <td>{{ photo.likes }}</td>
-                        <td>{{ photo.comments|length }}</td>
-                        <td>
-                            <button class="delete-btn" 
-                                    onclick="confirmDelete({{ photo.id }}, '{{ photo.uploader_name }}')">
-                                Delete
-                            </button>
-                        </td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-        </div>
-    </div>
-</div>
-{% endblock %}
-
-{% block scripts %}
-<script>
-    // Preview updates for QR settings
-    document.getElementById('qr_title').addEventListener('input', function(e) {
-        document.getElementById('previewTitle').textContent = e.target.value || 'Share Your Wedding Photos!';
-    });
-
-    document.getElementById('qr_subtitle').addEventListener('input', function(e) {
-        document.getElementById('previewSubtitle').textContent = e.target.value || 'Scan to Upload & View Photos';
-    });
-
-    document.getElementById('qr_message').addEventListener('input', function(e) {
-        document.getElementById('previewMessage').textContent = e.target.value || 'We would love to see the wedding through your eyes!';
-    });
-
-    document.getElementById('couple_names').addEventListener('input', function(e) {
-        document.getElementById('previewCouple').textContent = e.target.value || 'The Happy Couple';
-    });
-
-    // Preview updates for Welcome Modal
-    document.getElementById('modal_title').addEventListener('input', function(e) {
-        document.getElementById('previewModalTitle').textContent = e.target.value || 'Welcome to Our Wedding Gallery!';
-    });
-
-    document.getElementById('modal_message').addEventListener('input', function(e) {
-        document.getElementById('previewModalMessage').textContent = e.target.value || 'Thank you so much for celebrating with us!';
-    });
-
-    document.getElementById('couple_photo_url').addEventListener('input', function(e) {
-        const url = e.target.value;
-        const container = document.getElementById('previewPhotoContainer');
-        const img = document.getElementById('previewCouplePhoto');
-        
-        if (url) {
-            img.src = url;
-            container.style.display = 'block';
-        } else {
-            container.style.display = 'none';
-        }
-    });
-
-    document.getElementById('modal_instructions').addEventListener('input', function(e) {
-        const instructions = e.target.value.split('\n').filter(line => line.trim());
-        const list = document.getElementById('previewInstructions');
-        list.innerHTML = instructions.map(inst => `<li>${inst}</li>`).join('');
-    });
-
-    function saveAllSettings() {
-        const urlParams = new URLSearchParams(window.location.search);
-        const key = urlParams.get('key');
-        
-        const instructions = document.getElementById('modal_instructions').value
-            .split('\n')
-            .filter(line => line.trim())
-            .map(line => line.trim());
-        
-        const settings = {
-            public_url: document.getElementById('public_url').value,
-            qr_settings: {
-                title: document.getElementById('qr_title').value,
-                subtitle: document.getElementById('qr_subtitle').value,
-                message: document.getElementById('qr_message').value,
-                couple_names: document.getElementById('couple_names').value
-            },
-            welcome_settings: {
-                enabled: document.getElementById('modal_enabled').checked,
-                show_once: document.getElementById('modal_show_once').checked,
-                title: document.getElementById('modal_title').value,
-                message: document.getElementById('modal_message').value,
-                couple_photo: document.getElementById('couple_photo_url').value,
-                instructions: instructions
-            }
-        };
-
-        fetch(`/admin/save-settings?key=${key}`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify(settings)
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                document.getElementById('successMessage').style.display = 'block';
-                setTimeout(() => {
-                    document.getElementById('successMessage').style.display = 'none';
-                }, 3000);
-            }
-        });
-    }
-
-    function generatePDF() {
-        const urlParams = new URLSearchParams(window.location.search);
-        const key = urlParams.get('key');
-        
-        const publicUrl = document.getElementById('public_url').value;
-        if (!publicUrl) {
-            alert('Please enter a public URL first');
-            return;
-        }
-
-        // Save settings first, then generate PDF
-        saveAllSettings();
-        
-        setTimeout(() => {
-            window.location.href = `/admin/generate-qr-pdf?key=${key}`;
-        }, 500);
-    }
-
-    function confirmDelete(photoId, uploaderName) {
-        if (confirm(`Are you sure you want to delete the photo uploaded by ${uploaderName}? This action cannot be undone.`)) {
-            const urlParams = new URLSearchParams(window.location.search);
-            const key = urlParams.get('key');
-            window.location.href = `/admin/delete/${photoId}?key=${key}`;
-        }
-    }
-
-    // Initialize preview on load
-    document.getElementById('modal_instructions').dispatchEvent(new Event('input'));
-</script>
-{% endblock %}{% extends "base.html" %}
+{% extends "base.html" %}
 
 {% block title %}Admin Dashboard - Wedding Gallery{% endblock %}
 
@@ -390,11 +131,12 @@
         margin-top: 1rem;
     }
 
-    .photos-table {
+    .photos-table, .guestbook-table {
         background: white;
         border-radius: 15px;
         overflow: hidden;
         box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+        margin-bottom: 3rem;
     }
 
     .table-header {
@@ -456,6 +198,23 @@
         transform: translateY(-2px);
     }
 
+    .edit-btn {
+        background: #8b7355;
+        color: white;
+        border: none;
+        padding: 0.5rem 1rem;
+        border-radius: 20px;
+        cursor: pointer;
+        font-size: 0.9rem;
+        transition: all 0.3s ease;
+        margin-right: 0.5rem;
+    }
+
+    .edit-btn:hover {
+        background: #6b5d54;
+        transform: translateY(-2px);
+    }
+
     .admin-notice {
         background: #fff3cd;
         border: 1px solid #ffeaa7;
@@ -490,6 +249,58 @@
         display: none;
     }
 
+    .guestbook-message {
+        max-width: 300px;
+        line-height: 1.5;
+        color: #666;
+    }
+
+    .guestbook-location {
+        color: #999;
+        font-style: italic;
+        font-size: 0.9rem;
+    }
+
+    /* Edit Modal */
+    .edit-modal {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0, 0, 0, 0.7);
+        z-index: 1000;
+        padding: 20px;
+        overflow-y: auto;
+    }
+
+    .edit-modal-content {
+        background: white;
+        max-width: 500px;
+        margin: 50px auto;
+        border-radius: 20px;
+        padding: 2rem;
+        box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+    }
+
+    .edit-modal-header {
+        margin-bottom: 1.5rem;
+    }
+
+    .edit-modal-header h3 {
+        color: #8b7355;
+        font-family: 'Playfair Display', serif;
+        font-size: 1.8rem;
+        margin: 0;
+    }
+
+    .modal-buttons {
+        display: flex;
+        gap: 1rem;
+        margin-top: 1.5rem;
+    }
+
     @media (max-width: 768px) {
         .admin-header {
             margin: -3rem -1.5rem 3rem -1.5rem;
@@ -514,6 +325,10 @@
 
         .table-responsive {
             overflow-x: auto;
+        }
+
+        .guestbook-message {
+            max-width: 200px;
         }
     }
 </style>
@@ -547,6 +362,10 @@
         <div class="stat-card">
             <div class="stat-value">{{ total_comments }}</div>
             <div class="stat-label">Total Comments</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-value">{{ total_guestbook }}</div>
+            <div class="stat-label">Guestbook Entries</div>
         </div>
     </div>
 
@@ -626,12 +445,152 @@
             </div>
 
             <div class="button-group">
-                <button class="btn" onclick="saveSettings()">Save Settings</button>
+                <button class="btn" onclick="saveAllSettings()">Save Settings</button>
                 <button class="btn btn-secondary" onclick="generatePDF()">Generate PDF</button>
             </div>
         </div>
     </div>
 
+    <!-- Welcome Modal Settings Section -->
+    <div class="section-card">
+        <div class="section-header">
+            <h3>Welcome Modal Settings</h3>
+        </div>
+        <div class="section-content">
+            <div class="qr-settings-grid">
+                <div class="qr-form-section">
+                    <h4 style="color: #8b7355; margin-bottom: 1.5rem;">Modal Content</h4>
+                    
+                    <div class="form-group">
+                        <label style="display: flex; align-items: center; gap: 0.5rem;">
+                            <input type="checkbox" 
+                                   id="modal_enabled" 
+                                   {% if welcome_settings.get('enabled', True) %}checked{% endif %}>
+                            Enable Welcome Modal
+                        </label>
+                    </div>
+
+                    <div class="form-group">
+                        <label style="display: flex; align-items: center; gap: 0.5rem;">
+                            <input type="checkbox" 
+                                   id="modal_show_once" 
+                                   {% if welcome_settings.get('show_once', True) %}checked{% endif %}>
+                            Show Only Once per User
+                        </label>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="modal_title">Modal Title</label>
+                        <input type="text" 
+                               id="modal_title" 
+                               placeholder="Welcome to Our Wedding Gallery!"
+                               value="{{ welcome_settings.get('title', 'Welcome to Our Wedding Gallery!') }}">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="modal_message">Welcome Message</label>
+                        <textarea id="modal_message" 
+                                  placeholder="Thank you for celebrating with us..."
+                                  rows="4">{{ welcome_settings.get('message', 'Thank you so much for celebrating with us! We\'d love to see the wedding through your eyes. Feel free to upload your photos and browse the gallery.') }}</textarea>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="couple_photo_url">Couple Photo URL (optional)</label>
+                        <input type="text" 
+                               id="couple_photo_url" 
+                               placeholder="https://example.com/our-photo.jpg"
+                               value="{{ welcome_settings.get('couple_photo', '') }}">
+                        <small style="color: #666; display: block; margin-top: 0.5rem;">
+                            Enter a URL to your couple photo to display in the modal
+                        </small>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Instructions (one per line)</label>
+                        <textarea id="modal_instructions" 
+                                  placeholder="Click Upload Photo to share your pictures&#10;Browse the gallery to see all photos"
+                                  rows="6">{% for inst in welcome_settings.get('instructions', ['Click "Upload Photo" to share your pictures', 'Browse the gallery to see all photos', 'Click on any photo to like or comment', 'No login required - just add your name when uploading or commenting']) %}{{ inst }}
+{% endfor %}</textarea>
+                    </div>
+                </div>
+
+                <div class="qr-preview">
+                    <h4>Preview</h4>
+                    <div class="preview-content" style="text-align: left;">
+                        <h3 class="preview-title" id="previewModalTitle" style="text-align: center;">Welcome to Our Wedding Gallery!</h3>
+                        
+                        <div id="previewPhotoContainer" style="margin: 1rem 0; text-align: center; {% if not welcome_settings.get('couple_photo') %}display: none;{% endif %}">
+                            <img id="previewCouplePhoto" 
+                                 src="{{ welcome_settings.get('couple_photo', '') }}" 
+                                 style="max-width: 100%; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1);">
+                        </div>
+                        
+                        <p class="preview-message" id="previewModalMessage" style="text-align: center;">Thank you so much for celebrating with us!</p>
+                        
+                        <div style="background: #f9f5f0; padding: 1rem; border-radius: 8px; margin-top: 1rem;">
+                            <strong style="color: #8b7355;">How to Use:</strong>
+                            <ul id="previewInstructions" style="margin: 0.5rem 0 0 1rem; padding-left: 1rem; color: #666;">
+                                <li>Click "Upload Photo" to share</li>
+                                <li>Browse the gallery</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="button-group">
+                <button class="btn" onclick="saveAllSettings()">Save All Settings</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Guestbook Management -->
+    <div class="guestbook-table">
+        <div class="table-header">
+            <h3>Guestbook Entries</h3>
+        </div>
+        <div class="table-responsive">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Message</th>
+                        <th>Location</th>
+                        <th>Date</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for entry in guestbook_entries %}
+                    <tr>
+                        <td>{{ entry.name }}</td>
+                        <td class="guestbook-message">{{ entry.message }}</td>
+                        <td>
+                            {% if entry.location %}
+                            <span class="guestbook-location">{{ entry.location }}</span>
+                            {% else %}
+                            -
+                            {% endif %}
+                        </td>
+                        <td>{{ entry.created_at.strftime('%b %d, %Y') }}</td>
+                        <td>
+                            <button class="edit-btn" 
+                                    onclick="editGuestbookEntry({{ entry.id }}, '{{ entry.name|e }}', '{{ entry.message|e }}', '{{ entry.location|e if entry.location else '' }}')">
+                                Edit
+                            </button>
+                            <button class="delete-btn" 
+                                    onclick="confirmDeleteGuestbook({{ entry.id }}, '{{ entry.name|e }}')">
+                                Delete
+                            </button>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Photos Management -->
     <div class="photos-table">
         <div class="table-header">
             <h3>All Photos</h3>
@@ -673,11 +632,39 @@
         </div>
     </div>
 </div>
+
+<!-- Edit Guestbook Modal -->
+<div class="edit-modal" id="editModal">
+    <div class="edit-modal-content">
+        <div class="edit-modal-header">
+            <h3>Edit Guestbook Entry</h3>
+        </div>
+        <form id="editForm">
+            <input type="hidden" id="editEntryId">
+            <div class="form-group">
+                <label for="editName">Name</label>
+                <input type="text" id="editName" required>
+            </div>
+            <div class="form-group">
+                <label for="editLocation">Location</label>
+                <input type="text" id="editLocation">
+            </div>
+            <div class="form-group">
+                <label for="editMessage">Message</label>
+                <textarea id="editMessage" rows="6" required></textarea>
+            </div>
+            <div class="modal-buttons">
+                <button type="submit" class="btn">Save Changes</button>
+                <button type="button" class="btn btn-secondary" onclick="closeEditModal()">Cancel</button>
+            </div>
+        </form>
+    </div>
+</div>
 {% endblock %}
 
 {% block scripts %}
 <script>
-    // Preview updates
+    // Preview updates for QR settings
     document.getElementById('qr_title').addEventListener('input', function(e) {
         document.getElementById('previewTitle').textContent = e.target.value || 'Share Your Wedding Photos!';
     });
@@ -694,9 +681,42 @@
         document.getElementById('previewCouple').textContent = e.target.value || 'The Happy Couple';
     });
 
-    function saveSettings() {
+    // Preview updates for Welcome Modal
+    document.getElementById('modal_title').addEventListener('input', function(e) {
+        document.getElementById('previewModalTitle').textContent = e.target.value || 'Welcome to Our Wedding Gallery!';
+    });
+
+    document.getElementById('modal_message').addEventListener('input', function(e) {
+        document.getElementById('previewModalMessage').textContent = e.target.value || 'Thank you so much for celebrating with us!';
+    });
+
+    document.getElementById('couple_photo_url').addEventListener('input', function(e) {
+        const url = e.target.value;
+        const container = document.getElementById('previewPhotoContainer');
+        const img = document.getElementById('previewCouplePhoto');
+        
+        if (url) {
+            img.src = url;
+            container.style.display = 'block';
+        } else {
+            container.style.display = 'none';
+        }
+    });
+
+    document.getElementById('modal_instructions').addEventListener('input', function(e) {
+        const instructions = e.target.value.split('\n').filter(line => line.trim());
+        const list = document.getElementById('previewInstructions');
+        list.innerHTML = instructions.map(inst => `<li>${inst}</li>`).join('');
+    });
+
+    function saveAllSettings() {
         const urlParams = new URLSearchParams(window.location.search);
         const key = urlParams.get('key');
+        
+        const instructions = document.getElementById('modal_instructions').value
+            .split('\n')
+            .filter(line => line.trim())
+            .map(line => line.trim());
         
         const settings = {
             public_url: document.getElementById('public_url').value,
@@ -705,6 +725,14 @@
                 subtitle: document.getElementById('qr_subtitle').value,
                 message: document.getElementById('qr_message').value,
                 couple_names: document.getElementById('couple_names').value
+            },
+            welcome_settings: {
+                enabled: document.getElementById('modal_enabled').checked,
+                show_once: document.getElementById('modal_show_once').checked,
+                title: document.getElementById('modal_title').value,
+                message: document.getElementById('modal_message').value,
+                couple_photo: document.getElementById('couple_photo_url').value,
+                instructions: instructions
             }
         };
 
@@ -737,7 +765,7 @@
         }
 
         // Save settings first, then generate PDF
-        saveSettings();
+        saveAllSettings();
         
         setTimeout(() => {
             window.location.href = `/admin/generate-qr-pdf?key=${key}`;
@@ -751,246 +779,57 @@
             window.location.href = `/admin/delete/${photoId}?key=${key}`;
         }
     }
-</script>
-{% endblock %}{% extends "base.html" %}
 
-{% block title %}Admin Dashboard - Wedding Gallery{% endblock %}
-
-{% block extra_styles %}
-<style>
-    .admin-header {
-        background: linear-gradient(135deg, #2c2c2c 0%, #4a4a4a 100%);
-        color: white;
-        padding: 3rem 0;
-        margin: -3rem -20px 3rem -20px;
-        text-align: center;
-    }
-
-    .admin-header h2 {
-        font-family: 'Playfair Display', serif;
-        font-size: 2.5rem;
-        margin-bottom: 1rem;
-    }
-
-    .stats-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-        gap: 2rem;
-        margin-bottom: 3rem;
-    }
-
-    .stat-card {
-        background: white;
-        padding: 2rem;
-        border-radius: 15px;
-        box-shadow: 0 5px 20px rgba(0,0,0,0.1);
-        text-align: center;
-    }
-
-    .stat-value {
-        font-size: 3rem;
-        font-weight: 700;
-        color: #8b7355;
-        margin-bottom: 0.5rem;
-    }
-
-    .stat-label {
-        color: #6b5d54;
-        font-size: 1.1rem;
-    }
-
-    .photos-table {
-        background: white;
-        border-radius: 15px;
-        overflow: hidden;
-        box-shadow: 0 5px 20px rgba(0,0,0,0.1);
-    }
-
-    .table-header {
-        background: #f9f5f0;
-        padding: 1.5rem 2rem;
-        border-bottom: 1px solid #e8ddd3;
-    }
-
-    .table-header h3 {
-        color: #8b7355;
-        font-family: 'Playfair Display', serif;
-        font-size: 1.8rem;
-        margin: 0;
-    }
-
-    table {
-        width: 100%;
-        border-collapse: collapse;
-    }
-
-    th {
-        background: #f9f5f0;
-        padding: 1rem;
-        text-align: left;
-        color: #6b5d54;
-        font-weight: 600;
-        border-bottom: 2px solid #e8ddd3;
-    }
-
-    td {
-        padding: 1rem;
-        border-bottom: 1px solid #f0f0f0;
-    }
-
-    tr:hover {
-        background: #faf9f7;
-    }
-
-    .photo-thumbnail {
-        width: 60px;
-        height: 60px;
-        object-fit: cover;
-        border-radius: 10px;
-    }
-
-    .delete-btn {
-        background: #dc3545;
-        color: white;
-        border: none;
-        padding: 0.5rem 1rem;
-        border-radius: 20px;
-        cursor: pointer;
-        font-size: 0.9rem;
-        transition: all 0.3s ease;
-    }
-
-    .delete-btn:hover {
-        background: #c82333;
-        transform: translateY(-2px);
-    }
-
-    .admin-notice {
-        background: #fff3cd;
-        border: 1px solid #ffeaa7;
-        color: #856404;
-        padding: 1rem;
-        border-radius: 10px;
-        margin-bottom: 2rem;
-        display: flex;
-        align-items: center;
-        gap: 1rem;
-    }
-
-    .admin-notice svg {
-        width: 24px;
-        height: 24px;
-        fill: currentColor;
-        flex-shrink: 0;
-    }
-
-    @media (max-width: 768px) {
-        .admin-header {
-            margin: -3rem -1.5rem 3rem -1.5rem;
-        }
-
-        table {
-            font-size: 0.9rem;
-        }
-
-        .photo-thumbnail {
-            width: 40px;
-            height: 40px;
-        }
-
-        th, td {
-            padding: 0.75rem 0.5rem;
-        }
-
-        .table-responsive {
-            overflow-x: auto;
-        }
-    }
-</style>
-{% endblock %}
-
-{% block content %}
-<div class="admin-header">
-    <h2>Admin Dashboard</h2>
-    <p>Manage wedding gallery photos and statistics</p>
-</div>
-
-<div class="container">
-    <div class="admin-notice">
-        <svg viewBox="0 0 24 24">
-            <path d="M12,2L1,21H23M12,6L19.53,19H4.47M11,10V14H13V10M11,16V18H13V16"/>
-        </svg>
-        <div>
-            <strong>Security Notice:</strong> This admin panel is protected by a simple key. For production use, implement proper authentication.
-        </div>
-    </div>
-
-    <div class="stats-grid">
-        <div class="stat-card">
-            <div class="stat-value">{{ total_photos }}</div>
-            <div class="stat-label">Total Photos</div>
-        </div>
-        <div class="stat-card">
-            <div class="stat-value">{{ total_likes }}</div>
-            <div class="stat-label">Total Likes</div>
-        </div>
-        <div class="stat-card">
-            <div class="stat-value">{{ total_comments }}</div>
-            <div class="stat-label">Total Comments</div>
-        </div>
-    </div>
-
-    <div class="photos-table">
-        <div class="table-header">
-            <h3>All Photos</h3>
-        </div>
-        <div class="table-responsive">
-            <table>
-                <thead>
-                    <tr>
-                        <th>Preview</th>
-                        <th>Uploader</th>
-                        <th>Upload Date</th>
-                        <th>Likes</th>
-                        <th>Comments</th>
-                        <th>Actions</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for photo in photos %}
-                    <tr>
-                        <td>
-                            <img src="{{ url_for('static', filename='uploads/' + photo.filename) }}" 
-                                 alt="Thumbnail" 
-                                 class="photo-thumbnail">
-                        </td>
-                        <td>{{ photo.uploader_name }}</td>
-                        <td>{{ photo.upload_date.strftime('%b %d, %Y') }}</td>
-                        <td>{{ photo.likes }}</td>
-                        <td>{{ photo.comments|length }}</td>
-                        <td>
-                            <button class="delete-btn" 
-                                    onclick="confirmDelete({{ photo.id }}, '{{ photo.uploader_name }}')">
-                                Delete
-                            </button>
-                        </td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-        </div>
-    </div>
-</div>
-{% endblock %}
-
-{% block scripts %}
-<script>
-    function confirmDelete(photoId, uploaderName) {
-        if (confirm(`Are you sure you want to delete the photo uploaded by ${uploaderName}? This action cannot be undone.`)) {
+    function confirmDeleteGuestbook(entryId, name) {
+        if (confirm(`Are you sure you want to delete the guestbook entry by ${name}? This action cannot be undone.`)) {
             const urlParams = new URLSearchParams(window.location.search);
             const key = urlParams.get('key');
-            window.location.href = `/admin/delete/${photoId}?key=${key}`;
+            window.location.href = `/admin/delete-guestbook/${entryId}?key=${key}`;
         }
     }
+
+    function editGuestbookEntry(id, name, message, location) {
+        document.getElementById('editEntryId').value = id;
+        document.getElementById('editName').value = name;
+        document.getElementById('editMessage').value = message;
+        document.getElementById('editLocation').value = location;
+        document.getElementById('editModal').style.display = 'block';
+    }
+
+    function closeEditModal() {
+        document.getElementById('editModal').style.display = 'none';
+    }
+
+    // Handle edit form submission
+    document.getElementById('editForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        const urlParams = new URLSearchParams(window.location.search);
+        const key = urlParams.get('key');
+        const entryId = document.getElementById('editEntryId').value;
+        
+        const data = {
+            name: document.getElementById('editName').value,
+            message: document.getElementById('editMessage').value,
+            location: document.getElementById('editLocation').value
+        };
+
+        fetch(`/admin/edit-guestbook/${entryId}?key=${key}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(data)
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                window.location.reload();
+            }
+        });
+    });
+
+    // Initialize preview on load
+    document.getElementById('modal_instructions').dispatchEvent(new Event('input'));
 </script>
 {% endblock %}
