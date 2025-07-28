@@ -10,25 +10,27 @@ A beautiful, self-hosted wedding photo gallery application that allows wedding g
 ## ✨ Features
 
 ### For Guests
-- 📸 **Easy Photo/Video Upload** - No login required, just upload and share
+- 📸 **Easy Photo/Video Upload** - No login required, just upload and share (photos and videos up to 50MB, videos max 15 seconds)
 - 🤳 **Virtual Photobooth** - Take photos with custom wedding borders using device camera
 - ❤️ **Like Photos/Videos** - Show appreciation for beautiful moments
-- 💬 **Leave Comments** - Share memories and messages on photos
+- 💬 **Leave Comments** - Share memories and messages on photos and videos
 - 💌 **Message Board** - Post messages with optional photos that everyone can see, like, and comment on
 - 📖 **Virtual Guestbook** - Sign a digital guestbook with wishes and optional photos
 - 📱 **Mobile Responsive** - Works perfectly on all devices
-- 🎉 **Welcome Modal** - Greet guests with a personalized message
+- 🎉 **Welcome Modal** - Greet guests with a personalized message and instructions
 
 ### For Admins
 - 🔐 **Admin Dashboard** - Secure admin area with simple key authentication
-- 📊 **Statistics** - View total photos, likes, comments, messages, guestbook entries, and photobooth photos
+- 📊 **Statistics** - View total photos, videos, likes, comments, messages, guestbook entries, and photobooth photos
 - 🗑️ **Content Management** - Delete inappropriate photos, messages, or guestbook entries
 - 👁️ **Hide/Show Messages** - Hide inappropriate messages without deleting them
 - ✏️ **Edit Guestbook** - Modify guestbook entries when needed
 - 🖼️ **Media Management** - View and manage photos attached to messages and guestbook entries
 - 🎨 **Photobooth Border Upload** - Upload custom borders for the virtual photobooth
 - 📄 **QR Code Generator** - Create beautiful PDFs with QR codes for easy sharing
-- ✏️ **Customizable Content** - Edit welcome messages and QR code content
+- ✏️ **Customizable Content** - Edit welcome messages, modal settings, and QR code content
+- 💾 **Batch Download** - Download all gallery content (photos, videos, data) as a comprehensive ZIP file
+- 🔄 **System Reset** - Complete system reset with confirmation to start fresh
 
 ## 🚀 Quick Start
 
@@ -112,15 +114,17 @@ wedding-photo-gallery/
 │   ├── base.html        # Base template
 │   ├── index.html       # Gallery page
 │   ├── upload.html      # Upload page
-│   ├── photo_detail.html # Photo detail page
+│   ├── photo_detail.html # Photo/video detail page
 │   ├── photobooth.html  # Virtual photobooth
 │   ├── message_board.html # Message board
 │   ├── new_message.html  # Post new message
 │   ├── admin.html       # Admin dashboard
 │   ├── guestbook.html   # View guestbook
-│   └── sign_guestbook.html # Sign guestbook
+│   ├── sign_guestbook.html # Sign guestbook
+│   ├── privacy_policy.html # Privacy policy page
+│   └── terms_of_use.html   # Terms of use page
 ├── static/              # Static files
-│   └── uploads/        # Uploaded photos (created automatically)
+│   └── uploads/        # Uploaded content (created automatically)
 │       ├── guestbook/  # Guestbook photos
 │       ├── messages/   # Message board photos
 │       ├── videos/     # Video uploads
@@ -145,6 +149,7 @@ wedding-photo-gallery/
 1. Go to Admin Dashboard
 2. Find "Welcome Modal Settings"
 3. Customize:
+   - Enable/disable the modal
    - Title and message
    - Upload a couple photo URL
    - Edit instructions for guests
@@ -152,8 +157,14 @@ wedding-photo-gallery/
 
 ### QR Code PDFs
 1. Set your public gallery URL
-2. Customize the PDF content
+2. Customize the PDF content (title, subtitle, message, couple names)
 3. Generate and print for your venue
+
+### Video Support
+- Automatic video thumbnail generation using FFmpeg
+- Video duration validation (max 15 seconds)
+- Support for multiple video formats
+- Mobile-friendly video playback
 
 ### Styling
 The app uses a warm, elegant color scheme perfect for weddings. To customize:
@@ -182,7 +193,10 @@ docker-compose -f docker-compose.prod.yml up -d
 
 ### Backup Strategy
 ```bash
-# Backup photos and database
+# Using the built-in batch download feature (recommended)
+# Access: /admin/batch-download?key=your-key
+
+# Or manual backup
 tar -czf backup-$(date +%Y%m%d).tar.gz uploads/ data/
 
 # Restore
@@ -199,8 +213,8 @@ tar -xzf backup-20240101.tar.gz
    - Choose to sign the guestbook, post a message, or enter the gallery
 
 2. **Upload Photos/Videos**
-   - Click "Upload Photo"
-   - Select your photo or video (videos max 15 seconds)
+   - Click "Upload Photo/Video"
+   - Select your photo or video (videos max 15 seconds, files max 50MB)
    - Add your name (optional)
    - Add a description (optional)
    - Click "Upload"
@@ -212,10 +226,11 @@ tar -xzf backup-20240101.tar.gz
    - Click "Take Photo" (3-second countdown)
    - Download the photo or upload it directly to the gallery
 
-4. **Interact with Photos**
-   - Click any photo to view details
+4. **Interact with Photos/Videos**
+   - Click any photo or video to view details
    - Click the heart to like
    - Leave comments with your name
+   - Videos play with controls and show duration
 
 5. **Post on Message Board**
    - Click "Message Board" in navigation
@@ -238,42 +253,64 @@ tar -xzf backup-20240101.tar.gz
 
 1. **Access Admin Panel**
    - Visit `/admin?key=your-key`
-   - View statistics including photobooth usage
-   - Manage photos, messages, and guestbook entries
+   - View comprehensive statistics including photobooth usage
+   - Manage photos, videos, messages, and guestbook entries
 
-2. **Configure Virtual Photobooth**
+2. **Batch Download All Content**
+   - Click "Download All Content" button
+   - Automatically downloads a ZIP file containing:
+     - All photos organized by type (photos/, videos/, photobooth/, etc.)
+     - All video thumbnails
+     - All guestbook and message photos
+     - Complete database export as JSON
+     - Photobooth border images
+
+3. **System Reset**
+   - Click "System Reset" button for complete data wipe
+   - Must type "RESET EVERYTHING" to confirm
+   - Deletes all database records and uploaded files
+   - Returns system to fresh state
+
+4. **Configure Virtual Photobooth**
    - Upload a custom border image (PNG with transparency recommended)
    - The border will appear as an overlay on the camera feed
    - Test the photobooth to ensure the border looks good
    - Monitor photobooth photo statistics
 
-3. **Manage Message Board**
-   - View all messages with their comments
+5. **Manage Message Board**
+   - View all messages with their comments (visible/hidden tabs)
    - Hide inappropriate messages (they remain in database but hidden from public)
    - Unhide previously hidden messages
    - Delete messages permanently
    - View and manage message comments
 
-4. **Manage Guestbook**
+6. **Manage Guestbook**
    - View all guestbook entries
-   - Edit entries to fix typos
+   - Edit entries to fix typos or inappropriate content
    - Delete inappropriate entries
    - View photos attached to entries
 
-5. **Generate QR Codes**
+7. **Configure Welcome Modal**
+   - Enable/disable the welcome modal
+   - Set custom title, message, and instructions
+   - Add couple photo URL
+   - Choose whether to show once per user or always
+
+8. **Generate QR Codes**
    - Enter your public URL
-   - Customize the message
-   - Download PDF
-   - Print for tables
+   - Customize the message and couple names
+   - Download professionally designed PDF
+   - Print for tables or wedding programs
 
 ## 🐛 Troubleshooting
 
 ### Common Issues
 
-**Photos not uploading:**
+**Photos/Videos not uploading:**
 - Check file size (max 50MB)
 - Ensure correct file format
 - Check disk space
+- For videos: ensure duration is under 15 seconds
 
 **Virtual Photobooth not working:**
 - Ensure HTTPS is enabled (camera access requires secure connection)
@@ -295,6 +332,16 @@ tar -xzf backup-20240101.tar.gz
 - Verify the admin key
 - Check URL format: `/admin?key=your-key`
 
+**Batch download fails:**
+- Check disk space for temporary ZIP file creation
+- Ensure all upload directories are accessible
+- Verify admin permissions
+
+**System reset not working:**
+- Ensure exact confirmation text: "RESET EVERYTHING"
+- Check file system permissions for deletion
+- Verify database write access
+
 **Docker issues:**
 - Ensure ports 80/5000 are available
 - Check Docker logs: `docker-compose logs`
@@ -303,6 +350,24 @@ tar -xzf backup-20240101.tar.gz
 - Ensure the migration script has run
 - Check database file permissions
 - Verify all directories exist
+
+## 🆕 What's New
+
+### Latest Features
+- **Video Support**: Upload and share wedding videos (max 15 seconds, 50MB)
+- **Automatic Thumbnails**: Video thumbnails generated automatically with FFmpeg
+- **Batch Download**: Complete backup of all content in organized ZIP file
+- **System Reset**: Admin can completely reset the system with confirmation
+- **Enhanced Admin Dashboard**: Better organization and new management tools
+- **Improved Mobile Experience**: Better responsive design for all devices
+- **Privacy & Terms Pages**: Professional legal pages for transparency
+
+### Recent Improvements
+- Better error handling for large files
+- Improved video playback controls
+- Enhanced security for admin functions
+- More comprehensive statistics tracking
+- Better organization of uploaded content
 
 ## 🤝 Contributing
 
@@ -322,6 +387,7 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 - Built with love for couples everywhere
 - Inspired by the joy of wedding celebrations
 - Thanks to all contributors
+- Special thanks to the Flask and Python communities
 
 ---
 

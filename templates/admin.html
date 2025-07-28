@@ -331,6 +331,15 @@
         margin-left: 0.5rem;
     }
 
+    .video-badge {
+        background: #6f42c1;
+        color: white;
+        padding: 0.25rem 0.5rem;
+        border-radius: 10px;
+        font-size: 0.75rem;
+        margin-left: 0.5rem;
+    }
+
     .delete-btn, .hide-btn, .show-btn {
         background: #dc3545;
         color: white;
@@ -894,6 +903,76 @@
         </div>
     </div>
 
+    <!-- Photos & Videos Management -->
+    <div class="photos-table">
+        <div class="table-header">
+            <h3>Photos & Videos Management</h3>
+        </div>
+        <div class="table-responsive">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Preview</th>
+                        <th>Uploader</th>
+                        <th>Upload Date</th>
+                        <th>Type</th>
+                        <th>Likes</th>
+                        <th>Comments</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for photo in photos %}
+                    <tr>
+                        <td>
+                            {% if photo.media_type == 'video' %}
+                                {% if photo.thumbnail_filename %}
+                                <img src="{{ url_for('static', filename='uploads/thumbnails/' + photo.thumbnail_filename) }}" 
+                                     alt="Video thumbnail" 
+                                     class="photo-thumbnail">
+                                {% else %}
+                                <div class="photo-thumbnail" style="background: #f0f0f0; display: flex; align-items: center; justify-content: center;">
+                                    <svg viewBox="0 0 24 24" width="30" height="30" fill="#999">
+                                        <path d="M17,10.5V7A1,1 0 0,0 16,6H4A1,1 0 0,0 3,7V17A1,1 0 0,0 4,18H16A1,1 0 0,0 17,17V13.5L21,17.5V6.5L17,10.5Z"/>
+                                    </svg>
+                                </div>
+                                {% endif %}
+                            {% elif photo.is_photobooth %}
+                                <img src="{{ url_for('static', filename='uploads/photobooth/' + photo.filename) }}" 
+                                     alt="Photobooth thumbnail" 
+                                     class="photo-thumbnail">
+                            {% else %}
+                                <img src="{{ url_for('static', filename='uploads/' + photo.filename) }}" 
+                                     alt="Thumbnail" 
+                                     class="photo-thumbnail">
+                            {% endif %}
+                        </td>
+                        <td>{{ photo.uploader_name }}</td>
+                        <td>{{ photo.upload_date.strftime('%b %d, %Y') }}</td>
+                        <td>
+                            {% if photo.media_type == 'video' %}
+                                <span class="video-badge">Video</span>
+                            {% elif photo.is_photobooth %}
+                                <span class="photobooth-badge">Photobooth</span>
+                            {% else %}
+                                Photo
+                            {% endif %}
+                        </td>
+                        <td>{{ photo.likes }}</td>
+                        <td>{{ photo.comments|length }}</td>
+                        <td>
+                            <button class="delete-btn" 
+                                    onclick="confirmDelete({{ photo.id }}, '{{ photo.uploader_name }}')">
+                                Delete
+                            </button>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
     <!-- Message Board Management -->
     <div class="messages-table">
         <div class="table-header">
@@ -1027,57 +1106,45 @@
             <table>
                 <thead>
                     <tr>
-                        <th>Preview</th>
-                        <th>Uploader</th>
-                        <th>Upload Date</th>
-                        <th>Type</th>
-                        <th>Likes</th>
-                        <th>Comments</th>
+                        <th>Name</th>
+                        <th>Message</th>
+                        <th>Location</th>
+                        <th>Photo</th>
+                        <th>Date</th>
                         <th>Actions</th>
                     </tr>
                 </thead>
                 <tbody>
-                    {% for photo in photos %}
+                    {% for entry in guestbook_entries %}
                     <tr>
+                        <td>{{ entry.name }}</td>
+                        <td class="guestbook-message">{{ entry.message[:100] }}{% if entry.message|length > 100 %}...{% endif %}</td>
                         <td>
-                            {% if photo.media_type == 'video' %}
-                                {% if photo.thumbnail_filename %}
-                                <img src="{{ url_for('static', filename='uploads/thumbnails/' + photo.thumbnail_filename) }}" 
-                                     alt="Video thumbnail" 
-                                     class="photo-thumbnail">
-                                {% else %}
-                                <div class="photo-thumbnail" style="background: #f0f0f0; display: flex; align-items: center; justify-content: center;">
-                                    <svg viewBox="0 0 24 24" width="30" height="30" fill="#999">
-                                        <path d="M17,10.5V7A1,1 0 0,0 16,6H4A1,1 0 0,0 3,7V17A1,1 0 0,0 4,18H16A1,1 0 0,0 17,17V13.5L21,17.5V6.5L17,10.5Z"/>
-                                    </svg>
-                                </div>
-                                {% endif %}
-                            {% elif photo.is_photobooth %}
-                                <img src="{{ url_for('static', filename='uploads/photobooth/' + photo.filename) }}" 
-                                     alt="Photobooth thumbnail" 
-                                     class="photo-thumbnail">
+                            {% if entry.location %}
+                                <span class="guestbook-location">{{ entry.location }}</span>
                             {% else %}
-                                <img src="{{ url_for('static', filename='uploads/' + photo.filename) }}" 
-                                     alt="Thumbnail" 
-                                     class="photo-thumbnail">
+                                -
                             {% endif %}
                         </td>
-                        <td>{{ photo.uploader_name }}</td>
-                        <td>{{ photo.upload_date.strftime('%b %d, %Y') }}</td>
                         <td>
-                            {% if photo.media_type == 'video' %}
-                                Video
-                            {% elif photo.is_photobooth %}
-                                <span class="photobooth-badge">Photobooth</span>
+                            {% if entry.photo_filename %}
+                            <img src="{{ url_for('static', filename='uploads/guestbook/' + entry.photo_filename) }}" 
+                                 alt="Photo" 
+                                 class="photo-thumbnail"
+                                 style="cursor: pointer;"
+                                 onclick="window.open(this.src, '_blank')">
                             {% else %}
-                                Photo
+                            -
                             {% endif %}
                         </td>
-                        <td>{{ photo.likes }}</td>
-                        <td>{{ photo.comments|length }}</td>
+                        <td>{{ entry.created_at.strftime('%b %d, %Y') }}</td>
                         <td>
+                            <button class="edit-btn" 
+                                    onclick="editGuestbookEntry({{ entry.id }}, '{{ entry.name|e }}', {{ entry.message|tojson }}, '{{ entry.location or '' }}')">
+                                Edit
+                            </button>
                             <button class="delete-btn" 
-                                    onclick="confirmDelete({{ photo.id }}, '{{ photo.uploader_name }}')">
+                                    onclick="confirmDeleteGuestbook({{ entry.id }}, '{{ entry.name }}')">
                                 Delete
                             </button>
                         </td>
@@ -1417,7 +1484,7 @@
     }
 
     function confirmDelete(photoId, uploaderName) {
-        if (confirm(`Are you sure you want to delete the photo uploaded by ${uploaderName}? This action cannot be undone.`)) {
+        if (confirm(`Are you sure you want to delete the photo/video uploaded by ${uploaderName}? This action cannot be undone.`)) {
             const urlParams = new URLSearchParams(window.location.search);
             const key = urlParams.get('key');
             window.location.href = `/admin/delete/${photoId}?key=${key}`;
