@@ -17,6 +17,8 @@ from reportlab.pdfbase.ttfonts import TTFont
 import json
 import subprocess
 import tempfile
+import base64
+from PIL import Image as PILImage
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', secrets.token_hex(16))
@@ -27,6 +29,8 @@ app.config['GUESTBOOK_UPLOAD_FOLDER'] = 'static/uploads/guestbook'
 app.config['MESSAGE_UPLOAD_FOLDER'] = 'static/uploads/messages'
 app.config['VIDEO_FOLDER'] = 'static/uploads/videos'
 app.config['THUMBNAIL_FOLDER'] = 'static/uploads/thumbnails'
+app.config['PHOTOBOOTH_FOLDER'] = 'static/uploads/photobooth'
+app.config['BORDER_FOLDER'] = 'static/uploads/borders'
 app.config['MAX_CONTENT_LENGTH'] = 50 * 1024 * 1024  # Increased to 50MB for videos
 app.config['ALLOWED_IMAGE_EXTENSIONS'] = {'png', 'jpg', 'jpeg', 'gif', 'webp'}
 app.config['ALLOWED_VIDEO_EXTENSIONS'] = {'mp4', 'mov', 'avi', 'webm'}
@@ -40,6 +44,8 @@ os.makedirs(app.config['GUESTBOOK_UPLOAD_FOLDER'], exist_ok=True)
 os.makedirs(app.config['MESSAGE_UPLOAD_FOLDER'], exist_ok=True)
 os.makedirs(app.config['VIDEO_FOLDER'], exist_ok=True)
 os.makedirs(app.config['THUMBNAIL_FOLDER'], exist_ok=True)
+os.makedirs(app.config['PHOTOBOOTH_FOLDER'], exist_ok=True)
+os.makedirs(app.config['BORDER_FOLDER'], exist_ok=True)
 
 # Database Models
 class Photo(db.Model):
@@ -53,6 +59,7 @@ class Photo(db.Model):
     media_type = db.Column(db.String(10), default='image')  # 'image' or 'video'
     thumbnail_filename = db.Column(db.String(255))  # For video thumbnails
     duration = db.Column(db.Float)  # Video duration in seconds
+    is_photobooth = db.Column(db.Boolean, default=False)  # Track photobooth photos
     comments = db.relationship('Comment', backref='photo', lazy=True, cascade='all, delete-orphan')
 
 class Comment(db.Model):
@@ -267,6 +274,75 @@ def upload():
     
     user_name = request.cookies.get('user_name', '')
     return render_template('upload.html', user_name=user_name)
+
+@app.route('/photobooth')
+def photobooth():
+    user_name = request.cookies.get('user_name', '')
+    
+    # Get the current border settings
+    border_settings = Settings.get('photobooth_border', '{}')
+    border_settings = json.loads(border_settings) if border_settings else {}
+    
+    return render_template('photobooth.html', 
+                         user_name=user_name,
+                         border_url=border_settings.get('border_url', ''))
+
+@app.route('/api/photobooth/save', methods=['POST'])
+def save_photobooth_photo():
+    data = request.get_json()
+    
+    if not data or 'image' not in data:
+        return jsonify({'error': 'No image data provided'}), 400
+    
+    try:
+        # Extract base64 image data
+        image_data = data['image'].split(',')[1]
+        image_bytes = base64.b64decode(image_data)
+        
+        # Generate filename
+        timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+        filename = f"photobooth_{timestamp}.png"
+        filepath = os.path.join(app.config['PHOTOBOOTH_FOLDER'], filename)
+        
+        # Save image
+        with open(filepath, 'wb') as f:
+            f.write(image_bytes)
+        
+        # Create database entry if uploading to gallery
+        if data.get('upload_to_gallery', False):
+            uploader_name = data.get('uploader_name', 'Anonymous').strip() or 'Anonymous'
+            description = data.get('description', 'Photo from Virtual Photobooth')
+            
+            photo = Photo(
+                filename=filename,
+                original_filename=filename,
+                uploader_name=uploader_name,
+                description=description,
+                media_type='image',
+                is_photobooth=True
+            )
+            
+            db.session.add(photo)
+            db.session.commit()
+            
+            # Save user name in cookie
+            resp = jsonify({
+                'success': True,
+                'filename': filename,
+                'uploaded': True,
+                'photo_id': photo.id
+            })
+            resp.set_cookie('user_name', uploader_name, max_age=30*24*60*60)
+            return resp
+        
+        return jsonify({
+            'success': True,
+            'filename': filename,
+            'uploaded': False
+        })
+        
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
 
 @app.route('/photo/<int:photo_id>')
 def view_photo(photo_id):
@@ -527,6 +603,12 @@ def admin():
     welcome_settings = Settings.get('welcome_modal', '{}')
     welcome_settings = json.loads(welcome_settings) if welcome_settings else {}
     
+    border_settings = Settings.get('photobooth_border', '{}')
+    border_settings = json.loads(border_settings) if border_settings else {}
+    
+    # Count photobooth photos
+    photobooth_count = Photo.query.filter_by(is_photobooth=True).count()
+    
     return render_template('admin.html', 
                          photos=photos, 
                          total_photos=len(photos),
@@ -538,9 +620,55 @@ def admin():
                          hidden_messages=hidden_messages,
                          total_messages=len(visible_messages),
                          total_message_comments=total_message_comments,
+                         photobooth_count=photobooth_count,
                          public_url=public_url,
                          qr_settings=qr_settings,
-                         welcome_settings=welcome_settings)
+                         welcome_settings=welcome_settings,
+                         border_settings=border_settings)
+
+@app.route('/admin/upload-border', methods=['POST'])
+def upload_border():
+    admin_key = request.args.get('key', '')
+    if admin_key != 'wedding2024':
+        return "Unauthorized", 401
+    
+    if 'border' not in request.files:
+        return jsonify({'error': 'No file provided'}), 400
+    
+    file = request.files['border']
+    if file.filename == '':
+        return jsonify({'error': 'No file selected'}), 400
+    
+    if file and allowed_file(file.filename):
+        # Remove old border file if exists
+        border_settings = Settings.get('photobooth_border', '{}')
+        border_settings = json.loads(border_settings) if border_settings else {}
+        
+        if border_settings.get('filename'):
+            old_filepath = os.path.join(app.config['BORDER_FOLDER'], border_settings['filename'])
+            if os.path.exists(old_filepath):
+                os.remove(old_filepath)
+        
+        # Save new border
+        filename = secure_filename(file.filename)
+        timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+        filename = f"border_{timestamp}_{filename}"
+        filepath = os.path.join(app.config['BORDER_FOLDER'], filename)
+        file.save(filepath)
+        
+        # Update settings
+        border_settings = {
+            'filename': filename,
+            'border_url': url_for('static', filename=f'uploads/borders/{filename}')
+        }
+        Settings.set('photobooth_border', json.dumps(border_settings))
+        
+        return jsonify({
+            'success': True,
+            'border_url': border_settings['border_url']
+        })
+    
+    return jsonify({'error': 'Invalid file type'}), 400
 
 @app.route('/admin/delete/<int:photo_id>')
 def delete_photo(photo_id):
@@ -556,6 +684,8 @@ def delete_photo(photo_id):
             os.remove(os.path.join(app.config['VIDEO_FOLDER'], photo.filename))
             if photo.thumbnail_filename:
                 os.remove(os.path.join(app.config['THUMBNAIL_FOLDER'], photo.thumbnail_filename))
+        elif photo.is_photobooth:
+            os.remove(os.path.join(app.config['PHOTOBOOTH_FOLDER'], photo.filename))
         else:
             os.remove(os.path.join(app.config['UPLOAD_FOLDER'], photo.filename))
     except:

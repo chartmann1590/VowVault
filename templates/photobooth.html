@@ -1,0 +1,533 @@
+{% extends "base.html" %}
+
+{% block title %}Virtual Photobooth - Wedding Gallery{% endblock %}
+
+{% block extra_styles %}
+<style>
+    .photobooth-container {
+        max-width: 900px;
+        margin: 0 auto;
+        text-align: center;
+    }
+
+    .photobooth-header {
+        margin-bottom: 2rem;
+    }
+
+    .photobooth-header h2 {
+        font-family: 'Playfair Display', serif;
+        font-size: 3rem;
+        color: #8b7355;
+        margin-bottom: 1rem;
+    }
+
+    .photobooth-header p {
+        color: #6b5d54;
+        font-size: 1.2rem;
+    }
+
+    .camera-section {
+        background: white;
+        border-radius: 20px;
+        padding: 2rem;
+        box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+        margin-bottom: 2rem;
+    }
+
+    .video-container {
+        position: relative;
+        width: 100%;
+        max-width: 640px;
+        margin: 0 auto 2rem;
+        background: #f0f0f0;
+        border-radius: 15px;
+        overflow: hidden;
+    }
+
+    #video {
+        width: 100%;
+        height: auto;
+        display: block;
+        transform: scaleX(-1); /* Mirror effect */
+    }
+
+    #canvas {
+        display: none;
+    }
+
+    .border-overlay {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        pointer-events: none;
+        z-index: 10;
+    }
+
+    .border-overlay img {
+        width: 100%;
+        height: 100%;
+        object-fit: contain;
+    }
+
+    .no-border-message {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        background: rgba(255, 255, 255, 0.9);
+        padding: 1rem 2rem;
+        border-radius: 10px;
+        color: #6b5d54;
+        font-style: italic;
+        display: none;
+    }
+
+    .controls {
+        display: flex;
+        gap: 1rem;
+        justify-content: center;
+        flex-wrap: wrap;
+        margin-bottom: 2rem;
+    }
+
+    .capture-btn {
+        background: #8b7355;
+        color: white;
+        border: none;
+        padding: 1rem 3rem;
+        border-radius: 30px;
+        font-size: 1.1rem;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .capture-btn:hover {
+        background: #6b5d54;
+        transform: translateY(-2px);
+        box-shadow: 0 5px 20px rgba(139, 115, 85, 0.3);
+    }
+
+    .capture-btn:disabled {
+        background: #ccc;
+        cursor: not-allowed;
+    }
+
+    .capture-btn svg {
+        width: 24px;
+        height: 24px;
+        fill: currentColor;
+    }
+
+    .countdown {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        font-size: 8rem;
+        font-weight: bold;
+        color: white;
+        text-shadow: 0 0 20px rgba(0,0,0,0.5);
+        z-index: 20;
+        animation: pulse 1s ease-in-out;
+        display: none;
+    }
+
+    @keyframes pulse {
+        0% { transform: translate(-50%, -50%) scale(0.5); opacity: 0; }
+        50% { transform: translate(-50%, -50%) scale(1.2); }
+        100% { transform: translate(-50%, -50%) scale(1); opacity: 1; }
+    }
+
+    .preview-section {
+        display: none;
+        background: white;
+        border-radius: 20px;
+        padding: 2rem;
+        box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+        margin-bottom: 2rem;
+    }
+
+    .preview-image {
+        max-width: 100%;
+        max-height: 500px;
+        border-radius: 15px;
+        box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+        margin-bottom: 2rem;
+    }
+
+    .action-buttons {
+        display: flex;
+        gap: 1rem;
+        justify-content: center;
+        flex-wrap: wrap;
+        margin-bottom: 2rem;
+    }
+
+    .action-btn {
+        padding: 0.75rem 2rem;
+        border-radius: 25px;
+        border: none;
+        cursor: pointer;
+        font-size: 1rem;
+        transition: all 0.3s ease;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .download-btn {
+        background: #28a745;
+        color: white;
+    }
+
+    .download-btn:hover {
+        background: #218838;
+    }
+
+    .upload-btn {
+        background: #8b7355;
+        color: white;
+    }
+
+    .upload-btn:hover {
+        background: #6b5d54;
+    }
+
+    .retake-btn {
+        background: #e8ddd3;
+        color: #6b5d54;
+    }
+
+    .retake-btn:hover {
+        background: #d4c4b5;
+    }
+
+    .upload-form {
+        background: #f9f5f0;
+        padding: 2rem;
+        border-radius: 15px;
+        display: none;
+        text-align: left;
+    }
+
+    .upload-form h3 {
+        color: #8b7355;
+        margin-bottom: 1.5rem;
+        text-align: center;
+    }
+
+    .permission-error {
+        background: #f8d7da;
+        color: #721c24;
+        padding: 1.5rem;
+        border-radius: 10px;
+        margin-bottom: 2rem;
+        display: none;
+    }
+
+    .loading {
+        display: inline-block;
+        width: 20px;
+        height: 20px;
+        border: 3px solid #f3f3f3;
+        border-top: 3px solid #8b7355;
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+        margin-left: 10px;
+    }
+
+    @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+    }
+
+    .instructions {
+        background: #f9f5f0;
+        padding: 1.5rem;
+        border-radius: 15px;
+        margin-bottom: 2rem;
+    }
+
+    .instructions h3 {
+        color: #8b7355;
+        margin-bottom: 1rem;
+    }
+
+    .instructions ol {
+        text-align: left;
+        color: #6b5d54;
+        line-height: 1.8;
+        padding-left: 1.5rem;
+    }
+
+    @media (max-width: 768px) {
+        .photobooth-header h2 {
+            font-size: 2rem;
+        }
+
+        .countdown {
+            font-size: 5rem;
+        }
+
+        .camera-section {
+            padding: 1.5rem;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="photobooth-container">
+    <div class="photobooth-header">
+        <h2>📸 Virtual Photobooth</h2>
+        <p>Take a photo with our special wedding border!</p>
+    </div>
+
+    <div class="instructions">
+        <h3>How to Use</h3>
+        <ol>
+            <li>Allow camera access when prompted</li>
+            <li>Position yourself in the frame</li>
+            <li>Click "Take Photo" (3-second countdown)</li>
+            <li>Download or upload your photo to the gallery</li>
+        </ol>
+    </div>
+
+    <div class="permission-error" id="permissionError">
+        <strong>Camera Access Required</strong><br>
+        Please allow camera access to use the photobooth. Refresh the page and try again.
+    </div>
+
+    <div class="camera-section" id="cameraSection">
+        <div class="video-container">
+            <video id="video" autoplay playsinline></video>
+            <canvas id="canvas"></canvas>
+            <div class="countdown" id="countdown"></div>
+            <div class="border-overlay" id="borderOverlay">
+                {% if border_url %}
+                <img src="{{ border_url }}" alt="Wedding Border">
+                {% else %}
+                <div class="no-border-message">No border set - Contact admin</div>
+                {% endif %}
+            </div>
+        </div>
+
+        <div class="controls">
+            <button class="capture-btn" id="captureBtn" onclick="takePhoto()">
+                <svg viewBox="0 0 24 24">
+                    <path d="M4,4H7L9,2H15L17,4H20A2,2 0 0,1 22,6V18A2,2 0 0,1 20,20H4A2,2 0 0,1 2,18V6A2,2 0 0,1 4,4M12,7A5,5 0 0,0 7,12A5,5 0 0,0 12,17A5,5 0 0,0 17,12A5,5 0 0,0 12,7M12,9A3,3 0 0,1 15,12A3,3 0 0,1 12,15A3,3 0 0,1 9,12A3,3 0 0,1 12,9Z"/>
+                </svg>
+                Take Photo
+            </button>
+        </div>
+    </div>
+
+    <div class="preview-section" id="previewSection">
+        <h3>Your Photo</h3>
+        <img id="previewImage" class="preview-image" alt="Your photo">
+        
+        <div class="action-buttons">
+            <button class="action-btn download-btn" onclick="downloadPhoto()">
+                <svg viewBox="0 0 24 24" width="20" height="20">
+                    <path d="M5,20H19V18H5M19,9H15V3H9V9H5L12,16L19,9Z" fill="currentColor"/>
+                </svg>
+                Download Photo
+            </button>
+            <button class="action-btn upload-btn" onclick="showUploadForm()">
+                <svg viewBox="0 0 24 24" width="20" height="20">
+                    <path d="M9,16V10H5L12,3L19,10H15V16H9M5,20V18H19V20H5Z" fill="currentColor"/>
+                </svg>
+                Upload to Gallery
+            </button>
+            <button class="action-btn retake-btn" onclick="retakePhoto()">
+                <svg viewBox="0 0 24 24" width="20" height="20">
+                    <path d="M12,5V1L7,6L12,11V7A6,6 0 0,1 18,13A6,6 0 0,1 12,19A6,6 0 0,1 6,13H4A8,8 0 0,0 12,21A8,8 0 0,0 20,13A8,8 0 0,0 12,5Z" fill="currentColor"/>
+                </svg>
+                Take Another
+            </button>
+        </div>
+
+        <div class="upload-form" id="uploadForm">
+            <h3>Upload to Gallery</h3>
+            <form onsubmit="uploadPhoto(event)">
+                <div class="form-group">
+                    <label for="uploader_name">Your Name</label>
+                    <input type="text" 
+                           id="uploader_name" 
+                           name="uploader_name" 
+                           placeholder="Enter your name (optional)"
+                           value="{{ user_name }}">
+                </div>
+                <div class="form-group">
+                    <label for="description">Description</label>
+                    <textarea id="description" 
+                              name="description" 
+                              placeholder="Add a caption... (optional)"
+                              rows="3"></textarea>
+                </div>
+                <div class="form-actions">
+                    <button type="submit" class="btn" id="uploadSubmitBtn">
+                        Upload to Gallery
+                    </button>
+                    <button type="button" class="btn btn-secondary" onclick="hideUploadForm()">
+                        Cancel
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    let video = document.getElementById('video');
+    let canvas = document.getElementById('canvas');
+    let context = canvas.getContext('2d');
+    let stream = null;
+    let photoData = null;
+
+    // Initialize camera
+    async function initCamera() {
+        try {
+            stream = await navigator.mediaDevices.getUserMedia({ 
+                video: { 
+                    facingMode: 'user',
+                    width: { ideal: 1280 },
+                    height: { ideal: 720 }
+                } 
+            });
+            video.srcObject = stream;
+            
+            // Set canvas size once video loads
+            video.onloadedmetadata = () => {
+                canvas.width = video.videoWidth;
+                canvas.height = video.videoHeight;
+            };
+        } catch (err) {
+            console.error('Error accessing camera:', err);
+            document.getElementById('permissionError').style.display = 'block';
+            document.getElementById('cameraSection').style.display = 'none';
+        }
+    }
+
+    // Take photo with countdown
+    async function takePhoto() {
+        const captureBtn = document.getElementById('captureBtn');
+        const countdown = document.getElementById('countdown');
+        
+        captureBtn.disabled = true;
+        
+        // Countdown
+        for (let i = 3; i > 0; i--) {
+            countdown.textContent = i;
+            countdown.style.display = 'block';
+            await new Promise(resolve => setTimeout(resolve, 1000));
+        }
+        
+        countdown.style.display = 'none';
+        
+        // Capture photo
+        context.save();
+        context.scale(-1, 1); // Mirror the image
+        context.drawImage(video, -canvas.width, 0, canvas.width, canvas.height);
+        context.restore();
+        
+        // Add border if available
+        const borderImg = document.querySelector('#borderOverlay img');
+        if (borderImg && borderImg.complete) {
+            context.drawImage(borderImg, 0, 0, canvas.width, canvas.height);
+        }
+        
+        // Get photo data
+        photoData = canvas.toDataURL('image/png');
+        
+        // Show preview
+        document.getElementById('previewImage').src = photoData;
+        document.getElementById('previewSection').style.display = 'block';
+        document.getElementById('cameraSection').style.display = 'none';
+        
+        captureBtn.disabled = false;
+    }
+
+    // Download photo
+    function downloadPhoto() {
+        const link = document.createElement('a');
+        link.download = `wedding_photobooth_${new Date().getTime()}.png`;
+        link.href = photoData;
+        link.click();
+    }
+
+    // Show upload form
+    function showUploadForm() {
+        document.getElementById('uploadForm').style.display = 'block';
+    }
+
+    // Hide upload form
+    function hideUploadForm() {
+        document.getElementById('uploadForm').style.display = 'none';
+    }
+
+    // Upload photo
+    async function uploadPhoto(event) {
+        event.preventDefault();
+        
+        const submitBtn = document.getElementById('uploadSubmitBtn');
+        submitBtn.innerHTML = 'Uploading<span class="loading"></span>';
+        submitBtn.disabled = true;
+        
+        const uploaderName = document.getElementById('uploader_name').value;
+        const description = document.getElementById('description').value;
+        
+        try {
+            const response = await fetch('/api/photobooth/save', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    image: photoData,
+                    uploader_name: uploaderName,
+                    description: description || 'Photo from Virtual Photobooth',
+                    upload_to_gallery: true
+                })
+            });
+            
+            const result = await response.json();
+            
+            if (result.success) {
+                alert('Photo uploaded successfully!');
+                window.location.href = "{{ url_for('view_photo', photo_id='') }}" + result.photo_id;
+            } else {
+                throw new Error(result.error || 'Upload failed');
+            }
+        } catch (error) {
+            alert('Error uploading photo: ' + error.message);
+            submitBtn.innerHTML = 'Upload to Gallery';
+            submitBtn.disabled = false;
+        }
+    }
+
+    // Retake photo
+    function retakePhoto() {
+        document.getElementById('previewSection').style.display = 'none';
+        document.getElementById('cameraSection').style.display = 'block';
+        document.getElementById('uploadForm').style.display = 'none';
+    }
+
+    // Initialize on page load
+    window.addEventListener('load', initCamera);
+
+    // Cleanup on page unload
+    window.addEventListener('beforeunload', () => {
+        if (stream) {
+            stream.getTracks().forEach(track => track.stop());
+        }
+    });
+</script>
+{% endblock %}

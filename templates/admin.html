@@ -70,6 +70,84 @@
         padding: 2rem;
     }
 
+    .border-upload-section {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 2rem;
+        align-items: start;
+    }
+
+    .upload-area {
+        background: #f9f5f0;
+        padding: 2rem;
+        border-radius: 15px;
+        text-align: center;
+    }
+
+    .current-border {
+        background: #faf9f7;
+        padding: 2rem;
+        border-radius: 15px;
+        text-align: center;
+    }
+
+    .current-border img {
+        max-width: 100%;
+        max-height: 300px;
+        border-radius: 10px;
+        box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+        margin-bottom: 1rem;
+    }
+
+    .no-border {
+        padding: 3rem;
+        color: #999;
+        font-style: italic;
+    }
+
+    .file-upload-wrapper {
+        position: relative;
+        overflow: hidden;
+        display: inline-block;
+        width: 100%;
+    }
+
+    .file-upload-wrapper input[type=file] {
+        position: absolute;
+        left: -9999px;
+    }
+
+    .file-upload-label {
+        display: block;
+        padding: 2rem;
+        background: white;
+        border: 2px dashed #8b7355;
+        border-radius: 15px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+
+    .file-upload-label:hover {
+        background: #faf9f7;
+        border-color: #6b5d54;
+    }
+
+    .file-upload-label svg {
+        width: 50px;
+        height: 50px;
+        fill: #8b7355;
+        margin-bottom: 1rem;
+    }
+
+    .photobooth-info {
+        background: #e8f4fd;
+        border: 1px solid #bee5eb;
+        color: #0c5460;
+        padding: 1rem;
+        border-radius: 10px;
+        margin-bottom: 1.5rem;
+    }
+
     .qr-settings-grid {
         display: grid;
         grid-template-columns: 1fr 1fr;
@@ -208,6 +286,15 @@
         height: 60px;
         object-fit: cover;
         border-radius: 10px;
+    }
+
+    .photobooth-badge {
+        background: #17a2b8;
+        color: white;
+        padding: 0.25rem 0.5rem;
+        border-radius: 10px;
+        font-size: 0.75rem;
+        margin-left: 0.5rem;
     }
 
     .delete-btn, .hide-btn, .show-btn {
@@ -383,7 +470,7 @@
             margin: -3rem -1.5rem 3rem -1.5rem;
         }
 
-        .qr-settings-grid {
+        .qr-settings-grid, .border-upload-section {
             grid-template-columns: 1fr;
         }
 
@@ -453,8 +540,63 @@
             <div class="stat-label">Message Board Posts</div>
         </div>
         <div class="stat-card">
-            <div class="stat-value">{{ total_message_comments }}</div>
-            <div class="stat-label">Message Comments</div>
+            <div class="stat-value">{{ photobooth_count }}</div>
+            <div class="stat-label">Photobooth Photos</div>
+        </div>
+    </div>
+
+    <!-- Virtual Photobooth Settings -->
+    <div class="section-card">
+        <div class="section-header">
+            <h3>Virtual Photobooth Settings</h3>
+        </div>
+        <div class="section-content">
+            <div class="photobooth-info">
+                <strong>📸 Virtual Photobooth Feature:</strong> Guests can take photos with their camera and apply your custom wedding border. They can then download the photo or upload it directly to the gallery.
+            </div>
+            
+            <div class="border-upload-section">
+                <div class="upload-area">
+                    <h4 style="color: #8b7355; margin-bottom: 1.5rem;">Upload Wedding Border</h4>
+                    <p style="color: #666; margin-bottom: 1.5rem;">
+                        Upload a PNG image with transparent areas where the photo will show through. 
+                        Recommended size: 1280x720px or 16:9 aspect ratio.
+                    </p>
+                    
+                    <form id="borderUploadForm">
+                        <div class="file-upload-wrapper">
+                            <input type="file" 
+                                   id="borderFile" 
+                                   accept="image/png,image/jpg,image/jpeg,image/webp"
+                                   onchange="uploadBorder(this)">
+                            <label for="borderFile" class="file-upload-label">
+                                <svg viewBox="0 0 24 24">
+                                    <path d="M9,16V10H5L12,3L19,10H15V16H9M5,20V18H19V20H5Z"/>
+                                </svg>
+                                <p>Click to upload border image</p>
+                                <small>PNG with transparency recommended</small>
+                            </label>
+                        </div>
+                    </form>
+                </div>
+                
+                <div class="current-border">
+                    <h4 style="color: #8b7355; margin-bottom: 1.5rem;">Current Border</h4>
+                    {% if border_settings.get('border_url') %}
+                        <img src="{{ border_settings.get('border_url') }}" alt="Current wedding border">
+                        <p style="color: #666; font-size: 0.9rem;">
+                            Border uploaded successfully!<br>
+                            <a href="{{ url_for('photobooth') }}" target="_blank" class="btn btn-secondary" style="margin-top: 1rem;">
+                                View Photobooth
+                            </a>
+                        </p>
+                    {% else %}
+                        <div class="no-border">
+                            No border uploaded yet
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
         </div>
     </div>
 
@@ -652,71 +794,6 @@
                             <th>Message</th>
                             <th>Photo</th>
                             <th>Date</th>
-                            <th>Likes</th>
-                            <th>Comments</th>
-                            <th>Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for message in visible_messages %}
-                        <tr>
-                            <td>{{ message.author_name }}</td>
-                            <td class="message-content">
-                                {{ message.content[:100] }}{% if message.content|length > 100 %}...{% endif %}
-                                {% if message.message_comments %}
-                                <div class="message-comments">
-                                    {% for comment in message.message_comments[:2] %}
-                                        {% if not comment.is_hidden %}
-                                        <div class="comment-item">
-                                            <strong>{{ comment.commenter_name }}:</strong> {{ comment.content[:50] }}{% if comment.content|length > 50 %}...{% endif %}
-                                        </div>
-                                        {% endif %}
-                                    {% endfor %}
-                                    {% if message.message_comments|length > 2 %}
-                                    <small style="color: #999;">... and {{ message.message_comments|length - 2 }} more</small>
-                                    {% endif %}
-                                </div>
-                                {% endif %}
-                            </td>
-                            <td>
-                                {% if message.photo_filename %}
-                                <img src="{{ url_for('static', filename='uploads/messages/' + message.photo_filename) }}" 
-                                     alt="Photo" 
-                                     class="photo-thumbnail"
-                                     style="cursor: pointer;"
-                                     onclick="window.open(this.src, '_blank')">
-                                {% else %}
-                                -
-                                {% endif %}
-                            </td>
-                            <td>{{ message.created_at.strftime('%b %d, %Y') }}</td>
-                            <td>{{ message.likes }}</td>
-                            <td>{{ message.message_comments|selectattr('is_hidden', 'false')|list|length }}</td>
-                            <td>
-                                <button class="hide-btn" 
-                                        onclick="toggleMessageVisibility({{ message.id }})">
-                                    Hide
-                                </button>
-                                <button class="delete-btn" 
-                                        onclick="confirmDeleteMessage({{ message.id }}, '{{ message.author_name|e }}')">
-                                    Delete
-                                </button>
-                            </td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-            </div>
-
-            <!-- Hidden Messages -->
-            <div id="hidden-messages" class="tab-content">
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Author</th>
-                            <th>Message</th>
-                            <th>Photo</th>
-                            <th>Date</th>
                             <th>Reason Hidden</th>
                             <th>Actions</th>
                         </tr>
@@ -827,6 +904,7 @@
                         <th>Preview</th>
                         <th>Uploader</th>
                         <th>Upload Date</th>
+                        <th>Type</th>
                         <th>Likes</th>
                         <th>Comments</th>
                         <th>Actions</th>
@@ -836,12 +914,39 @@
                     {% for photo in photos %}
                     <tr>
                         <td>
-                            <img src="{{ url_for('static', filename='uploads/' + photo.filename) }}" 
-                                 alt="Thumbnail" 
-                                 class="photo-thumbnail">
+                            {% if photo.media_type == 'video' %}
+                                {% if photo.thumbnail_filename %}
+                                <img src="{{ url_for('static', filename='uploads/thumbnails/' + photo.thumbnail_filename) }}" 
+                                     alt="Video thumbnail" 
+                                     class="photo-thumbnail">
+                                {% else %}
+                                <div class="photo-thumbnail" style="background: #f0f0f0; display: flex; align-items: center; justify-content: center;">
+                                    <svg viewBox="0 0 24 24" width="30" height="30" fill="#999">
+                                        <path d="M17,10.5V7A1,1 0 0,0 16,6H4A1,1 0 0,0 3,7V17A1,1 0 0,0 4,18H16A1,1 0 0,0 17,17V13.5L21,17.5V6.5L17,10.5Z"/>
+                                    </svg>
+                                </div>
+                                {% endif %}
+                            {% elif photo.is_photobooth %}
+                                <img src="{{ url_for('static', filename='uploads/photobooth/' + photo.filename) }}" 
+                                     alt="Photobooth thumbnail" 
+                                     class="photo-thumbnail">
+                            {% else %}
+                                <img src="{{ url_for('static', filename='uploads/' + photo.filename) }}" 
+                                     alt="Thumbnail" 
+                                     class="photo-thumbnail">
+                            {% endif %}
                         </td>
                         <td>{{ photo.uploader_name }}</td>
                         <td>{{ photo.upload_date.strftime('%b %d, %Y') }}</td>
+                        <td>
+                            {% if photo.media_type == 'video' %}
+                                Video
+                            {% elif photo.is_photobooth %}
+                                <span class="photobooth-badge">Photobooth</span>
+                            {% else %}
+                                Photo
+                            {% endif %}
+                        </td>
                         <td>{{ photo.likes }}</td>
                         <td>{{ photo.comments|length }}</td>
                         <td>
@@ -889,6 +994,51 @@
 
 {% block scripts %}
 <script>
+    // Upload border functionality
+    async function uploadBorder(input) {
+        const file = input.files[0];
+        if (!file) return;
+        
+        const urlParams = new URLSearchParams(window.location.search);
+        const key = urlParams.get('key');
+        
+        const formData = new FormData();
+        formData.append('border', file);
+        
+        try {
+            const response = await fetch(`/admin/upload-border?key=${key}`, {
+                method: 'POST',
+                body: formData
+            });
+            
+            const data = await response.json();
+            
+            if (data.success) {
+                // Update the current border display
+                const currentBorderDiv = document.querySelector('.current-border');
+                currentBorderDiv.innerHTML = `
+                    <h4 style="color: #8b7355; margin-bottom: 1.5rem;">Current Border</h4>
+                    <img src="${data.border_url}" alt="Current wedding border">
+                    <p style="color: #666; font-size: 0.9rem;">
+                        Border uploaded successfully!<br>
+                        <a href="/photobooth" target="_blank" class="btn btn-secondary" style="margin-top: 1rem;">
+                            View Photobooth
+                        </a>
+                    </p>
+                `;
+                
+                alert('Border uploaded successfully!');
+            } else {
+                alert('Error uploading border: ' + (data.error || 'Unknown error'));
+            }
+        } catch (error) {
+            alert('Error uploading border: ' + error.message);
+        }
+        
+        // Reset the input
+        input.value = '';
+    }
+
     // Tab functionality for messages
     function showMessageTab(tabName) {
         document.querySelectorAll('.tab-content').forEach(tab => {
@@ -1084,4 +1234,4 @@
     // Initialize preview on load
     document.getElementById('modal_instructions').dispatchEvent(new Event('input'));
 </script>
-{% endblock %}
+{% endblock %}>

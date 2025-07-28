@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 """
-Database migration script to add video support to the photo table
+Database migration script to add video support and photobooth functionality to the photo table
 """
 import sqlite3
 import os
@@ -59,6 +59,17 @@ def migrate_photo_table_for_videos(cursor):
         print("Added 'duration' column successfully!")
     else:
         print("Column 'duration' already exists in 'photo' table.")
+    
+    # Add is_photobooth column
+    if not check_column_exists(cursor, 'photo', 'is_photobooth'):
+        print("Adding 'is_photobooth' column to 'photo' table...")
+        cursor.execute("""
+            ALTER TABLE photo 
+            ADD COLUMN is_photobooth BOOLEAN DEFAULT 0
+        """)
+        print("Added 'is_photobooth' column successfully!")
+    else:
+        print("Column 'is_photobooth' already exists in 'photo' table.")
     
     return True
 
@@ -144,7 +155,9 @@ def create_directories():
         os.path.join('static', 'uploads', 'guestbook'),
         os.path.join('static', 'uploads', 'messages'),
         os.path.join('static', 'uploads', 'videos'),
-        os.path.join('static', 'uploads', 'thumbnails')
+        os.path.join('static', 'uploads', 'thumbnails'),
+        os.path.join('static', 'uploads', 'photobooth'),
+        os.path.join('static', 'uploads', 'borders')
     ]
     
     for directory in directories:
@@ -176,7 +189,7 @@ def migrate_database(db_path='wedding_photos.db'):
         # Run migrations
         success = True
         
-        # Migrate photo table for video support
+        # Migrate photo table for video support and photobooth
         if not migrate_photo_table_for_videos(cursor):
             success = False
         
@@ -208,7 +221,7 @@ def migrate_database(db_path='wedding_photos.db'):
 
 def main():
     """Main migration function"""
-    print("=== Wedding Gallery Database Migration (with Video Support) ===")
+    print("=== Wedding Gallery Database Migration (with Video & Photobooth Support) ===")
     print(f"Migration started at: {datetime.now()}")
     print("")
     

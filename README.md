@@ -10,8 +10,8 @@ A beautiful, self-hosted wedding photo gallery application that allows wedding g
 ## ✨ Features
 
 ### For Guests
-- 📸 **Easy Photo Upload** - No login required, just upload and share
-- ❤️ **Like Photos** - Show appreciation for beautiful moments
+- 📸 **Easy Photo/Video Upload** - No login required, just upload and share
+- ❤️ **Like Photos/Videos** - Show appreciation for beautiful moments
 - 💬 **Leave Comments** - Share memories and messages on photos
 - 💌 **Message Board** - Post messages with optional photos that everyone can see, like, and comment on
 - 📖 **Virtual Guestbook** - Sign a digital guestbook with wishes and optional photos
