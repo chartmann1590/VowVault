@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 """
-Database migration script to add video support and photobooth functionality to the photo table
+Database migration script to add video support, photobooth functionality, and email processing to the photo table
 """
 import sqlite3
 import os
@@ -148,6 +148,32 @@ def create_message_tables(cursor):
     
     return True
 
+def create_email_log_table(cursor):
+    """Create email log table for tracking email processing"""
+    
+    # Create email_log table
+    if not check_table_exists(cursor, 'email_log'):
+        print("Creating 'email_log' table...")
+        cursor.execute("""
+            CREATE TABLE email_log (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                sender_email VARCHAR(255) NOT NULL,
+                subject VARCHAR(255),
+                received_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+                processed_at DATETIME,
+                status VARCHAR(50) NOT NULL,
+                photo_count INTEGER DEFAULT 0,
+                error_message TEXT,
+                response_sent BOOLEAN DEFAULT 0,
+                response_type VARCHAR(50)
+            )
+        """)
+        print("Created 'email_log' table successfully!")
+    else:
+        print("Table 'email_log' already exists.")
+    
+    return True
+
 def create_directories():
     """Create necessary directories for uploads"""
     directories = [
@@ -201,6 +227,10 @@ def migrate_database(db_path='wedding_photos.db'):
         if not create_message_tables(cursor):
             success = False
         
+        # Create email log table
+        if not create_email_log_table(cursor):
+            success = False
+        
         if success:
             # Commit changes
             conn.commit()
@@ -221,7 +251,7 @@ def migrate_database(db_path='wedding_photos.db'):
 
 def main():
     """Main migration function"""
-    print("=== Wedding Gallery Database Migration (with Video & Photobooth Support) ===")
+    print("=== Wedding Gallery Database Migration (with Video, Photobooth & Email Support) ===")
     print(f"Migration started at: {datetime.now()}")
     print("")
     
