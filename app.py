@@ -206,18 +206,34 @@ def create_video_thumbnail(video_path, thumbnail_path):
 
 def get_email_settings():
     """Get email settings from database"""
-    return {
-        'smtp_server': Settings.get('email_smtp_server', 'smtp.gmail.com'),
-        'smtp_port': Settings.get('email_smtp_port', '587'),
-        'smtp_username': Settings.get('email_smtp_username', ''),
-        'smtp_password': Settings.get('email_smtp_password', ''),
-        'imap_server': Settings.get('email_imap_server', 'imap.gmail.com'),
-        'imap_port': Settings.get('email_imap_port', '993'),
-        'imap_username': Settings.get('email_imap_username', ''),
-        'imap_password': Settings.get('email_imap_password', ''),
-        'monitor_email': Settings.get('email_monitor_email', ''),
-        'enabled': Settings.get('email_enabled', 'false').lower() == 'true'
-    }
+    try:
+        return {
+            'smtp_server': Settings.get('email_smtp_server', 'smtp.gmail.com'),
+            'smtp_port': Settings.get('email_smtp_port', '587'),
+            'smtp_username': Settings.get('email_smtp_username', ''),
+            'smtp_password': Settings.get('email_smtp_password', ''),
+            'imap_server': Settings.get('email_imap_server', 'imap.gmail.com'),
+            'imap_port': Settings.get('email_imap_port', '993'),
+            'imap_username': Settings.get('email_imap_username', ''),
+            'imap_password': Settings.get('email_imap_password', ''),
+            'monitor_email': Settings.get('email_monitor_email', ''),
+            'enabled': Settings.get('email_enabled', 'false').lower() == 'true'
+        }
+    except Exception as e:
+        print(f"Error getting email settings: {e}")
+        # Return default settings if database is not ready
+        return {
+            'smtp_server': 'smtp.gmail.com',
+            'smtp_port': '587',
+            'smtp_username': '',
+            'smtp_password': '',
+            'imap_server': 'imap.gmail.com',
+            'imap_port': '993',
+            'imap_username': '',
+            'imap_password': '',
+            'monitor_email': '',
+            'enabled': False
+        }
 
 def send_confirmation_email(recipient_email, photo_count, gallery_url):
     """Send confirmation email to user who uploaded photos via email"""
@@ -1505,8 +1521,13 @@ if __name__ == '__main__':
     with app.app_context():
         db.create_all()
         # Start email monitor if enabled
-        email_settings = get_email_settings()
-        if email_settings['enabled']:
-            start_email_monitor()
-            print("Email monitor started successfully")
+        try:
+            email_settings = get_email_settings()
+            if email_settings['enabled'] and email_settings['smtp_username']:
+                start_email_monitor()
+                print("Email monitor started successfully")
+            else:
+                print("Email monitor not started - not enabled or not configured")
+        except Exception as e:
+            print(f"Email monitor not started: {e}")
     app.run(debug=True, host='0.0.0.0')
