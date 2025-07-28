@@ -1054,6 +1054,75 @@
         </div>
     </div>
 
+    <!-- Email Processing Log Section -->
+    <div class="section-card">
+        <div class="section-header">
+            <h3>Email Processing Log</h3>
+        </div>
+        <div class="section-content">
+            <div class="table-responsive">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Sender</th>
+                            <th>Subject</th>
+                            <th>Received</th>
+                            <th>Status</th>
+                            <th>Photos</th>
+                            <th>Response</th>
+                            <th>Error</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for log in email_logs %}
+                        <tr>
+                            <td>{{ log.sender_email }}</td>
+                            <td>{{ log.subject[:50] }}{% if log.subject|length > 50 %}...{% endif %}</td>
+                            <td>{{ log.received_at.strftime('%b %d, %Y %H:%M') }}</td>
+                            <td>
+                                {% if log.status == 'success' %}
+                                    <span style="color: #28a745; font-weight: bold;">✓ Success</span>
+                                {% elif log.status == 'rejected' %}
+                                    <span style="color: #dc3545; font-weight: bold;">✗ Rejected</span>
+                                {% elif log.status == 'error' %}
+                                    <span style="color: #ffc107; font-weight: bold;">⚠ Error</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if log.photo_count > 0 %}
+                                    <span style="color: #28a745;">{{ log.photo_count }} photo(s)</span>
+                                {% else %}
+                                    -
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if log.response_sent %}
+                                    <span style="color: #28a745;">✓ {{ log.response_type|title }}</span>
+                                {% else %}
+                                    <span style="color: #dc3545;">✗ Not sent</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if log.error_message %}
+                                    <span style="color: #dc3545;" title="{{ log.error_message }}">Error</span>
+                                {% else %}
+                                    -
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+                {% if not email_logs %}
+                <div style="text-align: center; padding: 2rem; color: #666;">
+                    <p>No email processing logs yet.</p>
+                    <p>Emails will appear here once the email monitor is running and processes incoming emails.</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
     <!-- Photos & Videos Management -->
     <div class="photos-table">
         <div class="table-header">

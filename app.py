@@ -135,6 +135,18 @@ class Settings(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     key = db.Column(db.String(50), unique=True, nullable=False)
     value = db.Column(db.Text)
+
+class EmailLog(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    sender_email = db.Column(db.String(255), nullable=False)
+    subject = db.Column(db.String(255))
+    received_at = db.Column(db.DateTime, default=datetime.utcnow)
+    processed_at = db.Column(db.DateTime)
+    status = db.Column(db.String(50), nullable=False)  # 'success', 'rejected', 'error'
+    photo_count = db.Column(db.Integer, default=0)
+    error_message = db.Column(db.Text)
+    response_sent = db.Column(db.Boolean, default=False)
+    response_type = db.Column(db.String(50))  # 'confirmation', 'rejection'
     
     @staticmethod
     def get(key, default=None):
@@ -315,6 +327,7 @@ def process_email_photos():
                 email_message = email.message_from_bytes(email_body)
                 
                 sender_email = email_message['from']
+                subject = email_message.get('subject', '')
                 # Extract email from "Name <email@domain.com>" format
                 if '<' in sender_email and '>' in sender_email:
                     sender_email = sender_email.split('<')[1].split('>')[0]
@@ -322,6 +335,7 @@ def process_email_photos():
                 photo_count = 0
                 has_photos = False
                 has_non_photos = False
+                error_message = None
                 
                 # Process attachments
                 for part in email_message.walk():
@@ -359,8 +373,13 @@ def process_email_photos():
                         else:
                             has_non_photos = True
                 
-                # Commit database changes
+                # Determine status and create log entry
                 if photo_count > 0:
+                    status = 'success'
+                    response_type = 'confirmation'
+                    response_sent = True
+                    
+                    # Commit database changes
                     db.session.commit()
                     
                     # Send confirmation email
@@ -368,15 +387,50 @@ def process_email_photos():
                     if public_url:
                         send_confirmation_email(sender_email, photo_count, public_url)
                 
-                # Send rejection email if only non-photos were sent
                 elif has_non_photos and not has_photos:
+                    status = 'rejected'
+                    response_type = 'rejection'
+                    response_sent = True
                     send_rejection_email(sender_email, "We received your email but it didn't contain any photo attachments.")
+                
+                else:
+                    status = 'rejected'
+                    response_type = 'rejection'
+                    response_sent = True
+                    send_rejection_email(sender_email, "We received your email but it didn't contain any photo attachments.")
+                
+                # Create email log entry
+                email_log = EmailLog(
+                    sender_email=sender_email,
+                    subject=subject,
+                    processed_at=datetime.utcnow(),
+                    status=status,
+                    photo_count=photo_count,
+                    response_sent=response_sent,
+                    response_type=response_type
+                )
+                db.session.add(email_log)
+                db.session.commit()
                 
                 # Mark email as read
                 mail.store(num, '+FLAGS', '\\Seen')
                 
             except Exception as e:
                 print(f"Error processing email: {e}")
+                # Log the error
+                try:
+                    email_log = EmailLog(
+                        sender_email=sender_email if 'sender_email' in locals() else 'Unknown',
+                        subject=subject if 'subject' in locals() else '',
+                        processed_at=datetime.utcnow(),
+                        status='error',
+                        error_message=str(e),
+                        response_sent=False
+                    )
+                    db.session.add(email_log)
+                    db.session.commit()
+                except:
+                    pass
                 continue
         
         mail.close()
@@ -859,6 +913,9 @@ def admin():
     # Count photobooth photos
     photobooth_count = Photo.query.filter_by(is_photobooth=True).count()
     
+    # Get email logs
+    email_logs = EmailLog.query.order_by(EmailLog.received_at.desc()).limit(50).all()
+    
     return render_template('admin.html', 
                          photos=photos, 
                          total_photos=len(photos),
@@ -875,7 +932,8 @@ def admin():
                          qr_settings=qr_settings,
                          welcome_settings=welcome_settings,
                          border_settings=border_settings,
-                         email_settings=email_settings)
+                         email_settings=email_settings,
+                         email_logs=email_logs)
 
 @app.route('/admin/batch-download')
 def batch_download():
