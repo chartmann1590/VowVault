@@ -19,6 +19,8 @@ import subprocess
 import tempfile
 import base64
 from PIL import Image as PILImage
+import zipfile
+import shutil
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', secrets.token_hex(16))
@@ -625,6 +627,209 @@ def admin():
                          qr_settings=qr_settings,
                          welcome_settings=welcome_settings,
                          border_settings=border_settings)
+
+@app.route('/admin/batch-download')
+def batch_download():
+    admin_key = request.args.get('key', '')
+    if admin_key != 'wedding2024':
+        return "Unauthorized", 401
+    
+    try:
+        # Create a temporary zip file
+        temp_dir = tempfile.mkdtemp()
+        timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+        zip_filename = f"wedding_gallery_backup_{timestamp}.zip"
+        zip_path = os.path.join(temp_dir, zip_filename)
+        
+        with zipfile.ZipFile(zip_path, 'w', zipfile.ZIP_DEFLATED) as zipf:
+            # Add all photos
+            photos = Photo.query.all()
+            for photo in photos:
+                if photo.media_type == 'video':
+                    file_path = os.path.join(app.config['VIDEO_FOLDER'], photo.filename)
+                elif photo.is_photobooth:
+                    file_path = os.path.join(app.config['PHOTOBOOTH_FOLDER'], photo.filename)
+                else:
+                    file_path = os.path.join(app.config['UPLOAD_FOLDER'], photo.filename)
+                
+                if os.path.exists(file_path):
+                    # Create organized folder structure in zip
+                    if photo.media_type == 'video':
+                        zip_path_in_archive = f"videos/{photo.filename}"
+                    elif photo.is_photobooth:
+                        zip_path_in_archive = f"photobooth/{photo.filename}"
+                    else:
+                        zip_path_in_archive = f"photos/{photo.filename}"
+                    
+                    zipf.write(file_path, zip_path_in_archive)
+                
+                # Add video thumbnails if they exist
+                if photo.media_type == 'video' and photo.thumbnail_filename:
+                    thumb_path = os.path.join(app.config['THUMBNAIL_FOLDER'], photo.thumbnail_filename)
+                    if os.path.exists(thumb_path):
+                        zipf.write(thumb_path, f"video_thumbnails/{photo.thumbnail_filename}")
+            
+            # Add guestbook photos
+            guestbook_entries = GuestbookEntry.query.all()
+            for entry in guestbook_entries:
+                if entry.photo_filename:
+                    file_path = os.path.join(app.config['GUESTBOOK_UPLOAD_FOLDER'], entry.photo_filename)
+                    if os.path.exists(file_path):
+                        zipf.write(file_path, f"guestbook_photos/{entry.photo_filename}")
+            
+            # Add message board photos
+            messages = Message.query.all()
+            for message in messages:
+                if message.photo_filename:
+                    file_path = os.path.join(app.config['MESSAGE_UPLOAD_FOLDER'], message.photo_filename)
+                    if os.path.exists(file_path):
+                        zipf.write(file_path, f"message_photos/{message.photo_filename}")
+            
+            # Add border files
+            border_settings = Settings.get('photobooth_border', '{}')
+            border_settings = json.loads(border_settings) if border_settings else {}
+            if border_settings.get('filename'):
+                border_path = os.path.join(app.config['BORDER_FOLDER'], border_settings['filename'])
+                if os.path.exists(border_path):
+                    zipf.write(border_path, f"borders/{border_settings['filename']}")
+            
+            # Create and add a data export (JSON file with all database content)
+            export_data = {
+                'export_timestamp': datetime.now().isoformat(),
+                'photos': [],
+                'guestbook_entries': [],
+                'messages': [],
+                'settings': {}
+            }
+            
+            # Export photos data
+            for photo in photos:
+                export_data['photos'].append({
+                    'id': photo.id,
+                    'filename': photo.filename,
+                    'original_filename': photo.original_filename,
+                    'uploader_name': photo.uploader_name,
+                    'upload_date': photo.upload_date.isoformat(),
+                    'description': photo.description,
+                    'likes': photo.likes,
+                    'media_type': photo.media_type,
+                    'duration': photo.duration,
+                    'is_photobooth': photo.is_photobooth,
+                    'comments': [
+                        {
+                            'commenter_name': comment.commenter_name,
+                            'content': comment.content,
+                            'created_at': comment.created_at.isoformat()
+                        } for comment in photo.comments
+                    ]
+                })
+            
+            # Export guestbook entries
+            for entry in guestbook_entries:
+                export_data['guestbook_entries'].append({
+                    'id': entry.id,
+                    'name': entry.name,
+                    'message': entry.message,
+                    'location': entry.location,
+                    'photo_filename': entry.photo_filename,
+                    'created_at': entry.created_at.isoformat()
+                })
+            
+            # Export messages
+            for message in messages:
+                export_data['messages'].append({
+                    'id': message.id,
+                    'author_name': message.author_name,
+                    'content': message.content,
+                    'photo_filename': message.photo_filename,
+                    'created_at': message.created_at.isoformat(),
+                    'likes': message.likes,
+                    'is_hidden': message.is_hidden,
+                    'comments': [
+                        {
+                            'commenter_name': comment.commenter_name,
+                            'content': comment.content,
+                            'created_at': comment.created_at.isoformat(),
+                            'is_hidden': comment.is_hidden
+                        } for comment in message.message_comments
+                    ]
+                })
+            
+            # Export settings
+            all_settings = Settings.query.all()
+            for setting in all_settings:
+                export_data['settings'][setting.key] = setting.value
+            
+            # Add the export data as JSON file
+            import json
+            export_json = json.dumps(export_data, indent=2, ensure_ascii=False)
+            zipf.writestr('wedding_gallery_data_export.json', export_json)
+        
+        # Send the zip file
+        return send_file(
+            zip_path,
+            mimetype='application/zip',
+            as_attachment=True,
+            download_name=zip_filename
+        )
+        
+    except Exception as e:
+        print(f"Error creating batch download: {e}")
+        return f"Error creating download: {str(e)}", 500
+
+@app.route('/admin/system-reset', methods=['POST'])
+def system_reset():
+    admin_key = request.args.get('key', '')
+    if admin_key != 'wedding2024':
+        return "Unauthorized", 401
+    
+    data = request.get_json()
+    confirmation = data.get('confirmation', '')
+    
+    # Require specific confirmation text
+    if confirmation != 'RESET EVERYTHING':
+        return jsonify({'error': 'Invalid confirmation. Please type "RESET EVERYTHING" to confirm.'}), 400
+    
+    try:
+        # Delete all database records
+        MessageComment.query.delete()
+        MessageLike.query.delete()
+        Message.query.delete()
+        Comment.query.delete()
+        Like.query.delete()
+        Photo.query.delete()
+        GuestbookEntry.query.delete()
+        Settings.query.delete()
+        db.session.commit()
+        
+        # Delete all uploaded files
+        upload_folders = [
+            app.config['UPLOAD_FOLDER'],
+            app.config['VIDEO_FOLDER'],
+            app.config['THUMBNAIL_FOLDER'],
+            app.config['PHOTOBOOTH_FOLDER'],
+            app.config['GUESTBOOK_UPLOAD_FOLDER'],
+            app.config['MESSAGE_UPLOAD_FOLDER'],
+            app.config['BORDER_FOLDER']
+        ]
+        
+        for folder in upload_folders:
+            if os.path.exists(folder):
+                # Remove all files in the folder
+                for filename in os.listdir(folder):
+                    file_path = os.path.join(folder, filename)
+                    try:
+                        if os.path.isfile(file_path):
+                            os.unlink(file_path)
+                    except Exception as e:
+                        print(f"Error deleting {file_path}: {e}")
+        
+        return jsonify({'success': True, 'message': 'System reset completed successfully'})
+        
+    except Exception as e:
+        db.session.rollback()
+        print(f"Error during system reset: {e}")
+        return jsonify({'error': f'System reset failed: {str(e)}'}), 500
 
 @app.route('/admin/upload-border', methods=['POST'])
 def upload_border():
