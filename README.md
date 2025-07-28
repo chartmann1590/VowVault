@@ -11,6 +11,7 @@ A beautiful, self-hosted wedding photo gallery application that allows wedding g
 
 ### For Guests
 - 📸 **Easy Photo/Video Upload** - No login required, just upload and share (photos and videos up to 50MB, videos max 15 seconds)
+- 📧 **Email Photo Upload** - Send photos directly via email to automatically add them to the gallery
 - 🤳 **Virtual Photobooth** - Take photos with custom wedding borders using device camera
 - ❤️ **Like Photos/Videos** - Show appreciation for beautiful moments
 - 💬 **Leave Comments** - Share memories and messages on photos and videos
@@ -22,6 +23,7 @@ A beautiful, self-hosted wedding photo gallery application that allows wedding g
 ### For Admins
 - 🔐 **Admin Dashboard** - Secure admin area with simple key authentication
 - 📊 **Statistics** - View total photos, videos, likes, comments, messages, guestbook entries, and photobooth photos
+- 📧 **Email Photo Upload** - Configure email settings to allow guests to email photos directly to the gallery
 - 🗑️ **Content Management** - Delete inappropriate photos, messages, or guestbook entries
 - 👁️ **Hide/Show Messages** - Hide inappropriate messages without deleting them
 - ✏️ **Edit Guestbook** - Modify guestbook entries when needed
@@ -98,6 +100,25 @@ app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://user:pass@localhost/dbname
 ### File Uploads
 - Maximum file size: 50MB (supports both photos and videos)
 - Photo formats: PNG, JPG, JPEG, GIF, WEBP
+
+### Environment Variables
+Copy `env.example` to `.env` and configure your settings:
+```bash
+cp env.example .env
+# Edit .env with your actual values
+```
+
+### Git Configuration
+The `.gitignore` file is configured to exclude:
+- Virtual environment (`venv/`)
+- Database files (`*.db`, `*.sqlite`)
+- Upload directories (`static/uploads/`)
+- Environment files (`.env`)
+- Email credentials and logs
+- Python cache files (`__pycache__/`)
+- OS generated files (`.DS_Store`, etc.)
+
+**Important**: Never commit sensitive information like email passwords or API keys!
 - Video formats: MP4, MOV, AVI, WEBM (max 15 seconds)
 
 ## 📁 Project Structure

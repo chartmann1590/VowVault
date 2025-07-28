@@ -1,5 +1,6 @@
 from flask import Flask, render_template, request, redirect, url_for, jsonify, make_response, send_file
 from flask_sqlalchemy import SQLAlchemy
+from flask_mail import Mail, Message
 from datetime import datetime
 import os
 from werkzeug.utils import secure_filename
@@ -21,6 +22,16 @@ import base64
 from PIL import Image as PILImage
 import zipfile
 import shutil
+import email
+import imaplib
+import smtplib
+from email.mime.text import MIMEText
+from email.mime.multipart import MIMEMultipart
+from email.mime.image import MIMEImage
+from email.mime.base import MIMEBase
+from email import encoders
+import threading
+import time
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', secrets.token_hex(16))
@@ -38,7 +49,17 @@ app.config['ALLOWED_IMAGE_EXTENSIONS'] = {'png', 'jpg', 'jpeg', 'gif', 'webp'}
 app.config['ALLOWED_VIDEO_EXTENSIONS'] = {'mp4', 'mov', 'avi', 'webm'}
 app.config['MAX_VIDEO_DURATION'] = 15  # seconds
 
+# Email configuration
+app.config['MAIL_SERVER'] = os.environ.get('MAIL_SERVER', 'smtp.gmail.com')
+app.config['MAIL_PORT'] = int(os.environ.get('MAIL_PORT', 587))
+app.config['MAIL_USE_TLS'] = os.environ.get('MAIL_USE_TLS', 'True').lower() == 'true'
+app.config['MAIL_USE_SSL'] = os.environ.get('MAIL_USE_SSL', 'False').lower() == 'true'
+app.config['MAIL_USERNAME'] = os.environ.get('MAIL_USERNAME', '')
+app.config['MAIL_PASSWORD'] = os.environ.get('MAIL_PASSWORD', '')
+app.config['MAIL_DEFAULT_SENDER'] = os.environ.get('MAIL_DEFAULT_SENDER', '')
+
 db = SQLAlchemy(app)
+mail = Mail(app)
 
 # Ensure upload directories exist
 os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
@@ -170,6 +191,213 @@ def create_video_thumbnail(video_path, thumbnail_path):
     except Exception as e:
         print(f"Error creating thumbnail: {e}")
     return False
+
+def get_email_settings():
+    """Get email settings from database"""
+    return {
+        'smtp_server': Settings.get('email_smtp_server', 'smtp.gmail.com'),
+        'smtp_port': Settings.get('email_smtp_port', '587'),
+        'smtp_username': Settings.get('email_smtp_username', ''),
+        'smtp_password': Settings.get('email_smtp_password', ''),
+        'imap_server': Settings.get('email_imap_server', 'imap.gmail.com'),
+        'imap_port': Settings.get('email_imap_port', '993'),
+        'imap_username': Settings.get('email_imap_username', ''),
+        'imap_password': Settings.get('email_imap_password', ''),
+        'monitor_email': Settings.get('email_monitor_email', ''),
+        'enabled': Settings.get('email_enabled', 'false').lower() == 'true'
+    }
+
+def send_confirmation_email(recipient_email, photo_count, gallery_url):
+    """Send confirmation email to user who uploaded photos via email"""
+    try:
+        email_settings = get_email_settings()
+        if not email_settings['enabled'] or not email_settings['smtp_username']:
+            return False
+            
+        msg = MIMEMultipart()
+        msg['From'] = email_settings['smtp_username']
+        msg['To'] = recipient_email
+        msg['Subject'] = "Thank you for sharing your wedding photos!"
+        
+        body = f"""
+        Hi there!
+        
+        Thank you so much for sharing your wedding photos with us! We've successfully added {photo_count} photo(s) to our wedding gallery.
+        
+        You can view all the photos here: {gallery_url}
+        
+        We're so grateful to have these memories captured from your perspective. Thank you for being part of our special day!
+        
+        Best wishes,
+        The Happy Couple
+        """
+        
+        msg.attach(MIMEText(body, 'plain'))
+        
+        # Send email
+        server = smtplib.SMTP(email_settings['smtp_server'], int(email_settings['smtp_port']))
+        server.starttls()
+        server.login(email_settings['smtp_username'], email_settings['smtp_password'])
+        server.send_message(msg)
+        server.quit()
+        
+        return True
+    except Exception as e:
+        print(f"Error sending confirmation email: {e}")
+        return False
+
+def send_rejection_email(recipient_email, reason):
+    """Send rejection email to user who sent non-photo content"""
+    try:
+        email_settings = get_email_settings()
+        if not email_settings['enabled'] or not email_settings['smtp_username']:
+            return False
+            
+        msg = MIMEMultipart()
+        msg['From'] = email_settings['smtp_username']
+        msg['To'] = recipient_email
+        msg['Subject'] = "Photo upload - only photos accepted"
+        
+        body = f"""
+        Hi there!
+        
+        Thank you for trying to share content with our wedding gallery! However, we can only accept photo attachments at this time.
+        
+        {reason}
+        
+        Please send only photo files (JPG, PNG, GIF, WebP) as attachments to this email address.
+        
+        Thank you for understanding!
+        
+        Best wishes,
+        The Happy Couple
+        """
+        
+        msg.attach(MIMEText(body, 'plain'))
+        
+        # Send email
+        server = smtplib.SMTP(email_settings['smtp_server'], int(email_settings['smtp_port']))
+        server.starttls()
+        server.login(email_settings['smtp_username'], email_settings['smtp_password'])
+        server.send_message(msg)
+        server.quit()
+        
+        return True
+    except Exception as e:
+        print(f"Error sending rejection email: {e}")
+        return False
+
+def process_email_photos():
+    """Process incoming emails and extract photos"""
+    try:
+        email_settings = get_email_settings()
+        if not email_settings['enabled'] or not email_settings['imap_username']:
+            return
+            
+        # Connect to IMAP server
+        mail = imaplib.IMAP4_SSL(email_settings['imap_server'], int(email_settings['imap_port']))
+        mail.login(email_settings['imap_username'], email_settings['imap_password'])
+        mail.select('INBOX')
+        
+        # Search for unread emails
+        status, messages = mail.search(None, 'UNSEEN')
+        
+        if status != 'OK':
+            return
+            
+        for num in messages[0].split():
+            try:
+                status, msg_data = mail.fetch(num, '(RFC822)')
+                if status != 'OK':
+                    continue
+                    
+                email_body = msg_data[0][1]
+                email_message = email.message_from_bytes(email_body)
+                
+                sender_email = email_message['from']
+                # Extract email from "Name <email@domain.com>" format
+                if '<' in sender_email and '>' in sender_email:
+                    sender_email = sender_email.split('<')[1].split('>')[0]
+                
+                photo_count = 0
+                has_photos = False
+                has_non_photos = False
+                
+                # Process attachments
+                for part in email_message.walk():
+                    if part.get_content_maintype() == 'multipart':
+                        continue
+                    if part.get('Content-Disposition') is None:
+                        continue
+                        
+                    filename = part.get_filename()
+                    if filename:
+                        # Check if it's a photo
+                        if is_image(filename):
+                            has_photos = True
+                            # Save the photo
+                            file_data = part.get_payload(decode=True)
+                            if file_data:
+                                # Generate unique filename
+                                timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+                                safe_filename = secure_filename(filename)
+                                unique_filename = f"{timestamp}_{safe_filename}"
+                                file_path = os.path.join(app.config['UPLOAD_FOLDER'], unique_filename)
+                                
+                                with open(file_path, 'wb') as f:
+                                    f.write(file_data)
+                                
+                                # Create database entry
+                                photo = Photo(
+                                    filename=unique_filename,
+                                    original_filename=filename,
+                                    uploader_name=sender_email,
+                                    upload_date=datetime.utcnow()
+                                )
+                                db.session.add(photo)
+                                photo_count += 1
+                        else:
+                            has_non_photos = True
+                
+                # Commit database changes
+                if photo_count > 0:
+                    db.session.commit()
+                    
+                    # Send confirmation email
+                    public_url = Settings.get('public_url', '')
+                    if public_url:
+                        send_confirmation_email(sender_email, photo_count, public_url)
+                
+                # Send rejection email if only non-photos were sent
+                elif has_non_photos and not has_photos:
+                    send_rejection_email(sender_email, "We received your email but it didn't contain any photo attachments.")
+                
+                # Mark email as read
+                mail.store(num, '+FLAGS', '\\Seen')
+                
+            except Exception as e:
+                print(f"Error processing email: {e}")
+                continue
+        
+        mail.close()
+        mail.logout()
+        
+    except Exception as e:
+        print(f"Error in email processing: {e}")
+
+def start_email_monitor():
+    """Start the email monitoring thread"""
+    def monitor_emails():
+        while True:
+            try:
+                process_email_photos()
+                time.sleep(300)  # Check every 5 minutes
+            except Exception as e:
+                print(f"Email monitor error: {e}")
+                time.sleep(600)  # Wait 10 minutes on error
+    
+    thread = threading.Thread(target=monitor_emails, daemon=True)
+    thread.start()
 
 @app.route('/')
 def index():
@@ -608,6 +836,20 @@ def admin():
     border_settings = Settings.get('photobooth_border', '{}')
     border_settings = json.loads(border_settings) if border_settings else {}
     
+    # Get email settings
+    email_settings = {
+        'enabled': Settings.get('email_enabled', 'false').lower() == 'true',
+        'smtp_server': Settings.get('email_smtp_server', 'smtp.gmail.com'),
+        'smtp_port': Settings.get('email_smtp_port', '587'),
+        'smtp_username': Settings.get('email_smtp_username', ''),
+        'smtp_password': Settings.get('email_smtp_password', ''),
+        'imap_server': Settings.get('email_imap_server', 'imap.gmail.com'),
+        'imap_port': Settings.get('email_imap_port', '993'),
+        'imap_username': Settings.get('email_imap_username', ''),
+        'imap_password': Settings.get('email_imap_password', ''),
+        'monitor_email': Settings.get('email_monitor_email', '')
+    }
+    
     # Count photobooth photos
     photobooth_count = Photo.query.filter_by(is_photobooth=True).count()
     
@@ -626,7 +868,8 @@ def admin():
                          public_url=public_url,
                          qr_settings=qr_settings,
                          welcome_settings=welcome_settings,
-                         border_settings=border_settings)
+                         border_settings=border_settings,
+                         email_settings=email_settings)
 
 @app.route('/admin/batch-download')
 def batch_download():
@@ -1015,7 +1258,33 @@ def save_settings():
     if 'welcome_settings' in data:
         Settings.set('welcome_modal', json.dumps(data['welcome_settings']))
     
+    # Save email settings
+    if 'email_settings' in data:
+        email_data = data['email_settings']
+        Settings.set('email_enabled', str(email_data.get('enabled', False)).lower())
+        Settings.set('email_smtp_server', email_data.get('smtp_server', 'smtp.gmail.com'))
+        Settings.set('email_smtp_port', str(email_data.get('smtp_port', '587')))
+        Settings.set('email_smtp_username', email_data.get('smtp_username', ''))
+        Settings.set('email_smtp_password', email_data.get('smtp_password', ''))
+        Settings.set('email_imap_server', email_data.get('imap_server', 'imap.gmail.com'))
+        Settings.set('email_imap_port', str(email_data.get('imap_port', '993')))
+        Settings.set('email_imap_username', email_data.get('imap_username', ''))
+        Settings.set('email_imap_password', email_data.get('imap_password', ''))
+        Settings.set('email_monitor_email', email_data.get('monitor_email', ''))
+    
     return jsonify({'success': True})
+
+@app.route('/admin/start-email-monitor', methods=['POST'])
+def start_email_monitor_route():
+    admin_key = request.args.get('key', '')
+    if admin_key != 'wedding2024':
+        return "Unauthorized", 401
+    
+    try:
+        start_email_monitor()
+        return jsonify({'success': True, 'message': 'Email monitor started successfully'})
+    except Exception as e:
+        return jsonify({'success': False, 'message': f'Error starting email monitor: {str(e)}'})
 
 @app.route('/admin/generate-qr-pdf')
 def generate_qr_pdf():
@@ -1171,4 +1440,8 @@ def too_large(e):
 if __name__ == '__main__':
     with app.app_context():
         db.create_all()
+        # Start email monitor if enabled
+        email_settings = get_email_settings()
+        if email_settings['enabled']:
+            start_email_monitor()
     app.run(debug=True, host='0.0.0.0')

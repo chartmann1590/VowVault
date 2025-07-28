@@ -903,6 +903,157 @@
         </div>
     </div>
 
+    <!-- Email Photo Upload Settings Section -->
+    <div class="section-card">
+        <div class="section-header">
+            <h3>Email Photo Upload Settings</h3>
+        </div>
+        <div class="section-content">
+            <div class="qr-settings-grid">
+                <div class="qr-form-section">
+                    <h4 style="color: #8b7355; margin-bottom: 1.5rem;">Email Configuration</h4>
+                    
+                    <div class="form-group">
+                        <label style="display: flex; align-items: center; gap: 0.5rem;">
+                            <input type="checkbox" 
+                                   id="email_enabled" 
+                                   {% if email_settings.get('enabled', False) %}checked{% endif %}>
+                            Enable Email Photo Upload
+                        </label>
+                        <small style="color: #666; display: block; margin-top: 0.5rem;">
+                            When enabled, users can email photos to the configured email address
+                        </small>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="email_monitor_email">Monitor Email Address</label>
+                        <input type="email" 
+                               id="email_monitor_email" 
+                               placeholder="photos@yourdomain.com"
+                               value="{{ email_settings.get('monitor_email', '') }}">
+                        <small style="color: #666; display: block; margin-top: 0.5rem;">
+                            Email address to monitor for incoming photo uploads
+                        </small>
+                    </div>
+
+                    <h5 style="color: #8b7355; margin: 2rem 0 1rem 0;">SMTP Settings (for sending emails)</h5>
+                    
+                    <div class="form-group">
+                        <label for="email_smtp_server">SMTP Server</label>
+                        <input type="text" 
+                               id="email_smtp_server" 
+                               placeholder="smtp.gmail.com"
+                               value="{{ email_settings.get('smtp_server', 'smtp.gmail.com') }}">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="email_smtp_port">SMTP Port</label>
+                        <input type="number" 
+                               id="email_smtp_port" 
+                               placeholder="587"
+                               value="{{ email_settings.get('smtp_port', '587') }}">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="email_smtp_username">SMTP Username</label>
+                        <input type="email" 
+                               id="email_smtp_username" 
+                               placeholder="your-email@gmail.com"
+                               value="{{ email_settings.get('smtp_username', '') }}">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="email_smtp_password">SMTP Password</label>
+                        <input type="password" 
+                               id="email_smtp_password" 
+                               placeholder="App password or regular password"
+                               value="{{ email_settings.get('smtp_password', '') }}">
+                        <small style="color: #666; display: block; margin-top: 0.5rem;">
+                            For Gmail, use an App Password. For other providers, use your regular password.
+                        </small>
+                    </div>
+
+                    <h5 style="color: #8b7355; margin: 2rem 0 1rem 0;">IMAP Settings (for receiving emails)</h5>
+                    
+                    <div class="form-group">
+                        <label for="email_imap_server">IMAP Server</label>
+                        <input type="text" 
+                               id="email_imap_server" 
+                               placeholder="imap.gmail.com"
+                               value="{{ email_settings.get('imap_server', 'imap.gmail.com') }}">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="email_imap_port">IMAP Port</label>
+                        <input type="number" 
+                               id="email_imap_port" 
+                               placeholder="993"
+                               value="{{ email_settings.get('imap_port', '993') }}">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="email_imap_username">IMAP Username</label>
+                        <input type="email" 
+                               id="email_imap_username" 
+                               placeholder="your-email@gmail.com"
+                               value="{{ email_settings.get('imap_username', '') }}">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="email_imap_password">IMAP Password</label>
+                        <input type="password" 
+                               id="email_imap_password" 
+                               placeholder="App password or regular password"
+                               value="{{ email_settings.get('imap_password', '') }}">
+                        <small style="color: #666; display: block; margin-top: 0.5rem;">
+                            For Gmail, use an App Password. For other providers, use your regular password.
+                        </small>
+                    </div>
+                </div>
+
+                <div class="qr-preview">
+                    <h4>How It Works</h4>
+                    <div class="preview-content" style="text-align: left;">
+                        <div style="background: #f9f5f0; padding: 1.5rem; border-radius: 8px; margin-bottom: 1rem;">
+                            <strong style="color: #8b7355;">Email Upload Process:</strong>
+                            <ol style="margin: 0.5rem 0 0 1rem; padding-left: 1rem; color: #666;">
+                                <li>Users email photos to the monitor address</li>
+                                <li>System checks for photo attachments</li>
+                                <li>Photos are automatically added to gallery</li>
+                                <li>Confirmation email sent to user</li>
+                                <li>Non-photo emails get rejection notice</li>
+                            </ol>
+                        </div>
+                        
+                        <div style="background: #e8f5e8; padding: 1rem; border-radius: 8px; margin-bottom: 1rem;">
+                            <strong style="color: #28a745;">Accepted Formats:</strong>
+                            <ul style="margin: 0.5rem 0 0 1rem; padding-left: 1rem; color: #666;">
+                                <li>JPG / JPEG</li>
+                                <li>PNG</li>
+                                <li>GIF</li>
+                                <li>WebP</li>
+                            </ul>
+                        </div>
+                        
+                        <div style="background: #fff3cd; padding: 1rem; border-radius: 8px;">
+                            <strong style="color: #856404;">Setup Notes:</strong>
+                            <ul style="margin: 0.5rem 0 0 1rem; padding-left: 1rem; color: #666;">
+                                <li>Gmail requires App Passwords</li>
+                                <li>Enable "Less secure app access" for some providers</li>
+                                <li>Check your email provider's IMAP settings</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="button-group">
+                <button class="btn" onclick="saveAllSettings()">Save Email Settings</button>
+                <button class="btn btn-secondary" onclick="startEmailMonitor()">Start Email Monitor</button>
+            </div>
+        </div>
+    </div>
+
     <!-- Photos & Videos Management -->
     <div class="photos-table">
         <div class="table-header">
@@ -1444,6 +1595,18 @@
                 message: document.getElementById('modal_message').value,
                 couple_photo: document.getElementById('couple_photo_url').value,
                 instructions: instructions
+            },
+            email_settings: {
+                enabled: document.getElementById('email_enabled').checked,
+                monitor_email: document.getElementById('email_monitor_email').value,
+                smtp_server: document.getElementById('email_smtp_server').value,
+                smtp_port: document.getElementById('email_smtp_port').value,
+                smtp_username: document.getElementById('email_smtp_username').value,
+                smtp_password: document.getElementById('email_smtp_password').value,
+                imap_server: document.getElementById('email_imap_server').value,
+                imap_port: document.getElementById('email_imap_port').value,
+                imap_username: document.getElementById('email_imap_username').value,
+                imap_password: document.getElementById('email_imap_password').value
             }
         };
 
@@ -1462,6 +1625,29 @@
                     document.getElementById('successMessage').style.display = 'none';
                 }, 3000);
             }
+        });
+    }
+
+    function startEmailMonitor() {
+        const urlParams = new URLSearchParams(window.location.search);
+        const key = urlParams.get('key');
+        
+        fetch(`/admin/start-email-monitor?key=${key}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert('Email monitor started successfully!');
+            } else {
+                alert('Error starting email monitor: ' + data.message);
+            }
+        })
+        .catch(error => {
+            alert('Error starting email monitor: ' + error);
         });
     }
 
