@@ -949,6 +949,16 @@ def generate_qr_pdf():
         download_name='wedding_photo_qr.pdf'
     )
 
+@app.route('/privacy-policy')
+def privacy_policy():
+    current_date = datetime.now().strftime('%B %d, %Y')
+    return render_template('privacy_policy.html', current_date=current_date)
+
+@app.route('/terms-of-use')
+def terms_of_use():
+    current_date = datetime.now().strftime('%B %d, %Y')
+    return render_template('terms_of_use.html', current_date=current_date)
+
 @app.errorhandler(413)
 def too_large(e):
     return "File is too large. Maximum size is 50MB.", 413

@@ -1,0 +1,282 @@
+{% extends "base.html" %}
+
+{% block title %}Terms of Use - Wedding Gallery{% endblock %}
+
+{% block extra_styles %}
+<style>
+    .policy-container {
+        max-width: 800px;
+        margin: 0 auto;
+        background: white;
+        padding: 3rem;
+        border-radius: 20px;
+        box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+    }
+
+    .policy-header {
+        text-align: center;
+        margin-bottom: 3rem;
+    }
+
+    .policy-header h1 {
+        font-family: 'Playfair Display', serif;
+        font-size: 2.5rem;
+        color: #8b7355;
+        margin-bottom: 1rem;
+    }
+
+    .policy-header p {
+        color: #999;
+        font-style: italic;
+    }
+
+    .policy-content h2 {
+        font-family: 'Playfair Display', serif;
+        color: #8b7355;
+        font-size: 1.8rem;
+        margin-top: 2.5rem;
+        margin-bottom: 1rem;
+    }
+
+    .policy-content h3 {
+        color: #6b5d54;
+        font-size: 1.3rem;
+        margin-top: 2rem;
+        margin-bottom: 0.75rem;
+    }
+
+    .policy-content p {
+        line-height: 1.8;
+        color: #555;
+        margin-bottom: 1rem;
+    }
+
+    .policy-content ul {
+        margin-left: 2rem;
+        margin-bottom: 1rem;
+        line-height: 1.8;
+        color: #555;
+    }
+
+    .policy-content li {
+        margin-bottom: 0.5rem;
+    }
+
+    .important-notice {
+        background: #fff3cd;
+        border: 1px solid #ffeaa7;
+        color: #856404;
+        padding: 1.5rem;
+        border-radius: 10px;
+        margin: 2rem 0;
+    }
+
+    .contact-info {
+        background: #f9f5f0;
+        padding: 2rem;
+        border-radius: 15px;
+        margin-top: 3rem;
+    }
+
+    .contact-info h3 {
+        color: #8b7355;
+        margin-bottom: 1rem;
+    }
+
+    .back-link {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        color: #8b7355;
+        text-decoration: none;
+        margin-bottom: 2rem;
+        transition: color 0.3s ease;
+    }
+
+    .back-link:hover {
+        color: #6b5d54;
+    }
+
+    .back-link svg {
+        width: 20px;
+        height: 20px;
+        fill: currentColor;
+    }
+
+    @media (max-width: 768px) {
+        .policy-container {
+            padding: 2rem 1.5rem;
+            border-radius: 0;
+            box-shadow: none;
+        }
+
+        .policy-header h1 {
+            font-size: 2rem;
+        }
+
+        .policy-content h2 {
+            font-size: 1.5rem;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<a href="{{ url_for('index') }}" class="back-link">
+    <svg viewBox="0 0 24 24">
+        <path d="M20,11V13H8L13.5,18.5L12.08,19.92L4.16,12L12.08,4.08L13.5,5.5L8,11H20Z"/>
+    </svg>
+    Back to Gallery
+</a>
+
+<div class="policy-container">
+    <div class="policy-header">
+        <h1>Terms of Use</h1>
+        <p>Last updated: {{ current_date }}</p>
+    </div>
+
+    <div class="policy-content">
+        <h2>Welcome to Our Wedding Gallery</h2>
+        <p>
+            These Terms of Use ("Terms") govern your use of our wedding photo gallery service. By accessing or using this service, you agree to be bound by these Terms. If you do not agree to these Terms, please do not use the service.
+        </p>
+
+        <h2>1. Acceptance of Terms</h2>
+        <p>
+            By uploading photos, posting messages, signing the guestbook, or otherwise interacting with this wedding gallery, you acknowledge that you have read, understood, and agree to be bound by these Terms.
+        </p>
+
+        <h2>2. Service Description</h2>
+        <p>
+            This wedding photo gallery is a private platform created for wedding guests to share photos, videos, and memories from the wedding celebration. The service includes:
+        </p>
+        <ul>
+            <li>Photo and video upload functionality</li>
+            <li>Virtual photobooth feature</li>
+            <li>Message board for guests</li>
+            <li>Digital guestbook</li>
+            <li>Commenting and liking features</li>
+        </ul>
+
+        <h2>3. User Conduct</h2>
+        <h3>Acceptable Use</h3>
+        <p>When using this service, you agree to:</p>
+        <ul>
+            <li>Upload only content related to the wedding celebration</li>
+            <li>Respect the privacy and dignity of all wedding guests</li>
+            <li>Post messages and comments that are respectful and appropriate</li>
+            <li>Use real names or appropriate identifiers when posting</li>
+        </ul>
+
+        <h3>Prohibited Conduct</h3>
+        <p>You agree NOT to:</p>
+        <ul>
+            <li>Upload inappropriate, offensive, or explicit content</li>
+            <li>Post malicious, defamatory, or harassing messages</li>
+            <li>Upload content that infringes on others' rights</li>
+            <li>Attempt to hack, disrupt, or misuse the service</li>
+            <li>Upload content unrelated to the wedding</li>
+            <li>Impersonate other guests or individuals</li>
+        </ul>
+
+        <div class="important-notice">
+            <strong>Important:</strong> The wedding couple and administrators reserve the right to remove any content that violates these terms or is deemed inappropriate for the wedding gallery.
+        </div>
+
+        <h2>4. Content Rights and Licensing</h2>
+        <h3>Your Content</h3>
+        <p>
+            You retain ownership of any photos, videos, or other content you upload. However, by uploading content, you grant the wedding couple a non-exclusive, royalty-free license to:
+        </p>
+        <ul>
+            <li>Display the content in the wedding gallery</li>
+            <li>Include the content in wedding albums or keepsakes</li>
+            <li>Share the content with other wedding guests through the platform</li>
+        </ul>
+
+        <h3>Others' Content</h3>
+        <p>
+            You may view and enjoy content uploaded by other guests, but you may not download, copy, or use other guests' content without their permission.
+        </p>
+
+        <h2>5. Privacy and Public Visibility</h2>
+        <p>
+            <strong>Please Note:</strong> All content uploaded to this gallery is visible to anyone with access to the gallery URL. This includes:
+        </p>
+        <ul>
+            <li>Photos and videos you upload</li>
+            <li>Messages on the message board</li>
+            <li>Guestbook entries</li>
+            <li>Comments on photos</li>
+            <li>Your name (as provided)</li>
+        </ul>
+
+        <h2>6. Video Upload Restrictions</h2>
+        <p>
+            Videos uploaded to the gallery must be:
+        </p>
+        <ul>
+            <li>15 seconds or less in duration</li>
+            <li>Under 50MB in file size</li>
+            <li>In supported formats (MP4, MOV, AVI, WEBM)</li>
+        </ul>
+
+        <h2>7. Moderation and Content Removal</h2>
+        <p>
+            The wedding couple and designated administrators have the right to:
+        </p>
+        <ul>
+            <li>Remove any content without notice</li>
+            <li>Hide or delete inappropriate messages</li>
+            <li>Block access to users who violate these terms</li>
+            <li>Edit guestbook entries for appropriateness</li>
+        </ul>
+
+        <h2>8. Disclaimer of Warranties</h2>
+        <p>
+            This service is provided "as is" without any warranties, express or implied. We do not guarantee:
+        </p>
+        <ul>
+            <li>Continuous, uninterrupted access to the service</li>
+            <li>The permanence of uploaded content</li>
+            <li>The accuracy or reliability of any content</li>
+        </ul>
+
+        <h2>9. Limitation of Liability</h2>
+        <p>
+            The creators, administrators, and wedding couple shall not be liable for any indirect, incidental, special, or consequential damages arising from your use of this service.
+        </p>
+
+        <h2>10. Indemnification</h2>
+        <p>
+            You agree to indemnify and hold harmless the wedding couple, administrators, and service creators from any claims arising from your violation of these Terms or your use of the service.
+        </p>
+
+        <h2>11. Changes to Terms</h2>
+        <p>
+            These Terms may be updated from time to time. Continued use of the service after changes constitutes acceptance of the new Terms.
+        </p>
+
+        <h2>12. Termination</h2>
+        <p>
+            Access to this gallery may be terminated at any time for violation of these Terms or at the discretion of the administrators.
+        </p>
+
+        <h2>13. Governing Law</h2>
+        <p>
+            These Terms shall be governed by the laws of the jurisdiction where the wedding takes place, without regard to conflict of law principles.
+        </p>
+
+        <div class="contact-info">
+            <h3>Contact Information</h3>
+            <p>
+                For questions about these Terms of Use, please contact the wedding couple directly or reach out to the site administrator.
+            </p>
+            <p>
+                <strong>Created by:</strong> Charles Hartmann<br>
+                <strong>GitHub:</strong> <a href="https://github.com/chartmann1590" target="_blank">github.com/chartmann1590</a>
+            </p>
+        </div>
+    </div>
+</div>
+{% endblock %}

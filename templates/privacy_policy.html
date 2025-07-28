@@ -1,0 +1,212 @@
+{% extends "base.html" %}
+
+{% block title %}Privacy Policy - Wedding Gallery{% endblock %}
+
+{% block extra_styles %}
+<style>
+    .policy-container {
+        max-width: 800px;
+        margin: 0 auto;
+        background: white;
+        padding: 3rem;
+        border-radius: 20px;
+        box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+    }
+
+    .policy-header {
+        text-align: center;
+        margin-bottom: 3rem;
+    }
+
+    .policy-header h1 {
+        font-family: 'Playfair Display', serif;
+        font-size: 2.5rem;
+        color: #8b7355;
+        margin-bottom: 1rem;
+    }
+
+    .policy-header p {
+        color: #999;
+        font-style: italic;
+    }
+
+    .policy-content h2 {
+        font-family: 'Playfair Display', serif;
+        color: #8b7355;
+        font-size: 1.8rem;
+        margin-top: 2.5rem;
+        margin-bottom: 1rem;
+    }
+
+    .policy-content h3 {
+        color: #6b5d54;
+        font-size: 1.3rem;
+        margin-top: 2rem;
+        margin-bottom: 0.75rem;
+    }
+
+    .policy-content p {
+        line-height: 1.8;
+        color: #555;
+        margin-bottom: 1rem;
+    }
+
+    .policy-content ul {
+        margin-left: 2rem;
+        margin-bottom: 1rem;
+        line-height: 1.8;
+        color: #555;
+    }
+
+    .policy-content li {
+        margin-bottom: 0.5rem;
+    }
+
+    .contact-info {
+        background: #f9f5f0;
+        padding: 2rem;
+        border-radius: 15px;
+        margin-top: 3rem;
+    }
+
+    .contact-info h3 {
+        color: #8b7355;
+        margin-bottom: 1rem;
+    }
+
+    .back-link {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        color: #8b7355;
+        text-decoration: none;
+        margin-bottom: 2rem;
+        transition: color 0.3s ease;
+    }
+
+    .back-link:hover {
+        color: #6b5d54;
+    }
+
+    .back-link svg {
+        width: 20px;
+        height: 20px;
+        fill: currentColor;
+    }
+
+    @media (max-width: 768px) {
+        .policy-container {
+            padding: 2rem 1.5rem;
+            border-radius: 0;
+            box-shadow: none;
+        }
+
+        .policy-header h1 {
+            font-size: 2rem;
+        }
+
+        .policy-content h2 {
+            font-size: 1.5rem;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<a href="{{ url_for('index') }}" class="back-link">
+    <svg viewBox="0 0 24 24">
+        <path d="M20,11V13H8L13.5,18.5L12.08,19.92L4.16,12L12.08,4.08L13.5,5.5L8,11H20Z"/>
+    </svg>
+    Back to Gallery
+</a>
+
+<div class="policy-container">
+    <div class="policy-header">
+        <h1>Privacy Policy</h1>
+        <p>Last updated: {{ current_date }}</p>
+    </div>
+
+    <div class="policy-content">
+        <h2>Introduction</h2>
+        <p>
+            Welcome to our Wedding Photo Gallery. This Privacy Policy explains how we collect, use, and protect your information when you use our wedding photo sharing service. We are committed to protecting your privacy and ensuring a safe online experience for all our wedding guests.
+        </p>
+
+        <h2>Information We Collect</h2>
+        
+        <h3>Information You Provide</h3>
+        <p>When you use our service, you may provide:</p>
+        <ul>
+            <li><strong>Name:</strong> When uploading photos, commenting, or signing the guestbook</li>
+            <li><strong>Photos and Videos:</strong> Content you choose to upload to the gallery</li>
+            <li><strong>Messages and Comments:</strong> Text you post on the message board or photo comments</li>
+            <li><strong>Location (Optional):</strong> If you choose to share it in the guestbook</li>
+        </ul>
+
+        <h3>Automatically Collected Information</h3>
+        <p>We automatically collect certain information through cookies:</p>
+        <ul>
+            <li><strong>User Preferences:</strong> Your name preference for future uploads</li>
+            <li><strong>Interaction Data:</strong> Photos you've liked (stored anonymously)</li>
+            <li><strong>Session Information:</strong> To remember if you've seen the welcome modal</li>
+        </ul>
+
+        <h2>How We Use Your Information</h2>
+        <p>We use the collected information to:</p>
+        <ul>
+            <li>Display your uploaded photos and videos in the gallery</li>
+            <li>Show your comments and messages to other guests</li>
+            <li>Remember your preferences for a better user experience</li>
+            <li>Track likes and interactions with content</li>
+            <li>Create a memorable digital keepsake of the wedding celebration</li>
+        </ul>
+
+        <h2>Information Sharing</h2>
+        <p>
+            <strong>Public Nature of Content:</strong> Please be aware that all photos, videos, messages, and guestbook entries you submit are visible to all users of the gallery. This is designed to create a shared experience for all wedding guests.
+        </p>
+        <p>
+            We do not sell, trade, or otherwise transfer your personal information to third parties. The gallery is hosted privately and accessible only to those with the gallery URL.
+        </p>
+
+        <h2>Data Storage and Security</h2>
+        <p>
+            Your data is stored on secure servers with appropriate technical measures to protect against unauthorized access. However, please remember that no method of internet transmission is 100% secure.
+        </p>
+
+        <h2>Your Rights</h2>
+        <p>You have the right to:</p>
+        <ul>
+            <li>Upload content voluntarily - participation is entirely optional</li>
+            <li>Choose what name to display with your content</li>
+            <li>Contact the wedding couple to request removal of your content</li>
+        </ul>
+
+        <h2>Children's Privacy</h2>
+        <p>
+            This service is intended for wedding guests of all ages under adult supervision. Parents should monitor their children's use of the gallery.
+        </p>
+
+        <h2>Cookies</h2>
+        <p>
+            We use browser cookies to enhance your experience. These cookies help us remember your name for future uploads and track which photos you've liked. You can disable cookies in your browser settings, but this may limit some functionality.
+        </p>
+
+        <h2>Changes to This Policy</h2>
+        <p>
+            We may update this Privacy Policy from time to time. Any changes will be reflected on this page with an updated revision date.
+        </p>
+
+        <div class="contact-info">
+            <h3>Contact Information</h3>
+            <p>
+                If you have any questions about this Privacy Policy or wish to request removal of your content, please contact the wedding couple directly or the site administrator.
+            </p>
+            <p>
+                <strong>Created by:</strong> Charles Hartmann<br>
+                <strong>GitHub:</strong> <a href="https://github.com/chartmann1590" target="_blank">github.com/chartmann1590</a>
+            </p>
+        </div>
+    </div>
+</div>
+{% endblock %}

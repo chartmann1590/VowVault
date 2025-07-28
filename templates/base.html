@@ -233,6 +233,52 @@
             margin-top: 3rem;
         }
 
+        .footer-content {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+            align-items: center;
+        }
+
+        .footer-credit {
+            font-size: 0.9rem;
+            color: #8b7355;
+        }
+
+        .footer-credit a {
+            color: #8b7355;
+            text-decoration: none;
+            font-weight: 600;
+            transition: color 0.3s ease;
+        }
+
+        .footer-credit a:hover {
+            color: #6b5d54;
+            text-decoration: underline;
+        }
+
+        .footer-links {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+            font-size: 0.9rem;
+        }
+
+        .footer-links a {
+            color: #6b5d54;
+            text-decoration: none;
+            transition: color 0.3s ease;
+        }
+
+        .footer-links a:hover {
+            color: #8b7355;
+            text-decoration: underline;
+        }
+
+        .footer-links span {
+            color: #999;
+        }
+
         .form-group {
             margin-bottom: 1.5rem;
         }
@@ -330,7 +376,15 @@
 
     <footer>
         <div class="container">
-            <p>Made with ❤️ for our special day</p>
+            <div class="footer-content">
+                <p>Made with ❤️ for our special day</p>
+                <p class="footer-credit">Created by <a href="https://github.com/chartmann1590" target="_blank">Charles Hartmann</a></p>
+                <div class="footer-links">
+                    <a href="{{ url_for('privacy_policy') }}">Privacy Policy</a>
+                    <span>•</span>
+                    <a href="{{ url_for('terms_of_use') }}">Terms of Use</a>
+                </div>
+            </div>
         </div>
     </footer>
 
