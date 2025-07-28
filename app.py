@@ -384,17 +384,23 @@ def process_email_photos():
         
     except Exception as e:
         print(f"Error in email processing: {e}")
+        # Ensure we don't leave any uncommitted database changes
+        try:
+            db.session.rollback()
+        except:
+            pass
 
 def start_email_monitor():
     """Start the email monitoring thread"""
     def monitor_emails():
-        while True:
-            try:
-                process_email_photos()
-                time.sleep(300)  # Check every 5 minutes
-            except Exception as e:
-                print(f"Email monitor error: {e}")
-                time.sleep(600)  # Wait 10 minutes on error
+        with app.app_context():
+            while True:
+                try:
+                    process_email_photos()
+                    time.sleep(300)  # Check every 5 minutes
+                except Exception as e:
+                    print(f"Email monitor error: {e}")
+                    time.sleep(600)  # Wait 10 minutes on error
     
     thread = threading.Thread(target=monitor_emails, daemon=True)
     thread.start()
@@ -1444,4 +1450,5 @@ if __name__ == '__main__':
         email_settings = get_email_settings()
         if email_settings['enabled']:
             start_email_monitor()
+            print("Email monitor started successfully")
     app.run(debug=True, host='0.0.0.0')
