@@ -3,7 +3,7 @@
 {% block title %}Virtual Photobooth - Wedding Gallery{% endblock %}
 
 {% block extra_styles %}
-<style>
+
     .photobooth-container {
         max-width: 900px;
         margin: 0 auto;
@@ -278,119 +278,95 @@
             padding: 1.5rem;
         }
     }
-</style>
+
 {% endblock %}
 
 {% block content %}
-<div class="photobooth-container">
-    <div class="photobooth-header">
-        <h2>📸 Virtual Photobooth</h2>
-        <p>Take a photo with our special wedding border!</p>
-    </div>
 
-    <div class="instructions">
-        <h3>How to Use</h3>
-        <ol>
-            <li>Allow camera access when prompted</li>
-            <li>Position yourself in the frame</li>
-            <li>Click "Take Photo" (3-second countdown)</li>
-            <li>Download or upload your photo to the gallery</li>
-        </ol>
-    </div>
+  
+  📸 Virtual Photobooth 
+  Take a photo with our special wedding border! 
 
-    <div class="permission-error" id="permissionError">
-        <strong>Camera Access Required</strong><br>
+ 
+  How to Use 
+ 
+  Allow camera access when prompted 
+  Position yourself in the frame 
+  Click "Take Photo" (3-second countdown) 
+  Download or upload your photo to the gallery 
+ 
+  
+
+ 
+  Camera Access Required 
         Please allow camera access to use the photobooth. Refresh the page and try again.
-    </div>
 
-    <div class="camera-section" id="cameraSection">
-        <div class="video-container">
-            <video id="video" autoplay playsinline></video>
-            <canvas id="canvas"></canvas>
-            <div class="countdown" id="countdown"></div>
-            <div class="border-overlay" id="borderOverlay">
+
+
+
+
+
+
                 {% if border_url %}
-                <img src="{{ border_url }}" alt="Wedding Border">
+
                 {% else %}
-                <div class="no-border-message">No border set - Contact admin</div>
+  No border set - Contact admin 
                 {% endif %}
-            </div>
-        </div>
 
-        <div class="controls">
-            <button class="capture-btn" id="captureBtn" onclick="takePhoto()">
-                <svg viewBox="0 0 24 24">
-                    <path d="M4,4H7L9,2H15L17,4H20A2,2 0 0,1 22,6V18A2,2 0 0,1 20,20H4A2,2 0 0,1 2,18V6A2,2 0 0,1 4,4M12,7A5,5 0 0,0 7,12A5,5 0 0,0 12,17A5,5 0 0,0 17,12A5,5 0 0,0 12,7M12,9A3,3 0 0,1 15,12A3,3 0 0,1 12,15A3,3 0 0,1 9,12A3,3 0 0,1 12,9Z"/>
-                </svg>
+
+
+
+  
+  
+  
                 Take Photo
-            </button>
-        </div>
-    </div>
 
-    <div class="preview-section" id="previewSection">
-        <h3>Your Photo</h3>
-        <img id="previewImage" class="preview-image" alt="Your photo">
+
+
+  Your Photo 
         
-        <div class="action-buttons">
-            <button class="action-btn download-btn" onclick="downloadPhoto()">
-                <svg viewBox="0 0 24 24" width="20" height="20">
-                    <path d="M5,20H19V18H5M19,9H15V3H9V9H5L12,16L19,9Z" fill="currentColor"/>
-                </svg>
-                Download Photo
-            </button>
-            <button class="action-btn upload-btn" onclick="showUploadForm()">
-                <svg viewBox="0 0 24 24" width="20" height="20">
-                    <path d="M9,16V10H5L12,3L19,10H15V16H9M5,20V18H19V20H5Z" fill="currentColor"/>
-                </svg>
-                Upload to Gallery
-            </button>
-            <button class="action-btn retake-btn" onclick="retakePhoto()">
-                <svg viewBox="0 0 24 24" width="20" height="20">
-                    <path d="M12,5V1L7,6L12,11V7A6,6 0 0,1 18,13A6,6 0 0,1 12,19A6,6 0 0,1 6,13H4A8,8 0 0,0 12,21A8,8 0 0,0 20,13A8,8 0 0,0 12,5Z" fill="currentColor"/>
-                </svg>
-                Take Another
-            </button>
-        </div>
+        
+  
 
-        <div class="upload-form" id="uploadForm">
-            <h3>Upload to Gallery</h3>
-            <form onsubmit="uploadPhoto(event)">
-                <div class="form-group">
-                    <label for="uploader_name">Your Name</label>
-                    <input type="text" 
-                           id="uploader_name" 
-                           name="uploader_name" 
-                           placeholder="Enter your name (optional)"
-                           value="{{ user_name }}">
-                </div>
-                <div class="form-group">
-                    <label for="description">Description</label>
-                    <textarea id="description" 
-                              name="description" 
-                              placeholder="Add a caption... (optional)"
-                              rows="3"></textarea>
-                </div>
-                <div class="form-actions">
-                    <button type="submit" class="btn" id="uploadSubmitBtn">
-                        Upload to Gallery
-                    </button>
-                    <button type="button" class="btn btn-secondary" onclick="hideUploadForm()">
-                        Cancel
-                    </button>
-                </div>
-            </form>
-        </div>
-    </div>
-</div>
+  
+                Download Photo
+
+
+
+
+                Upload to Gallery
+
+
+
+
+                Take Another
+
+
+
+  Upload to Gallery 
+  
+  Your Name 
+  
+  Description 
+  
+                            Upload to Gallery
+  
+  
+                            Cancel
+
 {% endblock %}
 
 {% block scripts %}
-<script>
+
     let video = document.getElementById('video');
     let canvas = document.getElementById('canvas');
     let context = canvas.getContext('2d');
     let stream = null;
     let photoData = null;
+
+    // Determine base URL for viewing photos
+    const viewPhotoUrlTemplate = "{{ url_for('view_photo', photo_id=0) }}"; // e.g. "/photo/0"
+    const viewPhotoBase = viewPhotoUrlTemplate.substring(0, viewPhotoUrlTemplate.lastIndexOf('/') + 1);
 
     // Initialize camera
     async function initCamera() {
@@ -502,7 +478,8 @@
             
             if (result.success) {
                 alert('Photo uploaded successfully!');
-                window.location.href = "{{ url_for('view_photo', photo_id='') }}" + result.photo_id;
+                // Redirect to the new photo
+                window.location.href = viewPhotoBase + result.photo_id;
             } else {
                 throw new Error(result.error || 'Upload failed');
             }
@@ -529,5 +506,5 @@
             stream.getTracks().forEach(track => track.stop());
         }
     });
-</script>
+
 {% endblock %}

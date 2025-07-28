@@ -799,6 +799,71 @@
                         </tr>
                     </thead>
                     <tbody>
+                        th>Likes</th>
+                            <th>Comments</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for message in visible_messages %}
+                        <tr>
+                            <td>{{ message.author_name }}</td>
+                            <td class="message-content">
+                                {{ message.content[:100] }}{% if message.content|length > 100 %}...{% endif %}
+                                {% if message.message_comments %}
+                                <div class="message-comments">
+                                    {% for comment in message.message_comments[:2] %}
+                                        {% if not comment.is_hidden %}
+                                        <div class="comment-item">
+                                            <strong>{{ comment.commenter_name }}:</strong> {{ comment.content[:50] }}{% if comment.content|length > 50 %}...{% endif %}
+                                        </div>
+                                        {% endif %}
+                                    {% endfor %}
+                                    {% if message.message_comments|length > 2 %}
+                                    <small style="color: #999;">... and {{ message.message_comments|length - 2 }} more</small>
+                                    {% endif %}
+                                </div>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if message.photo_filename %}
+                                <img src="{{ url_for('static', filename='uploads/messages/' + message.photo_filename) }}" 
+                                     alt="Photo" 
+                                     class="photo-thumbnail"
+                                     style="cursor: pointer;"
+                                     onclick="window.open(this.src, '_blank')">
+                                {% else %}
+                                -
+                                {% endif %}
+                            </td>
+                            <td>{{ message.created_at.strftime('%b %d, %Y') }}</td>
+                            <td>{{ message.likes }}</td>
+                            <td>{{ message.message_comments|selectattr('is_hidden', 'false')|list|length }}</td>
+                            <td>
+                                <button class="hide-btn" 
+                                        onclick="toggleMessageVisibility({{ message.id }})">
+                                    Hide
+                                </button>
+                                <button class="delete-btn" 
+                                        onclick="confirmDeleteMessage({{ message.id }}, '{{ message.author_name|e }}')">
+                                    Delete
+                                </button>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Hidden Messages -->
+            <div id="hidden-messages" class="tab-content">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Author</th>
+                            <th>Message</th>
+                            <th>Photo</th>
+                            <th>Date</th
                         {% for message in hidden_messages %}
                         <tr>
                             <td>{{ message.author_name }}</td>
