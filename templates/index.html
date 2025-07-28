@@ -319,6 +319,59 @@
         flex-wrap: wrap;
     }
 
+    .email-upload-section {
+        margin-top: 2rem;
+        padding: 1.5rem;
+        background: linear-gradient(135deg, #f9f5f0 0%, #f5e6d3 100%);
+        border-radius: 15px;
+        border-left: 4px solid #8b7355;
+    }
+
+    .email-upload-title {
+        color: #8b7355;
+        font-size: 1.3rem;
+        margin-bottom: 1rem;
+        font-family: 'Playfair Display', serif;
+    }
+
+    .email-upload-text {
+        color: #6b5d54;
+        margin-bottom: 1rem;
+        line-height: 1.5;
+    }
+
+    .email-instructions {
+        background: white;
+        padding: 1rem;
+        border-radius: 10px;
+        border: 1px solid #e0d5c5;
+    }
+
+    .email-instructions p {
+        margin-bottom: 0.5rem;
+        color: #6b5d54;
+    }
+
+    .email-instructions ol {
+        margin: 0.5rem 0;
+        padding-left: 1.5rem;
+        color: #6b5d54;
+    }
+
+    .email-instructions li {
+        margin-bottom: 0.3rem;
+        line-height: 1.4;
+    }
+
+    .email-note {
+        margin-top: 1rem !important;
+        padding: 0.5rem;
+        background: #fff3cd;
+        border-radius: 5px;
+        border-left: 3px solid #ffc107;
+        font-size: 0.9rem;
+    }
+
     .close-modal-btn {
         background: #8b7355;
         color: white;
@@ -426,6 +479,23 @@
                 </ul>
             </div>
             {% endif %}
+            
+            <div class="email-upload-section">
+                <h3 class="email-upload-title">📧 Email Your Photos</h3>
+                <p class="email-upload-text">
+                    Can't upload right now? No problem! You can email your photos to us and we'll add them to the gallery automatically.
+                </p>
+                <div class="email-instructions">
+                    <p><strong>How to email photos:</strong></p>
+                    <ol>
+                        <li>Attach your photos to an email</li>
+                        <li>Send to: <strong>{{ email_settings.monitor_email if email_settings.monitor_email else 'your-email@example.com' }}</strong></li>
+                        <li>We'll automatically add them to the gallery</li>
+                        <li>You'll receive a confirmation email with a link</li>
+                    </ol>
+                    <p class="email-note">📸 <em>Only photo files (JPG, PNG, GIF, WebP) are accepted</em></p>
+                </div>
+            </div>
         </div>
         <div class="modal-footer">
             <div class="modal-actions">

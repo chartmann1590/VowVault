@@ -503,11 +503,15 @@ def index():
     
     show_modal = welcome_settings.get('enabled', True) and (not has_seen_welcome or not welcome_settings.get('show_once', True))
     
+    # Get email settings for the template
+    email_settings = get_email_settings()
+    
     return render_template('index.html', 
                          photos=photos, 
                          user_name=user_name,
                          welcome_settings=welcome_settings,
-                         show_modal=show_modal)
+                         show_modal=show_modal,
+                         email_settings=email_settings)
 
 @app.route('/upload', methods=['GET', 'POST'])
 def upload():
@@ -579,7 +583,8 @@ def upload():
             return resp
     
     user_name = request.cookies.get('user_name', '')
-    return render_template('upload.html', user_name=user_name)
+    email_settings = get_email_settings()
+    return render_template('upload.html', user_name=user_name, email_settings=email_settings)
 
 @app.route('/photobooth')
 def photobooth():
@@ -1379,6 +1384,10 @@ def generate_qr_pdf():
     qr_settings = Settings.get('qr_settings', '{}')
     qr_settings = json.loads(qr_settings) if qr_settings else {}
     
+    # Get email settings
+    email_settings = get_email_settings()
+    monitor_email = email_settings.get('monitor_email', 'your-email@example.com')
+    
     # Default settings
     title = qr_settings.get('title', 'Share Your Wedding Photos!')
     subtitle = qr_settings.get('subtitle', 'Scan to Upload & View Photos')
@@ -1464,6 +1473,22 @@ def generate_qr_pdf():
     
     # Message
     story.append(Paragraph(message, body_style))
+    
+    # Email instructions
+    email_instructions = f"""
+    <b>📧 Alternative: Email Your Photos</b><br/>
+    Can't scan the QR code? You can also email your photos to us!<br/>
+    <br/>
+    <b>How to email photos:</b><br/>
+    1. Attach your photos to an email<br/>
+    2. Send to: <b>{monitor_email}</b><br/>
+    3. We'll automatically add them to the gallery<br/>
+    4. You'll receive a confirmation email with a link<br/>
+    <br/>
+    <i>📸 Only photo files (JPG, PNG, GIF, WebP) are accepted via email</i>
+    """
+    story.append(Paragraph(email_instructions, body_style))
+    story.append(Spacer(1, 0.3*inch))
     
     # QR Code
     qr_image = Image(qr_buffer, width=3*inch, height=3*inch)
