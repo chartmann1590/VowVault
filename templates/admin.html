@@ -794,11 +794,6 @@
                             <th>Message</th>
                             <th>Photo</th>
                             <th>Date</th>
-                            <th>Reason Hidden</th>
-                            <th>Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody>
                             <th>Likes</th>
                             <th>Comments</th>
                             <th>Actions</th>
@@ -863,7 +858,12 @@
                             <th>Author</th>
                             <th>Message</th>
                             <th>Photo</th>
-                            <th>Date</th
+                            <th>Date</th>
+                            <th>Reason Hidden</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
                         {% for message in hidden_messages %}
                         <tr>
                             <td>{{ message.author_name }}</td>
