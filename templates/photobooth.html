@@ -502,7 +502,8 @@
             
             if (result.success) {
                 alert('Photo uploaded successfully!');
-                window.location.href = "{{ url_for('view_photo', photo_id='') }}" + result.photo_id;
+                // Use the photo_id from the response to navigate to the photo detail page
+                window.location.href = '/photo/' + result.photo_id;
             } else {
                 throw new Error(result.error || 'Upload failed');
             }
