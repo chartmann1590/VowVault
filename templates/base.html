@@ -86,7 +86,7 @@
         width: 100%;
     }
 
-    /* Hamburger Menu Button */
+    /* Hamburger Menu Button (desktop hidden) */
     .hamburger {
         display: none;
         background: none;
@@ -134,6 +134,11 @@
         display: block;
     }
 
+    /* Hide mobile nav by default */
+    #mobileNav {
+        display: none;
+    }
+
     /* Mobile Navigation */
     @media (max-width: 768px) {
         header {
@@ -154,6 +159,7 @@
 
         /* Mobile Nav Panel */
         #mobileNav {
+            display: block;
             position: fixed;
             top: 0;
             right: -300px;
@@ -188,7 +194,7 @@
             font-size: 1.1rem;
             color: #6b5d54;
             text-decoration: none;
-            transition: background-color 0.3s ease;
+            transition: background-color 0.3s ease, color 0.3s ease;
         }
 
         #mobileNav a:hover {
@@ -348,6 +354,7 @@
     }
 </style>
 {% block extra_styles %}{% endblock %}
+
 </head>
 <body>
     <header>
@@ -420,14 +427,12 @@
     hamburgerBtn.addEventListener('click', toggleMobileMenu);
     mobileMenuOverlay.addEventListener('click', toggleMobileMenu);
 
-    // Close mobile menu when clicking on a link
     mobileNav.querySelectorAll('a').forEach(link => {
         link.addEventListener('click', () => {
             if (window.innerWidth <= 768) toggleMobileMenu();
         });
     });
 
-    // Reset menu on resize
     window.addEventListener('resize', () => {
         if (window.innerWidth > 768) {
             hamburgerBtn.classList.remove('active');
@@ -437,7 +442,6 @@
         }
     });
 </script>
-
 {% block scripts %}{% endblock %}
 
 </body>
