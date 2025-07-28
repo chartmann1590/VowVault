@@ -11,6 +11,7 @@ A beautiful, self-hosted wedding photo gallery application that allows wedding g
 
 ### For Guests
 - 📸 **Easy Photo/Video Upload** - No login required, just upload and share
+- 🤳 **Virtual Photobooth** - Take photos with custom wedding borders using device camera
 - ❤️ **Like Photos/Videos** - Show appreciation for beautiful moments
 - 💬 **Leave Comments** - Share memories and messages on photos
 - 💌 **Message Board** - Post messages with optional photos that everyone can see, like, and comment on
@@ -20,11 +21,12 @@ A beautiful, self-hosted wedding photo gallery application that allows wedding g
 
 ### For Admins
 - 🔐 **Admin Dashboard** - Secure admin area with simple key authentication
-- 📊 **Statistics** - View total photos, likes, comments, messages, and guestbook entries
+- 📊 **Statistics** - View total photos, likes, comments, messages, guestbook entries, and photobooth photos
 - 🗑️ **Content Management** - Delete inappropriate photos, messages, or guestbook entries
 - 👁️ **Hide/Show Messages** - Hide inappropriate messages without deleting them
 - ✏️ **Edit Guestbook** - Modify guestbook entries when needed
 - 🖼️ **Media Management** - View and manage photos attached to messages and guestbook entries
+- 🎨 **Photobooth Border Upload** - Upload custom borders for the virtual photobooth
 - 📄 **QR Code Generator** - Create beautiful PDFs with QR codes for easy sharing
 - ✏️ **Customizable Content** - Edit welcome messages and QR code content
 
@@ -92,8 +94,9 @@ app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://user:pass@localhost/dbname
 ```
 
 ### File Uploads
-- Maximum file size: 16MB (configurable)
-- Allowed formats: PNG, JPG, JPEG, GIF, WEBP
+- Maximum file size: 50MB (supports both photos and videos)
+- Photo formats: PNG, JPG, JPEG, GIF, WEBP
+- Video formats: MP4, MOV, AVI, WEBM (max 15 seconds)
 
 ## 📁 Project Structure
 
@@ -110,6 +113,7 @@ wedding-photo-gallery/
 │   ├── index.html       # Gallery page
 │   ├── upload.html      # Upload page
 │   ├── photo_detail.html # Photo detail page
+│   ├── photobooth.html  # Virtual photobooth
 │   ├── message_board.html # Message board
 │   ├── new_message.html  # Post new message
 │   ├── admin.html       # Admin dashboard
@@ -118,11 +122,24 @@ wedding-photo-gallery/
 ├── static/              # Static files
 │   └── uploads/        # Uploaded photos (created automatically)
 │       ├── guestbook/  # Guestbook photos
-│       └── messages/   # Message board photos
+│       ├── messages/   # Message board photos
+│       ├── videos/     # Video uploads
+│       ├── thumbnails/ # Video thumbnails
+│       ├── photobooth/ # Photobooth photos
+│       └── borders/    # Photobooth border images
 └── data/               # Database files (created automatically)
 ```
 
 ## 🎨 Customization
+
+### Virtual Photobooth
+1. Go to Admin Dashboard
+2. Find "Virtual Photobooth Settings"
+3. Upload a custom border image:
+   - Use PNG format with transparent areas where the photo will show
+   - Recommended size: 1280x720px or 16:9 aspect ratio
+   - The border will overlay on top of the camera feed
+4. Guests can then access the photobooth and take photos with your custom border
 
 ### Welcome Modal
 1. Go to Admin Dashboard
@@ -181,19 +198,26 @@ tar -xzf backup-20240101.tar.gz
    - View the welcome message
    - Choose to sign the guestbook, post a message, or enter the gallery
 
-2. **Upload Photos**
+2. **Upload Photos/Videos**
    - Click "Upload Photo"
-   - Select your photo
+   - Select your photo or video (videos max 15 seconds)
    - Add your name (optional)
    - Add a description (optional)
    - Click "Upload"
 
-3. **Interact with Photos**
+3. **Use Virtual Photobooth**
+   - Click "Virtual Photobooth" in navigation or from the welcome screen
+   - Allow camera access when prompted
+   - Position yourself in the frame with the wedding border overlay
+   - Click "Take Photo" (3-second countdown)
+   - Download the photo or upload it directly to the gallery
+
+4. **Interact with Photos**
    - Click any photo to view details
    - Click the heart to like
    - Leave comments with your name
 
-4. **Post on Message Board**
+5. **Post on Message Board**
    - Click "Message Board" in navigation
    - Click "Leave a Message"
    - Enter your name (optional)
@@ -202,7 +226,7 @@ tar -xzf backup-20240101.tar.gz
    - Submit your message
    - Like and comment on other messages
 
-5. **Sign the Guestbook**
+6. **Sign the Guestbook**
    - Click "Guestbook" in navigation
    - Click "Sign the Guestbook"
    - Enter your name and location (optional)
@@ -214,23 +238,29 @@ tar -xzf backup-20240101.tar.gz
 
 1. **Access Admin Panel**
    - Visit `/admin?key=your-key`
-   - View statistics including message board activity
+   - View statistics including photobooth usage
    - Manage photos, messages, and guestbook entries
 
-2. **Manage Message Board**
+2. **Configure Virtual Photobooth**
+   - Upload a custom border image (PNG with transparency recommended)
+   - The border will appear as an overlay on the camera feed
+   - Test the photobooth to ensure the border looks good
+   - Monitor photobooth photo statistics
+
+3. **Manage Message Board**
    - View all messages with their comments
    - Hide inappropriate messages (they remain in database but hidden from public)
    - Unhide previously hidden messages
    - Delete messages permanently
    - View and manage message comments
 
-3. **Manage Guestbook**
+4. **Manage Guestbook**
    - View all guestbook entries
    - Edit entries to fix typos
    - Delete inappropriate entries
    - View photos attached to entries
 
-4. **Generate QR Codes**
+5. **Generate QR Codes**
    - Enter your public URL
    - Customize the message
    - Download PDF
@@ -241,9 +271,20 @@ tar -xzf backup-20240101.tar.gz
 ### Common Issues
 
 **Photos not uploading:**
-- Check file size (max 16MB)
+- Check file size (max 50MB)
 - Ensure correct file format
 - Check disk space
+
+**Virtual Photobooth not working:**
+- Ensure HTTPS is enabled (camera access requires secure connection)
+- Check browser camera permissions
+- Verify border image is uploaded correctly
+- Try refreshing the page
+
+**Videos not playing:**
+- Ensure ffmpeg is installed (included in Docker image)
+- Check video format compatibility
+- Verify video is under 15 seconds
 
 **Message board not loading:**
 - Ensure database migrations have run

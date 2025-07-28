@@ -113,6 +113,20 @@
         letter-spacing: 0.5px;
     }
 
+    .photobooth-badge {
+        position: absolute;
+        top: 10px;
+        left: 10px;
+        background: rgba(23, 162, 184, 0.9);
+        color: white;
+        padding: 4px 12px;
+        border-radius: 20px;
+        font-size: 0.75rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
     .photo-info {
         padding: 1.5rem;
     }
@@ -357,6 +371,10 @@
             font-size: 2rem;
         }
 
+        .modal-header {
+            padding: 1.5rem;
+        }
+
         .modal-body {
             padding: 1.5rem;
         }
@@ -367,6 +385,15 @@
 
         .modal-actions > * {
             width: 100%;
+        }
+
+        .close-modal-btn, .guestbook-modal-btn {
+            padding: 0.75rem 2rem;
+            font-size: 1rem;
+        }
+
+        .instructions-section {
+            padding: 1.5rem;
         }
     }
 </style>
@@ -438,6 +465,11 @@
                     <div class="video-duration">{{ '%d:%02d' | format((photo.duration // 60)|int, (photo.duration % 60)|int) }}</div>
                     {% endif %}
                     <div class="media-type-badge">Video</div>
+                {% elif photo.is_photobooth %}
+                    <img src="{{ url_for('static', filename='uploads/photobooth/' + photo.filename) }}" 
+                         alt="Photobooth by {{ photo.uploader_name }}"
+                         loading="lazy">
+                    <div class="photobooth-badge">Photobooth</div>
                 {% else %}
                     <img src="{{ url_for('static', filename='uploads/' + photo.filename) }}" 
                          alt="Photo by {{ photo.uploader_name }}"

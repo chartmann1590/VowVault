@@ -49,6 +49,7 @@
             font-weight: 700;
         }
 
+        /* Desktop Navigation */
         nav ul {
             list-style: none;
             display: flex;
@@ -80,6 +81,114 @@
 
         nav a:hover::after {
             width: 100%;
+        }
+
+        /* Hamburger Menu Button */
+        .hamburger {
+            display: none;
+            background: none;
+            border: none;
+            cursor: pointer;
+            padding: 10px;
+            z-index: 1001;
+        }
+
+        .hamburger span {
+            display: block;
+            width: 25px;
+            height: 3px;
+            background-color: #8b7355;
+            margin: 5px 0;
+            transition: all 0.3s ease;
+            transform-origin: center;
+        }
+
+        .hamburger.active span:nth-child(1) {
+            transform: translateY(8px) rotate(45deg);
+        }
+
+        .hamburger.active span:nth-child(2) {
+            opacity: 0;
+        }
+
+        .hamburger.active span:nth-child(3) {
+            transform: translateY(-8px) rotate(-45deg);
+        }
+
+        /* Mobile Menu Overlay */
+        .mobile-menu-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: 998;
+        }
+
+        .mobile-menu-overlay.active {
+            display: block;
+        }
+
+        /* Mobile Navigation */
+        @media (max-width: 768px) {
+            header {
+                padding: 1rem 0;
+            }
+
+            h1 {
+                font-size: 1.5rem;
+            }
+
+            .hamburger {
+                display: block;
+            }
+
+            nav {
+                position: fixed;
+                top: 0;
+                right: -300px;
+                width: 300px;
+                height: 100vh;
+                background: white;
+                box-shadow: -5px 0 20px rgba(0,0,0,0.1);
+                transition: right 0.3s ease;
+                z-index: 999;
+                overflow-y: auto;
+            }
+
+            nav.active {
+                right: 0;
+            }
+
+            nav ul {
+                flex-direction: column;
+                gap: 0;
+                padding: 80px 0 20px 0;
+            }
+
+            nav li {
+                border-bottom: 1px solid #f0f0f0;
+            }
+
+            nav a {
+                display: block;
+                padding: 1rem 2rem;
+                font-size: 1.1rem;
+            }
+
+            nav a::after {
+                display: none;
+            }
+
+            nav a:hover {
+                background-color: #f9f5f0;
+            }
+
+            .header-content {
+                align-items: center;
+            }
         }
 
         main {
@@ -177,19 +286,12 @@
         }
 
         @media (max-width: 768px) {
-            h1 {
-                font-size: 2rem;
+            main {
+                padding: 2rem 0;
             }
 
-            .header-content {
-                flex-direction: column;
-                gap: 1rem;
-            }
-
-            nav ul {
-                gap: 1rem;
-                flex-wrap: wrap;
-                justify-content: center;
+            .container {
+                padding: 0 15px;
             }
         }
     </style>
@@ -200,7 +302,12 @@
         <div class="container">
             <div class="header-content">
                 <h1>💑 Our Wedding Gallery</h1>
-                <nav>
+                <button class="hamburger" id="hamburgerBtn" aria-label="Menu">
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                </button>
+                <nav id="mobileNav">
                     <ul>
                         <li><a href="{{ url_for('index') }}">Gallery</a></li>
                         <li><a href="{{ url_for('upload') }}">Upload Photo</a></li>
@@ -213,6 +320,8 @@
         </div>
     </header>
 
+    <div class="mobile-menu-overlay" id="mobileMenuOverlay"></div>
+
     <main>
         <div class="container">
             {% block content %}{% endblock %}
@@ -224,6 +333,44 @@
             <p>Made with ❤️ for our special day</p>
         </div>
     </footer>
+
+    <script>
+        // Mobile menu functionality
+        const hamburgerBtn = document.getElementById('hamburgerBtn');
+        const mobileNav = document.getElementById('mobileNav');
+        const mobileMenuOverlay = document.getElementById('mobileMenuOverlay');
+        const body = document.body;
+
+        function toggleMobileMenu() {
+            hamburgerBtn.classList.toggle('active');
+            mobileNav.classList.toggle('active');
+            mobileMenuOverlay.classList.toggle('active');
+            body.style.overflow = body.style.overflow === 'hidden' ? '' : 'hidden';
+        }
+
+        hamburgerBtn.addEventListener('click', toggleMobileMenu);
+        mobileMenuOverlay.addEventListener('click', toggleMobileMenu);
+
+        // Close mobile menu when clicking on a link
+        const navLinks = mobileNav.querySelectorAll('a');
+        navLinks.forEach(link => {
+            link.addEventListener('click', () => {
+                if (window.innerWidth <= 768) {
+                    toggleMobileMenu();
+                }
+            });
+        });
+
+        // Reset menu state on window resize
+        window.addEventListener('resize', () => {
+            if (window.innerWidth > 768) {
+                hamburgerBtn.classList.remove('active');
+                mobileNav.classList.remove('active');
+                mobileMenuOverlay.classList.remove('active');
+                body.style.overflow = '';
+            }
+        });
+    </script>
 
     {% block scripts %}{% endblock %}
 </body>
