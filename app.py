@@ -135,18 +135,6 @@ class Settings(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     key = db.Column(db.String(50), unique=True, nullable=False)
     value = db.Column(db.Text)
-
-class EmailLog(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    sender_email = db.Column(db.String(255), nullable=False)
-    subject = db.Column(db.String(255))
-    received_at = db.Column(db.DateTime, default=datetime.utcnow)
-    processed_at = db.Column(db.DateTime)
-    status = db.Column(db.String(50), nullable=False)  # 'success', 'rejected', 'error'
-    photo_count = db.Column(db.Integer, default=0)
-    error_message = db.Column(db.Text)
-    response_sent = db.Column(db.Boolean, default=False)
-    response_type = db.Column(db.String(50))  # 'confirmation', 'rejection'
     
     @staticmethod
     def get(key, default=None):
@@ -162,6 +150,18 @@ class EmailLog(db.Model):
             setting = Settings(key=key, value=value)
             db.session.add(setting)
         db.session.commit()
+
+class EmailLog(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    sender_email = db.Column(db.String(255), nullable=False)
+    subject = db.Column(db.String(255))
+    received_at = db.Column(db.DateTime, default=datetime.utcnow)
+    processed_at = db.Column(db.DateTime)
+    status = db.Column(db.String(50), nullable=False)  # 'success', 'rejected', 'error'
+    photo_count = db.Column(db.Integer, default=0)
+    error_message = db.Column(db.Text)
+    response_sent = db.Column(db.Boolean, default=False)
+    response_type = db.Column(db.String(50))  # 'confirmation', 'rejection'
 
 def allowed_file(filename):
     """Check if file extension is allowed"""
