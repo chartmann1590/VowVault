@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """
 Database migration script to add navigation columns to notifications
+This script runs automatically in the Docker container
 """
 
 import sqlite3
@@ -9,12 +10,23 @@ import os
 def migrate_database():
     """Add navigation columns to the notification table"""
     
-    # Get the database path
-    db_path = 'instance/wedding_photos.db'
+    # Try Docker path first, then local path
+    db_paths = [
+        '/app/data/wedding_photos.db',  # Docker container path
+        'instance/wedding_photos.db',    # Local development path
+        'wedding_photos.db'              # Fallback path
+    ]
     
-    if not os.path.exists(db_path):
-        print(f"Database file not found at {db_path}")
-        return False
+    db_path = None
+    for path in db_paths:
+        if os.path.exists(path):
+            db_path = path
+            print(f"Using database at: {db_path}")
+            break
+    
+    if not db_path:
+        print("No database file found. It will be created when the app runs.")
+        return True
     
     try:
         # Connect to the database
