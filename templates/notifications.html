@@ -295,6 +295,9 @@
     <div class="notifications-summary" id="notificationsSummary" style="display: none;">
         <h3>📊 Notifications Summary</h3>
         <p id="summaryText">Loading...</p>
+        <button class="btn mark-all-btn" id="markAllAsReadBtn" style="margin-top: 1rem; display: none;">
+            Mark All as Read
+        </button>
     </div>
 
     <div id="notificationsList">
@@ -335,6 +338,7 @@
                 notifications = data.notifications || [];
                 displayNotificationsPage();
                 updateNotificationBadge();
+                addMarkAllAsReadButton(); // Call this after loading notifications
             })
             .catch(error => {
                 console.error('Error loading notifications:', error);
@@ -351,6 +355,7 @@
         const container = document.getElementById('notificationsList');
         const summary = document.getElementById('notificationsSummary');
         const summaryText = document.getElementById('summaryText');
+        const markAllAsReadBtn = document.getElementById('markAllAsReadBtn');
 
         if (notifications.length === 0) {
             container.innerHTML = `
@@ -361,6 +366,7 @@
                 </div>
             `;
             summary.style.display = 'none';
+            markAllAsReadBtn.style.display = 'none';
         } else {
             const unreadCount = notifications.filter(n => !n.is_read).length;
             const totalCount = notifications.length;
@@ -370,6 +376,7 @@
                 out of <strong>${totalCount}</strong> total notification${totalCount !== 1 ? 's' : ''}
             `;
             summary.style.display = 'block';
+            markAllAsReadBtn.style.display = 'block';
 
             const notificationsHtml = notifications.map(notification => {
                 // Generate navigation button based on content type
@@ -377,13 +384,13 @@
                 if (notification.content_type && notification.content_id) {
                     if (notification.content_type === 'photo') {
                         navigationButton = `
-                            <button class="btn btn-secondary" onclick="viewPhoto(${notification.content_id})">
+                            <button class="btn btn-secondary" onclick="viewPhotoAndMarkRead(${notification.id}, ${notification.content_id})">
                                 📸 View Photo
                             </button>
                         `;
                     } else if (notification.content_type === 'message') {
                         navigationButton = `
-                            <button class="btn btn-secondary" onclick="viewMessage(${notification.content_id})">
+                            <button class="btn btn-secondary" onclick="viewMessageAndMarkRead(${notification.id}, ${notification.content_id})">
                                 💬 View Message
                             </button>
                         `;
@@ -487,43 +494,6 @@
         }
     }
 
-    function markAllAsRead() {
-        if (notifications.length === 0) return;
-        
-        fetch('/api/notifications/mark-all-read', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            }
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                // Remove unread styling from all notifications
-                document.querySelectorAll('.notification-item.unread').forEach(item => {
-                    item.classList.remove('unread');
-                    item.classList.add('read'); // Add read class
-                });
-                
-                // Remove mark as read buttons
-                document.querySelectorAll('.notification-item .btn').forEach(btn => {
-                    if (btn.textContent === 'Mark as Read') {
-                        btn.remove();
-                    }
-                });
-                
-                // Reload notifications to update summary
-                loadNotifications();
-            } else {
-                alert('Error marking all notifications as read: ' + data.message);
-            }
-        })
-        .catch(error => {
-            console.error('Error marking all notifications as read:', error);
-            alert('Error marking all notifications as read');
-        });
-    }
-
     function updateNotificationBadge() {
         const unreadCount = notifications.filter(n => !n.is_read).length;
         const badge = document.getElementById('notificationBadge');
@@ -562,6 +532,23 @@
     function viewMessage(messageId) {
         console.log('Navigating to message:', messageId);
         window.location.href = `/messages#message-${messageId}`;
+    }
+
+    // New functions that mark as read and navigate
+    function viewPhotoAndMarkRead(notificationId, photoId) {
+        console.log('Marking notification as read and navigating to photo:', photoId);
+        markAsRead(notificationId);
+        setTimeout(() => {
+            viewPhoto(photoId);
+        }, 100); // Small delay to ensure the mark as read request completes
+    }
+
+    function viewMessageAndMarkRead(notificationId, messageId) {
+        console.log('Marking notification as read and navigating to message:', messageId);
+        markAsRead(notificationId);
+        setTimeout(() => {
+            viewMessage(messageId);
+        }, 100); // Small delay to ensure the mark as read request completes
     }
 
     function handleNotificationClick(notificationId, contentType, contentId) {
@@ -612,27 +599,59 @@
                 updateNotificationSettings();
             });
         });
+
+        // Mark all as read functionality
+        document.getElementById('markAllAsReadBtn').addEventListener('click', function() {
+            markAllAsRead();
+        });
     });
 
     // Add mark all as read button if there are unread notifications
     function addMarkAllAsReadButton() {
         const unreadCount = notifications.filter(n => !n.is_read).length;
-        if (unreadCount > 0) {
-            const summary = document.getElementById('notificationsSummary');
-            const existingButton = summary.querySelector('.mark-all-btn');
-            if (!existingButton) {
-                const button = document.createElement('button');
-                button.className = 'btn mark-all-btn';
-                button.textContent = `Mark All ${unreadCount} as Read`;
-                button.onclick = markAllAsRead;
-                button.style.marginTop = '1rem';
-                summary.appendChild(button);
+        const markAllAsReadBtn = document.getElementById('markAllAsReadBtn');
+        if (markAllAsReadBtn) {
+            if (unreadCount > 0) {
+                markAllAsReadBtn.style.display = 'block';
+            } else {
+                markAllAsReadBtn.style.display = 'none';
             }
         }
     }
 
-    // Call this after loading notifications
-    setTimeout(addMarkAllAsReadButton, 100);
+    // Mark all notifications as read
+    function markAllAsRead() {
+        fetch('/api/notifications/mark-all-read', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                // Update all notification items to show as read
+                document.querySelectorAll('.notification-item.unread').forEach(item => {
+                    item.classList.remove('unread');
+                    item.classList.add('read');
+                });
+                
+                // Hide the mark all as read button
+                document.getElementById('markAllAsReadBtn').style.display = 'none';
+                
+                // Reload notifications to update summary
+                loadNotifications();
+                
+                alert('All notifications marked as read!');
+            } else {
+                alert('Error marking all notifications as read: ' + data.message);
+            }
+        })
+        .catch(error => {
+            console.error('Error marking all notifications as read:', error);
+            alert('Error marking all notifications as read. Please try again.');
+        });
+    }
 
     // Collapsible settings functionality
     function toggleNotificationSettings() {
