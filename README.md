@@ -37,6 +37,39 @@ A beautiful, self-hosted wedding photo gallery application that allows wedding g
 - 💾 **Batch Download** - Download all gallery content (photos, videos, data) as a comprehensive ZIP file
 - 🔄 **System Reset** - Complete system reset with confirmation to start fresh
 
+## 📸 Screenshots
+
+### Gallery & Upload
+![Gallery View](docs/screenshots/gallery-view.png)
+*Main gallery showing uploaded photos and videos with like/comment functionality*
+
+![Upload Interface](docs/screenshots/upload-interface.png)
+*Easy photo and video upload with drag-and-drop support*
+
+### Mobile Experience
+![Mobile Gallery](docs/screenshots/mobile-gallery.png)
+*Responsive design optimized for mobile devices*
+
+![PWA Installation](docs/screenshots/pwa-install.png)
+*Progressive Web App installation prompt on mobile*
+
+### Admin Dashboard
+![Admin Dashboard](docs/screenshots/admin-dashboard.png)
+*Comprehensive admin panel with statistics and management tools*
+
+![PWA Debug Tools](docs/screenshots/pwa-debug.png)
+*PWA debugging and troubleshooting tools*
+
+### Interactive Features
+![Virtual Photobooth](docs/screenshots/photobooth.png)
+*Virtual photobooth with custom wedding borders*
+
+![Message Board](docs/screenshots/message-board.png)
+*Interactive message board with photo sharing*
+
+![Guestbook](docs/screenshots/guestbook.png)
+*Digital guestbook with photo attachments*
+
 ## 🚀 Quick Start
 
 ### Using Docker (Recommended)
