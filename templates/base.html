@@ -606,6 +606,24 @@
         <li><a href="{{ url_for('photobooth') }}">Virtual Photobooth</a></li>
         <li><a href="{{ url_for('message_board') }}">Message Board</a></li>
         <li><a href="{{ url_for('guestbook') }}">Guestbook</a></li>
+        <li><a href="{{ url_for('notifications_page') }}" style="position: relative;">
+            🔔 Notifications
+            <span id="mobileNotificationBadge" style="
+                position: absolute;
+                top: -5px;
+                right: -5px;
+                background: #ff4444;
+                color: white;
+                border-radius: 50%;
+                width: 20px;
+                height: 20px;
+                display: none;
+                align-items: center;
+                justify-content: center;
+                font-size: 12px;
+                font-weight: bold;
+            ">0</span>
+        </a></li>
         <li class="notification-toggle-item">
             <button id="notificationToggle" class="notification-toggle-btn">
                 <span id="notificationIcon">🔕</span>
@@ -1097,6 +1115,13 @@
         }
         badge.textContent = count;
         badge.style.display = 'flex';
+        
+        // Also update mobile notification badge
+        const mobileBadge = document.getElementById('mobileNotificationBadge');
+        if (mobileBadge) {
+            mobileBadge.textContent = count;
+            mobileBadge.style.display = count > 0 ? 'flex' : 'none';
+        }
     }
 
     function displayNotifications(notifications) {
@@ -1255,12 +1280,26 @@
             .then(response => response.json())
             .then(data => {
                 const badge = document.getElementById('notificationBadge');
-                if (badge) {
-                    if (data.notifications && data.notifications.length > 0) {
-                        badge.textContent = data.notifications.length;
-                        badge.style.display = 'flex';
-                    } else {
+                const mobileBadge = document.getElementById('mobileNotificationBadge');
+                
+                if (data.notifications && data.notifications.length > 0) {
+                    const unreadCount = data.notifications.filter(n => !n.is_read).length;
+                    
+                    if (badge) {
+                        badge.textContent = unreadCount;
+                        badge.style.display = unreadCount > 0 ? 'flex' : 'none';
+                    }
+                    
+                    if (mobileBadge) {
+                        mobileBadge.textContent = unreadCount;
+                        mobileBadge.style.display = unreadCount > 0 ? 'flex' : 'none';
+                    }
+                } else {
+                    if (badge) {
                         badge.style.display = 'none';
+                    }
+                    if (mobileBadge) {
+                        mobileBadge.style.display = 'none';
                     }
                 }
             })

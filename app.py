@@ -2300,6 +2300,40 @@ def mark_all_notifications_read():
     except Exception as e:
         return jsonify({'success': False, 'message': str(e)})
 
+@app.route('/notifications')
+def notifications_page():
+    """Notifications page for users"""
+    return render_template('notifications.html')
+
+@app.route('/api/notifications/delete', methods=['POST'])
+def delete_notification():
+    """Delete a notification"""
+    user_identifier = request.cookies.get('user_identifier', '')
+    if not user_identifier:
+        return jsonify({'success': False, 'message': 'User not authenticated'})
+    
+    data = request.get_json()
+    notification_id = data.get('notification_id')
+    
+    if not notification_id:
+        return jsonify({'success': False, 'message': 'Notification ID required'})
+    
+    try:
+        notification = Notification.query.filter_by(
+            id=notification_id,
+            user_identifier=user_identifier
+        ).first()
+        
+        if notification:
+            db.session.delete(notification)
+            db.session.commit()
+            return jsonify({'success': True})
+        else:
+            return jsonify({'success': False, 'message': 'Notification not found'})
+    
+    except Exception as e:
+        return jsonify({'success': False, 'message': str(e)})
+
 if __name__ == '__main__':
     with app.app_context():
         db.create_all()
