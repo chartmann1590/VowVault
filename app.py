@@ -2410,6 +2410,46 @@ def delete_notification():
     except Exception as e:
         return jsonify({'success': False, 'message': str(e)})
 
+@app.route('/api/notifications/toggle-enabled', methods=['POST'])
+def toggle_notifications_enabled():
+    """Toggle notification settings for a user"""
+    user_identifier = request.cookies.get('user_identifier', '')
+    if not user_identifier:
+        return jsonify({'success': False, 'message': 'User not authenticated'})
+    
+    data = request.get_json()
+    enabled = data.get('enabled', True)
+    
+    try:
+        # Find or create notification user
+        notification_user = NotificationUser.query.filter_by(
+            user_identifier=user_identifier
+        ).first()
+        
+        if notification_user:
+            notification_user.notifications_enabled = enabled
+            notification_user.last_seen = datetime.utcnow()
+        else:
+            # Create new notification user
+            user_name = request.cookies.get('user_name', 'Anonymous')
+            notification_user = NotificationUser(
+                user_identifier=user_identifier,
+                user_name=user_name,
+                notifications_enabled=enabled,
+                last_seen=datetime.utcnow()
+            )
+            db.session.add(notification_user)
+        
+        db.session.commit()
+        
+        return jsonify({
+            'success': True, 
+            'message': f'Notifications {"enabled" if enabled else "disabled"} successfully'
+        })
+    
+    except Exception as e:
+        return jsonify({'success': False, 'message': str(e)})
+
 def trigger_push_notification(user_identifier, title, message, notification_type='admin'):
     """Trigger a push notification for a specific user"""
     try:

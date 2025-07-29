@@ -27,6 +27,82 @@
         font-size: 1.1rem;
     }
 
+    /* Notification Settings Section */
+    .notification-settings {
+        background: linear-gradient(135deg, #f9f5f0 0%, #f5e6d3 100%);
+        border-radius: 15px;
+        padding: 2rem;
+        margin-bottom: 2rem;
+        text-align: center;
+        border: 2px solid #e8ddd3;
+    }
+
+    .notification-settings h2 {
+        color: #8b7355;
+        font-family: 'Playfair Display', serif;
+        font-size: 1.8rem;
+        margin-bottom: 1rem;
+    }
+
+    .notification-status {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 1rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .status-indicator {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.75rem 1.5rem;
+        border-radius: 25px;
+        font-weight: 600;
+        font-size: 1rem;
+    }
+
+    .status-enabled {
+        background: linear-gradient(135deg, #4CAF50 0%, #45a049 100%);
+        color: white;
+        box-shadow: 0 3px 10px rgba(76, 175, 80, 0.3);
+    }
+
+    .status-disabled {
+        background: linear-gradient(135deg, #f44336 0%, #d32f2f 100%);
+        color: white;
+        box-shadow: 0 3px 10px rgba(244, 67, 54, 0.3);
+    }
+
+    .notification-toggle-btn {
+        background: linear-gradient(135deg, #8b7355 0%, #6b5d54 100%);
+        color: white;
+        border: none;
+        padding: 1rem 2rem;
+        border-radius: 30px;
+        font-size: 1.1rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        box-shadow: 0 4px 15px rgba(139, 115, 85, 0.3);
+    }
+
+    .notification-toggle-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(139, 115, 85, 0.4);
+    }
+
+    .notification-toggle-btn:active {
+        transform: translateY(0);
+    }
+
+    .settings-description {
+        color: #6b5d54;
+        font-size: 1rem;
+        line-height: 1.6;
+        margin-top: 1rem;
+    }
+
     .notification-item {
         background: white;
         border-radius: 15px;
@@ -35,6 +111,7 @@
         box-shadow: 0 2px 10px rgba(0,0,0,0.1);
         border-left: 4px solid #8b7355;
         transition: all 0.3s ease;
+        cursor: pointer;
     }
 
     .notification-item:hover {
@@ -45,6 +122,11 @@
     .notification-item.unread {
         border-left-color: #ff4444;
         background: linear-gradient(135deg, #fff5f5 0%, #ffffff 100%);
+    }
+
+    .notification-item.read {
+        opacity: 0.8;
+        border-left-color: #ccc;
     }
 
     .notification-header {
@@ -176,6 +258,22 @@
         <p>Stay updated with the latest activity from your wedding gallery</p>
     </div>
 
+    <div class="notification-settings">
+        <h2>Notification Settings</h2>
+        <div class="notification-status">
+            <span class="status-indicator status-enabled">
+                <i class="fas fa-bell"></i> Notifications Enabled
+            </span>
+            <button class="notification-toggle-btn" id="toggleNotifications">
+                Turn Off Notifications
+            </button>
+        </div>
+        <p class="settings-description">
+            You can turn off notifications if you prefer to check your gallery directly.
+            You can always re-enable them from your account settings.
+        </p>
+    </div>
+
     <div class="notifications-summary" id="notificationsSummary" style="display: none;">
         <h3>📊 Notifications Summary</h3>
         <p id="summaryText">Loading...</p>
@@ -188,6 +286,7 @@
 
 <script>
     let notifications = [];
+    let isNotificationsEnabled = true; // Default to enabled
 
     function loadNotifications() {
         fetch('/api/notifications/check')
@@ -196,6 +295,7 @@
                 notifications = data.notifications || [];
                 displayNotificationsPage();
                 updateNotificationBadge();
+                updateNotificationSettings(); // Update settings based on current state
             })
             .catch(error => {
                 console.error('Error loading notifications:', error);
@@ -252,13 +352,15 @@
                 }
                 
                 return `
-                    <div class="notification-item ${notification.is_read ? '' : 'unread'}" data-id="${notification.id}">
+                    <div class="notification-item ${notification.is_read ? 'read' : 'unread'}" 
+                         data-id="${notification.id}" 
+                         onclick="handleNotificationClick(${notification.id}, '${notification.content_type}', ${notification.content_id})">
                         <div class="notification-header">
                             <h3 class="notification-title">${notification.title}</h3>
                             <p class="notification-time">${notification.created_at}</p>
                         </div>
                         <p class="notification-message">${notification.message}</p>
-                        <div class="notification-actions">
+                        <div class="notification-actions" onclick="event.stopPropagation();">
                             ${!notification.is_read ? `
                                 <button class="btn" onclick="markAsRead(${notification.id})">
                                     Mark as Read
@@ -294,6 +396,7 @@
                 const notificationItem = document.querySelector(`[data-id="${notificationId}"]`);
                 if (notificationItem) {
                     notificationItem.classList.remove('unread');
+                    notificationItem.classList.add('read'); // Add read class
                     const markReadBtn = notificationItem.querySelector('.btn');
                     if (markReadBtn) {
                         markReadBtn.remove();
@@ -360,6 +463,7 @@
                 // Remove unread styling from all notifications
                 document.querySelectorAll('.notification-item.unread').forEach(item => {
                     item.classList.remove('unread');
+                    item.classList.add('read'); // Add read class
                 });
                 
                 // Remove mark as read buttons
@@ -395,6 +499,26 @@
         }
     }
 
+    function updateNotificationSettings() {
+        const toggleBtn = document.getElementById('toggleNotifications');
+        const statusIndicator = document.querySelector('.status-enabled');
+        const statusDisabled = document.querySelector('.status-disabled');
+
+        if (isNotificationsEnabled) {
+            toggleBtn.textContent = 'Turn Off Notifications';
+            statusIndicator.classList.add('status-enabled');
+            statusIndicator.classList.remove('status-disabled');
+            statusDisabled.classList.remove('status-enabled');
+            statusDisabled.classList.add('status-disabled');
+        } else {
+            toggleBtn.textContent = 'Turn On Notifications';
+            statusIndicator.classList.remove('status-enabled');
+            statusIndicator.classList.add('status-disabled');
+            statusDisabled.classList.remove('status-disabled');
+            statusDisabled.classList.add('status-enabled');
+        }
+    }
+
     // Navigation functions
     function viewPhoto(photoId) {
         console.log('Navigating to photo:', photoId);
@@ -406,9 +530,54 @@
         window.location.href = `/messages#message-${messageId}`;
     }
 
+    function handleNotificationClick(notificationId, contentType, contentId) {
+        // Mark the notification as read
+        markAsRead(notificationId);
+
+        // Navigate to the content based on content type
+        if (contentType === 'photo') {
+            viewPhoto(contentId);
+        } else if (contentType === 'message') {
+            viewMessage(contentId);
+        }
+    }
+
     // Load notifications when page loads
     document.addEventListener('DOMContentLoaded', function() {
         loadNotifications();
+
+        // Toggle notifications functionality
+        document.getElementById('toggleNotifications').addEventListener('click', function() {
+            isNotificationsEnabled = !isNotificationsEnabled;
+            updateNotificationSettings();
+
+            fetch('/api/notifications/toggle-enabled', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    enabled: isNotificationsEnabled
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert('Notification settings updated successfully!');
+                    loadNotifications(); // Reload to update summary
+                } else {
+                    alert('Error updating notification settings: ' + data.message);
+                    isNotificationsEnabled = !isNotificationsEnabled; // Revert if API fails
+                    updateNotificationSettings();
+                }
+            })
+            .catch(error => {
+                console.error('Error toggling notifications:', error);
+                alert('Error toggling notifications. Please try again.');
+                isNotificationsEnabled = !isNotificationsEnabled; // Revert on error
+                updateNotificationSettings();
+            });
+        });
     });
 
     // Add mark all as read button if there are unread notifications

@@ -624,12 +624,6 @@
                 font-weight: bold;
             ">0</span>
         </a></li>
-        <li class="notification-toggle-item">
-            <button id="notificationToggle" class="notification-toggle-btn">
-                <span id="notificationIcon">🔕</span>
-                <span id="notificationText">Enable Notifications</span>
-            </button>
-        </li>
         <li id="pwaInstallItem" class="mobile-only">
             <button id="pwaInstallBtn" class="pwa-install-btn">
                 📱 Install App
@@ -903,29 +897,11 @@
     // Notification System
     let notificationPermission = false;
     let notificationEnabled = localStorage.getItem('notifications_enabled') === 'true';
-    const notificationToggle = document.getElementById('notificationToggle');
-    const notificationIcon = document.getElementById('notificationIcon');
-    const notificationText = document.getElementById('notificationText');
 
     // Initialize notification system
     function initNotifications() {
-        updateNotificationUI();
-        
         if (notificationEnabled) {
             requestNotificationPermission();
-        }
-    }
-
-    // Update notification UI
-    function updateNotificationUI() {
-        if (notificationEnabled && notificationPermission) {
-            notificationIcon.textContent = '🔔';
-            notificationText.textContent = 'Notifications On';
-            notificationToggle.classList.add('active');
-        } else {
-            notificationIcon.textContent = '🔕';
-            notificationText.textContent = 'Enable Notifications';
-            notificationToggle.classList.remove('active');
         }
     }
 
@@ -934,7 +910,6 @@
         if ('Notification' in window) {
             Notification.requestPermission().then(permission => {
                 notificationPermission = permission === 'granted';
-                updateNotificationUI();
                 
                 if (notificationPermission) {
                     localStorage.setItem('notifications_enabled', 'true');
@@ -948,19 +923,6 @@
             });
         } else {
             alert('Notifications are not supported in this browser.');
-        }
-    }
-
-    // Toggle notifications
-    function toggleNotifications() {
-        if (notificationEnabled) {
-            // Disable notifications
-            notificationEnabled = false;
-            localStorage.setItem('notifications_enabled', 'false');
-            updateNotificationUI();
-        } else {
-            // Enable notifications
-            requestNotificationPermission();
         }
     }
 
@@ -985,11 +947,6 @@
                 notification.close();
             };
         }
-    }
-
-    // Handle notification toggle click
-    if (notificationToggle) {
-        notificationToggle.addEventListener('click', toggleNotifications);
     }
 
     // Initialize notifications on page load
