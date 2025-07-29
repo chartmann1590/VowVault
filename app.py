@@ -1166,6 +1166,22 @@ def toggle_message_like(message_id):
     
     db.session.commit()
     
+    # Create database notification for the message author if someone else liked it
+    if liked and message.author_identifier and message.author_identifier != user_identifier:
+        liker_name = request.cookies.get('user_name', 'Anonymous')
+        
+        # Create notification in database
+        notification = Notification(
+            user_identifier=message.author_identifier,
+            title='❤️ New Like!',
+            message=f'{liker_name} just liked your message!',
+            notification_type='like'
+        )
+        db.session.add(notification)
+        db.session.commit()
+        
+        print(f"Notification Debug: Created message like notification for {message.author_identifier} from {liker_name}")
+    
     # Prepare notification data for the message author
     notification_data = {
         'type': 'message_like',
@@ -1204,6 +1220,21 @@ def add_message_comment(message_id):
     )
     db.session.add(comment)
     db.session.commit()
+    
+    # Create database notification for the message author if someone else commented
+    user_identifier = request.cookies.get('user_identifier', '')
+    if message.author_identifier and message.author_identifier != user_identifier:
+        # Create notification in database
+        notification = Notification(
+            user_identifier=message.author_identifier,
+            title='💬 New Comment!',
+            message=f'{commenter_name} commented on your message!',
+            notification_type='comment'
+        )
+        db.session.add(notification)
+        db.session.commit()
+        
+        print(f"Notification Debug: Created message comment notification for {message.author_identifier} from {commenter_name}")
     
     # Prepare notification data for the message author
     notification_data = {
@@ -1248,6 +1279,22 @@ def toggle_like(photo_id):
     
     db.session.commit()
     
+    # Create database notification for the photo uploader if someone else liked it
+    if liked and photo.uploader_identifier and photo.uploader_identifier != user_identifier:
+        liker_name = request.cookies.get('user_name', 'Anonymous')
+        
+        # Create notification in database
+        notification = Notification(
+            user_identifier=photo.uploader_identifier,
+            title='❤️ New Like!',
+            message=f'{liker_name} just liked your photo!',
+            notification_type='like'
+        )
+        db.session.add(notification)
+        db.session.commit()
+        
+        print(f"Notification Debug: Created like notification for {photo.uploader_identifier} from {liker_name}")
+    
     # Prepare notification data for the photo uploader
     notification_data = {
         'type': 'like',
@@ -1286,6 +1333,21 @@ def add_comment(photo_id):
     )
     db.session.add(comment)
     db.session.commit()
+    
+    # Create database notification for the photo uploader if someone else commented
+    user_identifier = request.cookies.get('user_identifier', '')
+    if photo.uploader_identifier and photo.uploader_identifier != user_identifier:
+        # Create notification in database
+        notification = Notification(
+            user_identifier=photo.uploader_identifier,
+            title='💬 New Comment!',
+            message=f'{commenter_name} commented on your photo!',
+            notification_type='comment'
+        )
+        db.session.add(notification)
+        db.session.commit()
+        
+        print(f"Notification Debug: Created comment notification for {photo.uploader_identifier} from {commenter_name}")
     
     # Prepare notification data for the photo uploader
     notification_data = {
