@@ -393,6 +393,18 @@
         background: #6b5d54;
     }
 
+    /* Mobile-only class - hidden on desktop */
+    .mobile-only {
+        display: none;
+    }
+
+    /* Show mobile-only elements on mobile devices */
+    @media (max-width: 768px) {
+        .mobile-only {
+            display: block;
+        }
+    }
+
     .pwa-modal {
         position: fixed;
         top: 0;
@@ -565,7 +577,7 @@
         <li><a href="{{ url_for('photobooth') }}">Virtual Photobooth</a></li>
         <li><a href="{{ url_for('message_board') }}">Message Board</a></li>
         <li><a href="{{ url_for('guestbook') }}">Guestbook</a></li>
-        <li id="pwaInstallItem" style="display: none;">
+        <li id="pwaInstallItem" class="mobile-only">
             <button id="pwaInstallBtn" class="pwa-install-btn">
                 📱 Install App
             </button>
@@ -694,8 +706,8 @@
         // Stash the event so it can be triggered later
         deferredPrompt = e;
         
-        // Show install button in mobile menu
-        if (pwaInstallItem) {
+        // Show install button in mobile menu (if on mobile)
+        if (pwaInstallItem && window.innerWidth <= 768) {
             pwaInstallItem.style.display = 'block';
             console.log('PWA Debug: Install button shown');
         }
@@ -811,31 +823,16 @@
         pwaInstallItem.style.display = 'none';
     }
 
-    // Add manual install button for testing (always visible)
-    function addManualInstallButton() {
-        const manualBtn = document.createElement('div');
-        manualBtn.style.cssText = `
-            position: fixed;
-            top: 10px;
-            right: 10px;
-            background: #8b7355;
-            color: white;
-            padding: 10px;
-            border-radius: 5px;
-            z-index: 10000;
-            font-size: 12px;
-            cursor: pointer;
-        `;
-        manualBtn.innerHTML = '📱 Test PWA';
-        manualBtn.onclick = () => {
-            console.log('PWA Debug: Manual install button clicked');
-            showPwaModal();
-        };
-        document.body.appendChild(manualBtn);
+    // Show install option in mobile menu (always show on mobile for manual install)
+    function showMobileInstallOption() {
+        if (window.innerWidth <= 768 && pwaInstallItem) {
+            pwaInstallItem.style.display = 'block';
+        }
     }
 
-    // Add manual button for testing
-    addManualInstallButton();
+    // Call on page load and resize
+    showMobileInstallOption();
+    window.addEventListener('resize', showMobileInstallOption);
 </script>
 {% block scripts %}{% endblock %}
 
