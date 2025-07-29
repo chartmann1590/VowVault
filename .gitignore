@@ -89,6 +89,8 @@ Thumbs.db
 *.bak
 *.backup
 *.old
+app_backup_*.py
+*_backup_*.py
 
 # Docker
 .dockerignore
@@ -226,4 +228,36 @@ cython_debug/
 EMAIL_SETUP.md
 
 # Immich setup documentation (optional - remove if you want to track it)
-IMMICH_SETUP.md 
+IMMICH_SETUP.md
+
+# Test files
+test-docker.py
+test_*.py
+*_test.py
+
+# Migration and setup files (optional - remove if you want to track them)
+migrate_to_modular.py
+check_requirements.py
+
+# Docker data directories
+data/
+uploads/
+
+# Docker build artifacts
+.dockerignore
+
+# Backup directories
+backup/
+backups/
+
+# Local development files
+local_settings.py
+local_config.py
+
+# Cache directories
+.cache/
+cache/
+
+# Temporary directories
+tmp/
+temp/ 

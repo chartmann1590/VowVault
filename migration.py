@@ -5,6 +5,10 @@ Migration script to add tags column to Photo table
 
 import sqlite3
 import os
+import sys
+
+# Add the current directory to Python path so we can import the app
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 def migrate_database():
     """Add tags column to Photo table if it doesn't exist"""
@@ -51,6 +55,42 @@ def migrate_database():
             print("✅ uploader_identifier column added successfully!")
         else:
             print("✅ uploader_identifier column already exists")
+            
+        # Check if media_type column exists
+        if 'media_type' not in columns:
+            print("Adding media_type column to Photo table...")
+            cursor.execute("ALTER TABLE photo ADD COLUMN media_type VARCHAR(10) DEFAULT 'image'")
+            conn.commit()
+            print("✅ media_type column added successfully!")
+        else:
+            print("✅ media_type column already exists")
+            
+        # Check if thumbnail_filename column exists
+        if 'thumbnail_filename' not in columns:
+            print("Adding thumbnail_filename column to Photo table...")
+            cursor.execute("ALTER TABLE photo ADD COLUMN thumbnail_filename VARCHAR(255)")
+            conn.commit()
+            print("✅ thumbnail_filename column added successfully!")
+        else:
+            print("✅ thumbnail_filename column already exists")
+            
+        # Check if duration column exists
+        if 'duration' not in columns:
+            print("Adding duration column to Photo table...")
+            cursor.execute("ALTER TABLE photo ADD COLUMN duration FLOAT")
+            conn.commit()
+            print("✅ duration column added successfully!")
+        else:
+            print("✅ duration column already exists")
+            
+        # Check if is_photobooth column exists
+        if 'is_photobooth' not in columns:
+            print("Adding is_photobooth column to Photo table...")
+            cursor.execute("ALTER TABLE photo ADD COLUMN is_photobooth BOOLEAN DEFAULT FALSE")
+            conn.commit()
+            print("✅ is_photobooth column added successfully!")
+        else:
+            print("✅ is_photobooth column already exists")
             
     except Exception as e:
         print(f"❌ Error during migration: {e}")
