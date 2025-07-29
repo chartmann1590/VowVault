@@ -100,6 +100,74 @@
         margin: 0;
     }
 
+    .section-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .monitoring-status {
+        display: flex;
+        align-items: center;
+    }
+
+    .status-indicator {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.5rem 1rem;
+        border-radius: 20px;
+        font-size: 0.9rem;
+        font-weight: 500;
+        transition: all 0.3s ease;
+    }
+
+    .status-indicator.active {
+        background: linear-gradient(135deg, #d4edda 0%, #c3e6cb 100%);
+        color: #155724;
+        border: 1px solid #c3e6cb;
+    }
+
+    .status-indicator.inactive {
+        background: linear-gradient(135deg, #f8d7da 0%, #f5c6cb 100%);
+        color: #721c24;
+        border: 1px solid #f5c6cb;
+    }
+
+    .status-dot {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        display: inline-block;
+        animation: pulse 2s infinite;
+    }
+
+    .status-indicator.active .status-dot {
+        background: #28a745;
+        box-shadow: 0 0 0 0 rgba(40, 167, 69, 0.7);
+    }
+
+    .status-indicator.inactive .status-dot {
+        background: #dc3545;
+        box-shadow: 0 0 0 0 rgba(220, 53, 69, 0.7);
+    }
+
+    @keyframes pulse {
+        0% {
+            box-shadow: 0 0 0 0 rgba(40, 167, 69, 0.7);
+        }
+        70% {
+            box-shadow: 0 0 0 10px rgba(40, 167, 69, 0);
+        }
+        100% {
+            box-shadow: 0 0 0 0 rgba(40, 167, 69, 0);
+        }
+    }
+
+    .status-indicator.inactive .status-dot {
+        animation: none;
+    }
+
     .section-content {
         padding: 2rem;
     }
@@ -907,6 +975,18 @@
     <div class="section-card">
         <div class="section-header">
             <h3>Email Photo Upload Settings</h3>
+            <div class="monitoring-status">
+                <div class="status-indicator {% if email_settings.get('enabled', False) and email_settings.get('smtp_username') %}active{% else %}inactive{% endif %}">
+                    <span class="status-dot"></span>
+                    <span class="status-text">
+                        {% if email_settings.get('enabled', False) and email_settings.get('smtp_username') %}
+                            📧 Monitoring Active
+                        {% else %}
+                            ⏸️ Monitoring Inactive
+                        {% endif %}
+                    </span>
+                </div>
+            </div>
         </div>
         <div class="section-content">
             <div class="qr-settings-grid">
@@ -1719,6 +1799,26 @@
             alert('Error starting email monitor: ' + error);
         });
     }
+
+    // Update monitoring status indicator
+    function updateMonitoringStatus() {
+        const enabled = document.getElementById('email_enabled').checked;
+        const username = document.getElementById('email_smtp_username').value.trim();
+        const statusIndicator = document.querySelector('.status-indicator');
+        const statusText = statusIndicator.querySelector('.status-text');
+        
+        if (enabled && username) {
+            statusIndicator.className = 'status-indicator active';
+            statusText.innerHTML = '📧 Monitoring Active';
+        } else {
+            statusIndicator.className = 'status-indicator inactive';
+            statusText.innerHTML = '⏸️ Monitoring Inactive';
+        }
+    }
+
+    // Add event listeners for email settings changes
+    document.getElementById('email_enabled').addEventListener('change', updateMonitoringStatus);
+    document.getElementById('email_smtp_username').addEventListener('input', updateMonitoringStatus);
 
     function generatePDF() {
         const urlParams = new URLSearchParams(window.location.search);
