@@ -1,392 +1,102 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 """
-Database migration script to add video support, photobooth functionality, email processing, and Immich sync to the photo table
+Database migration script to add navigation columns to notifications
 """
+
 import sqlite3
 import os
-import sys
-from datetime import datetime
 
-def check_column_exists(cursor, table_name, column_name):
-    """Check if a column exists in a table"""
-    cursor.execute(f"PRAGMA table_info({table_name})")
-    columns = cursor.fetchall()
-    return any(column[1] == column_name for column in columns)
-
-def check_table_exists(cursor, table_name):
-    """Check if a table exists"""
-    cursor.execute("""
-        SELECT name FROM sqlite_master 
-        WHERE type='table' AND name=?
-    """, (table_name,))
-    return cursor.fetchone() is not None
-
-def migrate_photo_table_for_videos(cursor):
-    """Add video-related columns to photo table"""
-    if not check_table_exists(cursor, 'photo'):
-        print("Table 'photo' does not exist. Skipping photo migration.")
-        return True
+def migrate_database():
+    """Add navigation columns to the notification table"""
     
-    # Add media_type column
-    if not check_column_exists(cursor, 'photo', 'media_type'):
-        print("Adding 'media_type' column to 'photo' table...")
-        cursor.execute("""
-            ALTER TABLE photo 
-            ADD COLUMN media_type VARCHAR(10) DEFAULT 'image'
-        """)
-        print("Added 'media_type' column successfully!")
-    else:
-        print("Column 'media_type' already exists in 'photo' table.")
+    # Get the database path
+    db_path = 'instance/wedding_photos.db'
     
-    # Add thumbnail_filename column
-    if not check_column_exists(cursor, 'photo', 'thumbnail_filename'):
-        print("Adding 'thumbnail_filename' column to 'photo' table...")
-        cursor.execute("""
-            ALTER TABLE photo 
-            ADD COLUMN thumbnail_filename VARCHAR(255)
-        """)
-        print("Added 'thumbnail_filename' column successfully!")
-    else:
-        print("Column 'thumbnail_filename' already exists in 'photo' table.")
-    
-    # Add duration column
-    if not check_column_exists(cursor, 'photo', 'duration'):
-        print("Adding 'duration' column to 'photo' table...")
-        cursor.execute("""
-            ALTER TABLE photo 
-            ADD COLUMN duration REAL
-        """)
-        print("Added 'duration' column successfully!")
-    else:
-        print("Column 'duration' already exists in 'photo' table.")
-    
-    # Add is_photobooth column
-    if not check_column_exists(cursor, 'photo', 'is_photobooth'):
-        print("Adding 'is_photobooth' column to 'photo' table...")
-        cursor.execute("""
-            ALTER TABLE photo 
-            ADD COLUMN is_photobooth BOOLEAN DEFAULT 0
-        """)
-        print("Added 'is_photobooth' column successfully!")
-    else:
-        print("Column 'is_photobooth' already exists in 'photo' table.")
-    
-    return True
-
-def migrate_guestbook(cursor):
-    """Add photo_filename column to guestbook_entry table if it doesn't exist"""
-    if not check_table_exists(cursor, 'guestbook_entry'):
-        print("Table 'guestbook_entry' does not exist. Skipping guestbook migration.")
-        return True
-        
-    if check_column_exists(cursor, 'guestbook_entry', 'photo_filename'):
-        print("Column 'photo_filename' already exists in 'guestbook_entry' table.")
-        return True
-    
-    print("Adding 'photo_filename' column to 'guestbook_entry' table...")
-    cursor.execute("""
-        ALTER TABLE guestbook_entry 
-        ADD COLUMN photo_filename VARCHAR(255)
-    """)
-    print("Added 'photo_filename' column successfully!")
-    return True
-
-def create_message_tables(cursor):
-    """Create message board related tables"""
-    
-    # Create message table
-    if not check_table_exists(cursor, 'message'):
-        print("Creating 'message' table...")
-        cursor.execute("""
-            CREATE TABLE message (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                author_name VARCHAR(100) NOT NULL DEFAULT 'Anonymous',
-                content TEXT NOT NULL,
-                photo_filename VARCHAR(255),
-                created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-                likes INTEGER DEFAULT 0,
-                is_hidden BOOLEAN DEFAULT 0
-            )
-        """)
-        print("Created 'message' table successfully!")
-    else:
-        print("Table 'message' already exists.")
-    
-    # Create message_comment table
-    if not check_table_exists(cursor, 'message_comment'):
-        print("Creating 'message_comment' table...")
-        cursor.execute("""
-            CREATE TABLE message_comment (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                message_id INTEGER NOT NULL,
-                commenter_name VARCHAR(100) DEFAULT 'Anonymous',
-                content TEXT NOT NULL,
-                created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-                is_hidden BOOLEAN DEFAULT 0,
-                FOREIGN KEY (message_id) REFERENCES message(id) ON DELETE CASCADE
-            )
-        """)
-        print("Created 'message_comment' table successfully!")
-    else:
-        print("Table 'message_comment' already exists.")
-    
-    # Create message_like table
-    if not check_table_exists(cursor, 'message_like'):
-        print("Creating 'message_like' table...")
-        cursor.execute("""
-            CREATE TABLE message_like (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                message_id INTEGER NOT NULL,
-                user_identifier VARCHAR(100) NOT NULL,
-                created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-                FOREIGN KEY (message_id) REFERENCES message(id) ON DELETE CASCADE
-            )
-        """)
-        print("Created 'message_like' table successfully!")
-    else:
-        print("Table 'message_like' already exists.")
-    
-    return True
-
-def create_email_log_table(cursor):
-    """Create email log table for tracking email processing"""
-    
-    # Create email_log table
-    if not check_table_exists(cursor, 'email_log'):
-        print("Creating 'email_log' table...")
-        cursor.execute("""
-            CREATE TABLE email_log (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                sender_email VARCHAR(255) NOT NULL,
-                subject VARCHAR(255),
-                received_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-                processed_at DATETIME,
-                status VARCHAR(50) NOT NULL,
-                photo_count INTEGER DEFAULT 0,
-                error_message TEXT,
-                response_sent BOOLEAN DEFAULT 0,
-                response_type VARCHAR(50)
-            )
-        """)
-        print("Created 'email_log' table successfully!")
-    else:
-        print("Table 'email_log' already exists.")
-    
-    return True
-
-def create_immich_sync_log_table(cursor):
-    """Create Immich sync log table"""
-    if check_table_exists(cursor, 'immich_sync_log'):
-        print("Table 'immich_sync_log' already exists.")
-        return True
-    
-    print("Creating 'immich_sync_log' table...")
-    cursor.execute("""
-        CREATE TABLE immich_sync_log (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            filename VARCHAR(255) NOT NULL,
-            file_path VARCHAR(500) NOT NULL,
-            sync_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-            status VARCHAR(50) NOT NULL,
-            immich_asset_id VARCHAR(255),
-            error_message TEXT,
-            retry_count INTEGER DEFAULT 0,
-            last_retry TIMESTAMP
-        )
-    """)
-    print("Table 'immich_sync_log' created successfully!")
-    return True
-
-def create_notification_users_table(cursor):
-    """Create notification users table"""
-    if check_table_exists(cursor, 'notification_user'):
-        print("Table 'notification_user' already exists.")
-        return True
-    
-    print("Creating 'notification_user' table...")
-    cursor.execute("""
-        CREATE TABLE notification_user (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            user_identifier VARCHAR(100) UNIQUE NOT NULL,
-            user_name VARCHAR(100) DEFAULT 'Anonymous',
-            notifications_enabled BOOLEAN DEFAULT 1,
-            last_seen TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-            device_info TEXT
-        )
-    """)
-    print("Table 'notification_user' created successfully!")
-    return True
-
-def create_notifications_table(cursor):
-    """Create notifications table"""
-    if check_table_exists(cursor, 'notification'):
-        print("Table 'notification' already exists.")
-        return True
-    
-    print("Creating 'notification' table...")
-    cursor.execute("""
-        CREATE TABLE notification (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            user_identifier VARCHAR(100) NOT NULL,
-            title VARCHAR(255) NOT NULL,
-            message TEXT NOT NULL,
-            notification_type VARCHAR(50) DEFAULT 'admin',
-            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-            read_at TIMESTAMP,
-            is_read BOOLEAN DEFAULT 0
-        )
-    """)
-    print("Table 'notification' created successfully!")
-    return True
-
-def add_user_identifier_columns(cursor):
-    """Add user identifier columns to existing tables"""
-    
-    # Add uploader_identifier to photo table
-    if not check_column_exists(cursor, 'photo', 'uploader_identifier'):
-        print("Adding 'uploader_identifier' column to 'photo' table...")
-        cursor.execute("""
-            ALTER TABLE photo 
-            ADD COLUMN uploader_identifier VARCHAR(100)
-        """)
-        print("Added 'uploader_identifier' column successfully!")
-    else:
-        print("Column 'uploader_identifier' already exists in 'photo' table.")
-    
-    # Add author_identifier to message table
-    if not check_column_exists(cursor, 'message', 'author_identifier'):
-        print("Adding 'author_identifier' column to 'message' table...")
-        cursor.execute("""
-            ALTER TABLE message 
-            ADD COLUMN author_identifier VARCHAR(100)
-        """)
-        print("Added 'author_identifier' column successfully!")
-    else:
-        print("Column 'author_identifier' already exists in 'message' table.")
-    
-    return True
-
-def create_directories():
-    """Create necessary directories for uploads"""
-    directories = [
-        os.path.join('static', 'uploads'),
-        os.path.join('static', 'uploads', 'guestbook'),
-        os.path.join('static', 'uploads', 'messages'),
-        os.path.join('static', 'uploads', 'videos'),
-        os.path.join('static', 'uploads', 'thumbnails'),
-        os.path.join('static', 'uploads', 'photobooth'),
-        os.path.join('static', 'uploads', 'borders')
-    ]
-    
-    for directory in directories:
-        if not os.path.exists(directory):
-            try:
-                os.makedirs(directory, exist_ok=True)
-                print(f"Created directory: {directory}")
-            except Exception as e:
-                print(f"Error creating directory {directory}: {e}")
-                return False
-        else:
-            print(f"Directory already exists: {directory}")
-    
-    return True
-
-def migrate_database(db_path='wedding_photos.db'):
-    """Run all database migrations"""
-    
-    # Check if database exists
     if not os.path.exists(db_path):
-        print(f"Database {db_path} does not exist. It will be created when the app runs.")
-        return True
+        print(f"Database file not found at {db_path}")
+        return False
     
     try:
-        # Connect to database
+        # Connect to the database
         conn = sqlite3.connect(db_path)
         cursor = conn.cursor()
         
-        # Run migrations
-        success = True
-        
-        # Migrate photo table for video support and photobooth
-        if not migrate_photo_table_for_videos(cursor):
-            success = False
-        
-        # Migrate guestbook
-        if not migrate_guestbook(cursor):
-            success = False
-        
-        # Create message board tables
-        if not create_message_tables(cursor):
-            success = False
-        
-        # Create email log table
-        if not create_email_log_table(cursor):
-            success = False
-        
-        # Create Immich sync log table
-        if not create_immich_sync_log_table(cursor):
-            success = False
-        
-        # Create notification users table
-        if not create_notification_users_table(cursor):
-            success = False
-        
-        # Create notifications table
-        if not create_notifications_table(cursor):
-            success = False
-        
-        # Add user identifier columns
-        if not add_user_identifier_columns(cursor):
-            success = False
-        
-        if success:
-            # Commit changes
-            conn.commit()
-            print("\nAll database migrations completed successfully!")
+        # Check if notification_user table exists
+        cursor.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='notification_user'")
+        if not cursor.fetchone():
+            print("Creating notification_user table...")
+            cursor.execute("""
+                CREATE TABLE notification_user (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    user_identifier VARCHAR(100) UNIQUE NOT NULL,
+                    user_name VARCHAR(100) DEFAULT 'Anonymous',
+                    notifications_enabled BOOLEAN DEFAULT 1,
+                    last_seen TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                    device_info TEXT
+                )
+            """)
+            print("✓ Created notification_user table")
         else:
-            print("\nSome migrations failed!")
-            conn.rollback()
+            print("notification_user table already exists")
         
+        # Check if notification table exists
+        cursor.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='notification'")
+        if not cursor.fetchone():
+            print("Creating notification table...")
+            cursor.execute("""
+                CREATE TABLE notification (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    user_identifier VARCHAR(100) NOT NULL,
+                    title VARCHAR(255) NOT NULL,
+                    message TEXT NOT NULL,
+                    notification_type VARCHAR(50) DEFAULT 'admin',
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                    read_at TIMESTAMP,
+                    is_read BOOLEAN DEFAULT 0,
+                    content_type VARCHAR(50),
+                    content_id INTEGER
+                )
+            """)
+            print("✓ Created notification table with navigation columns")
+        else:
+            # Check if columns already exist
+            cursor.execute("PRAGMA table_info(notification)")
+            columns = [column[1] for column in cursor.fetchall()]
+            
+            print("Current notification table columns:", columns)
+            
+            # Add content_type column if it doesn't exist
+            if 'content_type' not in columns:
+                print("Adding content_type column...")
+                cursor.execute("ALTER TABLE notification ADD COLUMN content_type VARCHAR(50)")
+                print("✓ Added content_type column")
+            else:
+                print("content_type column already exists")
+            
+            # Add content_id column if it doesn't exist
+            if 'content_id' not in columns:
+                print("Adding content_id column...")
+                cursor.execute("ALTER TABLE notification ADD COLUMN content_id INTEGER")
+                print("✓ Added content_id column")
+            else:
+                print("content_id column already exists")
+        
+        # Commit the changes
+        conn.commit()
         conn.close()
-        return success
         
-    except sqlite3.Error as e:
-        print(f"Database error: {e}")
-        return False
+        print("✅ Database migration completed successfully!")
+        return True
+        
     except Exception as e:
-        print(f"Unexpected error: {e}")
+        print(f"❌ Error during migration: {e}")
         return False
-
-def main():
-    """Main migration function"""
-    print("=== Wedding Gallery Database Migration (with Video, Photobooth & Email Support) ===")
-    print(f"Migration started at: {datetime.now()}")
-    print("")
-    
-    # Determine database path
-    db_path = os.environ.get('DATABASE_URL', 'wedding_photos.db')
-    if db_path.startswith('sqlite:///'):
-        db_path = db_path.replace('sqlite:///', '')
-    
-    # For Docker environments
-    if db_path.startswith('/app/'):
-        db_path = db_path.replace('/app/', '')
-    
-    print(f"Database path: {db_path}")
-    
-    # Run database migrations
-    db_success = migrate_database(db_path)
-    
-    # Create directories
-    dir_success = create_directories()
-    
-    if db_success and dir_success:
-        print("\n✅ All migrations completed successfully!")
-        return 0
-    else:
-        print("\n❌ Some migrations failed!")
-        return 1
 
 if __name__ == "__main__":
-    sys.exit(main())
+    print("🔄 Starting database migration...")
+    success = migrate_database()
+    if success:
+        print("🎉 Migration completed! The notification system should now work properly.")
+    else:
+        print("💥 Migration failed. Please check the error messages above.")
