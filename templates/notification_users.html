@@ -317,6 +317,12 @@
         const message = document.getElementById('notificationMessage').value.trim();
         const userIdentifier = document.getElementById('userSelect').value;
         
+        console.log('Notification Debug: sendNotification called');
+        console.log('Notification Debug: type:', type);
+        console.log('Notification Debug: title:', title);
+        console.log('Notification Debug: message:', message);
+        console.log('Notification Debug: userIdentifier:', userIdentifier);
+        
         if (!title || !message) {
             alert('Please enter both title and message.');
             return;
@@ -337,6 +343,9 @@
             data.user_identifier = userIdentifier;
         }
         
+        console.log('Notification Debug: sending data:', data);
+        console.log('Notification Debug: URL:', `/admin/send-notification?key={{ admin_key }}`);
+        
         fetch(`/admin/send-notification?key={{ admin_key }}`, {
             method: 'POST',
             headers: {
@@ -344,8 +353,12 @@
             },
             body: JSON.stringify(data)
         })
-        .then(response => response.json())
+        .then(response => {
+            console.log('Notification Debug: response status:', response.status);
+            return response.json();
+        })
         .then(data => {
+            console.log('Notification Debug: response data:', data);
             if (data.success) {
                 alert('Notification sent successfully!');
                 document.getElementById('notificationTitle').value = '';
@@ -355,11 +368,16 @@
             }
         })
         .catch(error => {
+            console.error('Notification Debug: fetch error:', error);
             alert('Error sending notification: ' + error);
         });
     }
 
     function sendIndividualNotification(userIdentifier, userName) {
+        console.log('Notification Debug: sendIndividualNotification called');
+        console.log('Notification Debug: userIdentifier:', userIdentifier);
+        console.log('Notification Debug: userName:', userName);
+        
         const title = prompt(`Enter notification title for ${userName}:`);
         if (!title) return;
         
@@ -373,6 +391,8 @@
             user_identifier: userIdentifier
         };
         
+        console.log('Notification Debug: sending individual data:', data);
+        
         fetch(`/admin/send-notification?key={{ admin_key }}`, {
             method: 'POST',
             headers: {
@@ -380,8 +400,12 @@
             },
             body: JSON.stringify(data)
         })
-        .then(response => response.json())
+        .then(response => {
+            console.log('Notification Debug: individual response status:', response.status);
+            return response.json();
+        })
         .then(data => {
+            console.log('Notification Debug: individual response data:', data);
             if (data.success) {
                 alert('Individual notification sent successfully!');
             } else {
@@ -389,6 +413,7 @@
             }
         })
         .catch(error => {
+            console.error('Notification Debug: individual fetch error:', error);
             alert('Error sending notification: ' + error);
         });
     }
