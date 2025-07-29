@@ -410,6 +410,21 @@
         box-shadow: 0 5px 20px rgba(232, 221, 211, 0.3);
     }
 
+    .copy-email-btn {
+        background: #f0f0f0;
+        border: 1px solid #ccc;
+        border-radius: 5px;
+        padding: 2px 6px;
+        font-size: 0.9rem;
+        cursor: pointer;
+        margin-left: 5px;
+        transition: background-color 0.2s ease;
+    }
+
+    .copy-email-btn:hover {
+        background: #e0e0e0;
+    }
+
     @media (max-width: 768px) {
         .gallery-header h2 {
             font-size: 2rem;
@@ -489,7 +504,12 @@
                     <p><strong>How to email photos:</strong></p>
                     <ol>
                         <li>Attach your photos to an email</li>
-                        <li>Send to: <strong>{{ email_settings.monitor_email if email_settings.monitor_email else 'your-email@example.com' }}</strong></li>
+                        <li>Send to: 
+                            <strong id="emailAddress">{{ email_settings.monitor_email if email_settings.monitor_email else 'your-email@example.com' }}</strong>
+                            <button class="copy-email-btn" onclick="copyEmail()" title="Copy email address">
+                                📋
+                            </button>
+                        </li>
                         <li>We'll automatically add them to the gallery</li>
                         <li>You'll receive a confirmation email with a link</li>
                     </ol>
@@ -611,5 +631,14 @@
             closeWelcomeModal();
         }
     });
+
+    function copyEmail() {
+        const emailAddress = document.getElementById('emailAddress').textContent;
+        navigator.clipboard.writeText(emailAddress).then(() => {
+            alert('Email address copied to clipboard!');
+        }).catch(err => {
+            console.error('Failed to copy email address: ', err);
+        });
+    }
 </script>
 {% endblock %}

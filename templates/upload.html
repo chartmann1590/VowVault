@@ -234,6 +234,21 @@
         font-size: 0.9rem;
     }
 
+    .copy-email-btn {
+        background-color: #e0d5c5;
+        border: none;
+        border-radius: 5px;
+        padding: 0.2rem 0.5rem;
+        cursor: pointer;
+        font-size: 1rem;
+        margin-left: 0.5rem;
+        transition: background-color 0.3s ease;
+    }
+
+    .copy-email-btn:hover {
+        background-color: #d5c6b3;
+    }
+
     @media (max-width: 768px) {
         .upload-form {
             padding: 1.5rem;
@@ -279,7 +294,12 @@
                 <p><strong>How to email photos:</strong></p>
                 <ol>
                     <li>Attach your photos to an email</li>
-                    <li>Send to: <strong>{{ email_settings.monitor_email if email_settings.monitor_email else 'your-email@example.com' }}</strong></li>
+                    <li>Send to: 
+                        <strong id="emailAddress">{{ email_settings.monitor_email if email_settings.monitor_email else 'your-email@example.com' }}</strong>
+                        <button class="copy-email-btn" onclick="copyEmail()" title="Copy email address">
+                            📋
+                        </button>
+                    </li>
                     <li>We'll automatically add them to the gallery</li>
                     <li>You'll receive a confirmation email with a link</li>
                 </ol>
@@ -350,6 +370,7 @@
     const submitBtn = document.getElementById('submitBtn');
     const videoInfo = document.getElementById('videoInfo');
     const videoDuration = document.getElementById('videoDuration');
+    const emailAddress = document.getElementById('emailAddress');
 
     const imageExtensions = ['png', 'jpg', 'jpeg', 'gif', 'webp'];
     const videoExtensions = ['mp4', 'mov', 'avi', 'webm'];
@@ -409,5 +430,14 @@
         submitBtn.textContent = 'Uploading...';
         submitBtn.disabled = true;
     });
+
+    function copyEmail() {
+        const email = emailAddress.textContent;
+        navigator.clipboard.writeText(email).then(() => {
+            alert('Email address copied to clipboard!');
+        }).catch(err => {
+            console.error('Failed to copy email address: ', err);
+        });
+    }
 </script>
 {% endblock %}

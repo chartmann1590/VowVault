@@ -679,6 +679,21 @@
             max-width: 300px;
         }
     }
+
+    .copy-email-btn {
+        background: #8b7355;
+        color: white;
+        border: none;
+        border-radius: 5px;
+        padding: 0.5rem 0.75rem;
+        cursor: pointer;
+        font-size: 0.9rem;
+        transition: background-color 0.3s ease;
+    }
+
+    .copy-email-btn:hover {
+        background: #6b5d54;
+    }
 </style>
 {% endblock %}
 
@@ -1013,10 +1028,19 @@
 
                     <div class="form-group">
                         <label for="email_monitor_email">Monitor Email Address</label>
-                        <input type="email" 
-                               id="email_monitor_email" 
-                               placeholder="photos@yourdomain.com"
-                               value="{{ email_settings.get('monitor_email', '') }}">
+                        <div style="display: flex; align-items: center; gap: 0.5rem;">
+                            <input type="email" 
+                                   id="email_monitor_email" 
+                                   placeholder="photos@yourdomain.com"
+                                   value="{{ email_settings.get('monitor_email', '') }}"
+                                   style="flex: 1;">
+                            <button type="button" 
+                                    class="copy-email-btn" 
+                                    onclick="copyMonitorEmail()" 
+                                    title="Copy email address">
+                                📋
+                            </button>
+                        </div>
                         <small style="color: #666; display: block; margin-top: 0.5rem;">
                             Email address to monitor for incoming photo uploads
                         </small>
@@ -2090,6 +2114,26 @@
         } else {
             statusIndicator.className = 'status-indicator inactive';
             statusText.innerHTML = '⏸️ Monitoring Inactive';
+        }
+    }
+
+    // Copy monitor email address
+    function copyMonitorEmail() {
+        const emailInput = document.getElementById('email_monitor_email');
+        const email = emailInput.value;
+        
+        if (email) {
+            navigator.clipboard.writeText(email).then(() => {
+                alert('Email address copied to clipboard!');
+            }).catch(err => {
+                console.error('Failed to copy email address: ', err);
+                // Fallback for older browsers
+                emailInput.select();
+                document.execCommand('copy');
+                alert('Email address copied to clipboard!');
+            });
+        } else {
+            alert('Please enter an email address first.');
         }
     }
 
