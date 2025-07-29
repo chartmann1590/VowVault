@@ -250,6 +250,7 @@
                 </div>
                 
                 <button class="btn" onclick="sendNotification()">Send Notification</button>
+                <button class="btn btn-secondary" onclick="testFunction()" style="margin-left: 10px;">Test Button</button>
             </div>
         </div>
     </div>
@@ -300,6 +301,12 @@
 </div>
 
 <script>
+    // Test function to verify JavaScript is working
+    function testFunction() {
+        console.log('Test function called!');
+        alert('JavaScript is working!');
+    }
+
     function toggleUserSelect() {
         const type = document.getElementById('notificationType').value;
         const userGroup = document.getElementById('userSelectGroup');
@@ -312,6 +319,9 @@
     }
 
     function sendNotification() {
+        console.log('=== NOTIFICATION DEBUG START ===');
+        console.log('sendNotification function called');
+        
         const type = document.getElementById('notificationType').value;
         const title = document.getElementById('notificationTitle').value.trim();
         const message = document.getElementById('notificationMessage').value.trim();
@@ -324,11 +334,13 @@
         console.log('Notification Debug: userIdentifier:', userIdentifier);
         
         if (!title || !message) {
+            console.log('Notification Debug: Missing title or message');
             alert('Please enter both title and message.');
             return;
         }
         
         if (type === 'individual' && !userIdentifier) {
+            console.log('Notification Debug: Missing user identifier for individual notification');
             alert('Please select a user for individual notification.');
             return;
         }
@@ -346,7 +358,11 @@
         console.log('Notification Debug: sending data:', data);
         console.log('Notification Debug: URL:', `/admin/send-notification?key={{ admin_key }}`);
         
-        fetch(`/admin/send-notification?key={{ admin_key }}`, {
+        // Test the URL construction
+        const url = `/admin/send-notification?key={{ admin_key }}`;
+        console.log('Notification Debug: Constructed URL:', url);
+        
+        fetch(url, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
@@ -355,6 +371,7 @@
         })
         .then(response => {
             console.log('Notification Debug: response status:', response.status);
+            console.log('Notification Debug: response headers:', response.headers);
             return response.json();
         })
         .then(data => {
@@ -371,6 +388,8 @@
             console.error('Notification Debug: fetch error:', error);
             alert('Error sending notification: ' + error);
         });
+        
+        console.log('=== NOTIFICATION DEBUG END ===');
     }
 
     function sendIndividualNotification(userIdentifier, userName) {
