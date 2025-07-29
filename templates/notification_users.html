@@ -296,7 +296,7 @@
                     <textarea id="notificationMessage" rows="3" placeholder="Enter notification message..." maxlength="200"></textarea>
                 </div>
                 
-                <button class="btn" id="sendButton" onclick="sendNotification()">Send Notification</button>
+                <button class="btn" id="sendButton" type="button">Send Notification</button>
                 
                 <div id="messageContainer" class="message"></div>
             </div>
@@ -372,11 +372,15 @@
     }
 
     async function sendNotification() {
+        console.log('sendNotification called');
+        
         const type = document.getElementById('notificationType').value;
         const title = document.getElementById('notificationTitle').value.trim();
         const message = document.getElementById('notificationMessage').value.trim();
         const userSelect = document.getElementById('userSelect');
         const userIdentifier = type === 'individual' ? userSelect.value : null;
+        
+        console.log('Form values:', { type, title, message, userIdentifier });
         
         // Validation
         if (!title || !message) {
@@ -400,6 +404,8 @@
             data.user_identifier = userIdentifier;
         }
         
+        console.log('Sending data:', data);
+        
         // Show loading state
         const sendButton = document.getElementById('sendButton');
         const originalText = sendButton.textContent;
@@ -415,7 +421,11 @@
                 body: JSON.stringify(data)
             });
             
+            console.log('Response status:', response.status);
+            
             const result = await response.json();
+            
+            console.log('Response data:', result);
             
             if (result.success) {
                 showMessage(result.message, true);
@@ -487,7 +497,19 @@
 
     // Initialize on page load
     document.addEventListener('DOMContentLoaded', function() {
-        // Any initialization code here
+        console.log('DOM loaded, attaching event listener');
+        
+        // Attach click event to send button
+        const sendButton = document.getElementById('sendButton');
+        if (sendButton) {
+            sendButton.addEventListener('click', sendNotification);
+            console.log('Event listener attached to send button');
+        } else {
+            console.error('Send button not found!');
+        }
+        
+        // Test that the function exists
+        console.log('sendNotification function exists:', typeof sendNotification === 'function');
     });
 </script>
 {% endblock %}
