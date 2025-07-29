@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 """
-Database migration script to add video support, photobooth functionality, and email processing to the photo table
+Database migration script to add video support, photobooth functionality, email processing, and Immich sync to the photo table
 """
 import sqlite3
 import os
@@ -174,6 +174,31 @@ def create_email_log_table(cursor):
     
     return True
 
+def create_immich_sync_log_table(cursor):
+    """Create Immich sync log table for tracking sync operations"""
+    
+    # Create immich_sync_log table
+    if not check_table_exists(cursor, 'immich_sync_log'):
+        print("Creating 'immich_sync_log' table...")
+        cursor.execute("""
+            CREATE TABLE immich_sync_log (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                filename VARCHAR(255) NOT NULL,
+                file_path VARCHAR(500) NOT NULL,
+                sync_date DATETIME DEFAULT CURRENT_TIMESTAMP,
+                status VARCHAR(50) NOT NULL,
+                immich_asset_id VARCHAR(255),
+                error_message TEXT,
+                retry_count INTEGER DEFAULT 0,
+                last_retry DATETIME
+            )
+        """)
+        print("Created 'immich_sync_log' table successfully!")
+    else:
+        print("Table 'immich_sync_log' already exists.")
+    
+    return True
+
 def create_directories():
     """Create necessary directories for uploads"""
     directories = [
@@ -229,6 +254,10 @@ def migrate_database(db_path='wedding_photos.db'):
         
         # Create email log table
         if not create_email_log_table(cursor):
+            success = False
+        
+        # Create Immich sync log table
+        if not create_immich_sync_log_table(cursor):
             success = False
         
         if success:

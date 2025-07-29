@@ -1134,6 +1134,236 @@
         </div>
     </div>
 
+    <!-- Immich Sync Settings Section -->
+    <div class="section-card">
+        <div class="section-header">
+            <h3>Immich Server Sync Settings</h3>
+            <div class="sync-status">
+                <div class="status-indicator {% if immich_settings.get('enabled', False) and immich_settings.get('server_url') and immich_settings.get('api_key') %}active{% else %}inactive{% endif %}">
+                    <span class="status-dot"></span>
+                    <span class="status-text">
+                        {% if immich_settings.get('enabled', False) and immich_settings.get('server_url') and immich_settings.get('api_key') %}
+                            🔄 Sync Active
+                        {% else %}
+                            ⏸️ Sync Inactive
+                        {% endif %}
+                    </span>
+                </div>
+            </div>
+        </div>
+        <div class="section-content">
+            <div class="qr-settings-grid">
+                <div class="qr-form-section">
+                    <h4 style="color: #8b7355; margin-bottom: 1.5rem;">Immich Configuration</h4>
+                    
+                    <div class="form-group">
+                        <label style="display: flex; align-items: center; gap: 0.5rem;">
+                            <input type="checkbox" 
+                                   id="immich_enabled" 
+                                   {% if immich_settings.get('enabled', False) %}checked{% endif %}>
+                            Enable Immich Sync
+                        </label>
+                        <small style="color: #666; display: block; margin-top: 0.5rem;">
+                            When enabled, all uploads will be synced to your Immich server
+                        </small>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="immich_server_url">Immich Server URL</label>
+                        <input type="url" 
+                               id="immich_server_url" 
+                               placeholder="https://your-immich-server.com"
+                               value="{{ immich_settings.get('server_url', '') }}">
+                        <small style="color: #666; display: block; margin-top: 0.5rem;">
+                            Your Immich server URL (e.g., https://immich.yourdomain.com)
+                        </small>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="immich_api_key">API Key</label>
+                        <input type="password" 
+                               id="immich_api_key" 
+                               placeholder="Your Immich API key"
+                               value="{{ immich_settings.get('api_key', '') }}">
+                        <small style="color: #666; display: block; margin-top: 0.5rem;">
+                            API key from your Immich server (Admin → Settings → API Keys)
+                        </small>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="immich_user_id">User ID (Optional)</label>
+                        <input type="text" 
+                               id="immich_user_id" 
+                               placeholder="Your Immich user ID"
+                               value="{{ immich_settings.get('user_id', '') }}">
+                        <small style="color: #666; display: block; margin-top: 0.5rem;">
+                            Your Immich user ID (optional, will use API key owner if not specified)
+                        </small>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="immich_album_name">Album Name</label>
+                        <input type="text" 
+                               id="immich_album_name" 
+                               placeholder="Wedding Gallery"
+                               value="{{ immich_settings.get('album_name', 'Wedding Gallery') }}">
+                        <small style="color: #666; display: block; margin-top: 0.5rem;">
+                            Name of the album to sync photos to (will be created if it doesn't exist)
+                        </small>
+                    </div>
+
+                    <h5 style="color: #8b7355; margin: 2rem 0 1rem 0;">Sync Options</h5>
+                    
+                    <div class="form-group">
+                        <label style="display: flex; align-items: center; gap: 0.5rem;">
+                            <input type="checkbox" 
+                                   id="immich_sync_photos" 
+                                   {% if immich_settings.get('sync_photos', True) %}checked{% endif %}>
+                            Sync Photos
+                        </label>
+                    </div>
+
+                    <div class="form-group">
+                        <label style="display: flex; align-items: center; gap: 0.5rem;">
+                            <input type="checkbox" 
+                                   id="immich_sync_videos" 
+                                   {% if immich_settings.get('sync_videos', True) %}checked{% endif %}>
+                            Sync Videos
+                        </label>
+                    </div>
+
+                    <div class="form-group">
+                        <label style="display: flex; align-items: center; gap: 0.5rem;">
+                            <input type="checkbox" 
+                                   id="immich_sync_guestbook" 
+                                   {% if immich_settings.get('sync_guestbook', True) %}checked{% endif %}>
+                            Sync Guestbook Photos
+                        </label>
+                    </div>
+
+                    <div class="form-group">
+                        <label style="display: flex; align-items: center; gap: 0.5rem;">
+                            <input type="checkbox" 
+                                   id="immich_sync_messages" 
+                                   {% if immich_settings.get('sync_messages', True) %}checked{% endif %}>
+                            Sync Message Photos
+                        </label>
+                    </div>
+
+                    <div class="form-group">
+                        <label style="display: flex; align-items: center; gap: 0.5rem;">
+                            <input type="checkbox" 
+                                   id="immich_sync_photobooth" 
+                                   {% if immich_settings.get('sync_photobooth', True) %}checked{% endif %}>
+                            Sync Photobooth Photos
+                        </label>
+                    </div>
+                </div>
+
+                <div class="qr-preview">
+                    <h4>How It Works</h4>
+                    <div class="preview-content" style="text-align: left;">
+                        <div style="background: #f9f5f0; padding: 1.5rem; border-radius: 8px; margin-bottom: 1rem;">
+                            <strong style="color: #8b7355;">Immich Sync Process:</strong>
+                            <ol style="margin: 0.5rem 0 0 1rem; padding-left: 1rem; color: #666;">
+                                <li>Photos/videos are uploaded to the wedding gallery</li>
+                                <li>System automatically syncs to your Immich server</li>
+                                <li>Files are added to the specified album</li>
+                                <li>Descriptions include uploader name and details</li>
+                                <li>Sync status is logged for troubleshooting</li>
+                            </ol>
+                        </div>
+                        
+                        <div style="background: #e8f5e8; padding: 1rem; border-radius: 8px; margin-bottom: 1rem;">
+                            <strong style="color: #28a745;">What Gets Synced:</strong>
+                            <ul style="margin: 0.5rem 0 0 1rem; padding-left: 1rem; color: #666;">
+                                <li>All uploaded photos and videos</li>
+                                <li>Guestbook photo attachments</li>
+                                <li>Message board photo attachments</li>
+                                <li>Photobooth photos</li>
+                                <li>Original file names preserved</li>
+                            </ul>
+                        </div>
+                        
+                        <div style="background: #fff3cd; padding: 1rem; border-radius: 8px;">
+                            <strong style="color: #856404;">Setup Notes:</strong>
+                            <ul style="margin: 0.5rem 0 0 1rem; padding-left: 1rem; color: #666;">
+                                <li>Ensure your Immich server is accessible</li>
+                                <li>Generate an API key in Immich admin settings</li>
+                                <li>Test the connection before enabling sync</li>
+                                <li>Monitor sync logs for any issues</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="button-group">
+                <button class="btn" onclick="saveAllSettings()">Save Immich Settings</button>
+                <button class="btn btn-secondary" onclick="syncImmich()">Sync Now</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Immich Sync Log Section -->
+    <div class="section-card">
+        <div class="section-header">
+            <h3>Immich Sync Log</h3>
+        </div>
+        <div class="section-content">
+            <div class="table-responsive">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Filename</th>
+                            <th>Sync Date</th>
+                            <th>Status</th>
+                            <th>Asset ID</th>
+                            <th>Error</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for log in immich_sync_logs %}
+                        <tr>
+                            <td>{{ log.filename }}</td>
+                            <td>{{ log.sync_date.strftime('%b %d, %Y %H:%M') }}</td>
+                            <td>
+                                {% if log.status == 'success' %}
+                                    <span style="color: #28a745; font-weight: bold;">✓ Success</span>
+                                {% elif log.status == 'error' %}
+                                    <span style="color: #dc3545; font-weight: bold;">✗ Error</span>
+                                {% elif log.status == 'pending' %}
+                                    <span style="color: #ffc107; font-weight: bold;">⏳ Pending</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if log.immich_asset_id %}
+                                    <span style="color: #28a745;">{{ log.immich_asset_id[:20] }}...</span>
+                                {% else %}
+                                    -
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if log.error_message %}
+                                    <span style="color: #dc3545;" title="{{ log.error_message }}">Error</span>
+                                {% else %}
+                                    -
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+                {% if not immich_sync_logs %}
+                <div style="text-align: center; padding: 2rem; color: #666;">
+                    <p>No Immich sync logs yet.</p>
+                    <p>Sync logs will appear here once you enable Immich sync and files are synced.</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
     <!-- Email Processing Log Section -->
     <div class="section-card">
         <div class="section-header">
@@ -1756,6 +1986,18 @@
                 imap_port: document.getElementById('email_imap_port').value,
                 imap_username: document.getElementById('email_imap_username').value,
                 imap_password: document.getElementById('email_imap_password').value
+            },
+            immich_settings: {
+                enabled: document.getElementById('immich_enabled').checked,
+                server_url: document.getElementById('immich_server_url').value,
+                api_key: document.getElementById('immich_api_key').value,
+                user_id: document.getElementById('immich_user_id').value,
+                album_name: document.getElementById('immich_album_name').value,
+                sync_photos: document.getElementById('immich_sync_photos').checked,
+                sync_videos: document.getElementById('immich_sync_videos').checked,
+                sync_guestbook: document.getElementById('immich_sync_guestbook').checked,
+                sync_messages: document.getElementById('immich_sync_messages').checked,
+                sync_photobooth: document.getElementById('immich_sync_photobooth').checked
             }
         };
 
@@ -1797,6 +2039,35 @@
         })
         .catch(error => {
             alert('Error starting email monitor: ' + error);
+        });
+    }
+
+    function syncImmich() {
+        const urlParams = new URLSearchParams(window.location.search);
+        const key = urlParams.get('key');
+        
+        showLoading('Syncing to Immich...');
+        
+        fetch(`/admin/sync-immich?key=${key}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            hideLoading();
+            if (data.success) {
+                alert('Immich sync completed: ' + data.message);
+                // Reload page to show updated logs
+                window.location.reload();
+            } else {
+                alert('Error syncing to Immich: ' + data.message);
+            }
+        })
+        .catch(error => {
+            hideLoading();
+            alert('Error syncing to Immich: ' + error);
         });
     }
 

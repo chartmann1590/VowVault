@@ -32,6 +32,8 @@ from email.mime.base import MIMEBase
 from email import encoders
 import threading
 import time
+import requests
+from pathlib import Path
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', secrets.token_hex(16))
@@ -163,6 +165,17 @@ class EmailLog(db.Model):
     response_sent = db.Column(db.Boolean, default=False)
     response_type = db.Column(db.String(50))  # 'confirmation', 'rejection'
 
+class ImmichSyncLog(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    filename = db.Column(db.String(255), nullable=False)
+    file_path = db.Column(db.String(500), nullable=False)
+    sync_date = db.Column(db.DateTime, default=datetime.utcnow)
+    status = db.Column(db.String(50), nullable=False)  # 'success', 'error', 'pending'
+    immich_asset_id = db.Column(db.String(255))  # Immich asset ID if successful
+    error_message = db.Column(db.Text)
+    retry_count = db.Column(db.Integer, default=0)
+    last_retry = db.Column(db.DateTime)
+
 def allowed_file(filename):
     """Check if file extension is allowed"""
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in (app.config['ALLOWED_IMAGE_EXTENSIONS'] | app.config['ALLOWED_VIDEO_EXTENSIONS'])
@@ -233,6 +246,36 @@ def get_email_settings():
             'imap_password': '',
             'monitor_email': '',
             'enabled': False
+        }
+
+def get_immich_settings():
+    """Get Immich settings from database"""
+    try:
+        return {
+            'enabled': Settings.get('immich_enabled', 'false').lower() == 'true',
+            'server_url': Settings.get('immich_server_url', ''),
+            'api_key': Settings.get('immich_api_key', ''),
+            'user_id': Settings.get('immich_user_id', ''),
+            'album_name': Settings.get('immich_album_name', 'Wedding Gallery'),
+            'sync_photos': Settings.get('immich_sync_photos', 'true').lower() == 'true',
+            'sync_videos': Settings.get('immich_sync_videos', 'true').lower() == 'true',
+            'sync_guestbook': Settings.get('immich_sync_guestbook', 'true').lower() == 'true',
+            'sync_messages': Settings.get('immich_sync_messages', 'true').lower() == 'true',
+            'sync_photobooth': Settings.get('immich_sync_photobooth', 'true').lower() == 'true'
+        }
+    except Exception as e:
+        print(f"Error getting Immich settings: {e}")
+        return {
+            'enabled': False,
+            'server_url': '',
+            'api_key': '',
+            'user_id': '',
+            'album_name': 'Wedding Gallery',
+            'sync_photos': True,
+            'sync_videos': True,
+            'sync_guestbook': True,
+            'sync_messages': True,
+            'sync_photobooth': True
         }
 
 def send_confirmation_email(recipient_email, photo_count, gallery_url):
@@ -314,6 +357,199 @@ def send_rejection_email(recipient_email, reason):
     except Exception as e:
         print(f"Error sending rejection email: {e}")
         return False
+
+def sync_file_to_immich(file_path, filename, description=""):
+    """Sync a file to Immich server"""
+    try:
+        immich_settings = get_immich_settings()
+        if not immich_settings['enabled'] or not immich_settings['server_url'] or not immich_settings['api_key']:
+            return False, "Immich sync not configured"
+        
+        # Check if file exists
+        if not os.path.exists(file_path):
+            return False, f"File not found: {file_path}"
+        
+        # Prepare headers for Immich API
+        headers = {
+            'x-api-key': immich_settings['api_key'],
+            'Content-Type': 'application/octet-stream'
+        }
+        
+        # Upload file to Immich
+        upload_url = f"{immich_settings['server_url'].rstrip('/')}/api/asset/upload"
+        
+        with open(file_path, 'rb') as f:
+            files = {'assetData': (filename, f, 'application/octet-stream')}
+            data = {
+                'deviceAssetId': filename,
+                'deviceId': 'wedding-gallery',
+                'fileCreatedAt': datetime.now().isoformat(),
+                'fileModifiedAt': datetime.now().isoformat(),
+                'isFavorite': False,
+                'fileExtension': Path(filename).suffix.lower().lstrip('.'),
+                'description': description
+            }
+            
+            response = requests.post(upload_url, headers=headers, files=files, data=data, timeout=30)
+            
+            if response.status_code == 201:
+                asset_data = response.json()
+                asset_id = asset_data.get('id')
+                
+                # Add to album if specified
+                if immich_settings['album_name']:
+                    album_url = f"{immich_settings['server_url'].rstrip('/')}/api/album/{immich_settings['album_name']}/assets"
+                    album_data = {'ids': [asset_id]}
+                    album_response = requests.put(album_url, headers=headers, json=album_data, timeout=10)
+                
+                return True, asset_id
+            else:
+                return False, f"Immich API error: {response.status_code} - {response.text}"
+                
+    except Exception as e:
+        return False, f"Error syncing to Immich: {str(e)}"
+
+def sync_all_to_immich():
+    """Sync all eligible files to Immich"""
+    try:
+        immich_settings = get_immich_settings()
+        if not immich_settings['enabled']:
+            return False, "Immich sync not enabled"
+        
+        synced_count = 0
+        error_count = 0
+        
+        # Sync photos
+        if immich_settings['sync_photos']:
+            photos = Photo.query.filter_by(media_type='image').all()
+            for photo in photos:
+                file_path = os.path.join(app.config['UPLOAD_FOLDER'], photo.filename)
+                description = f"Wedding photo by {photo.uploader_name}"
+                if photo.description:
+                    description += f" - {photo.description}"
+                
+                success, result = sync_file_to_immich(file_path, photo.filename, description)
+                
+                # Log sync attempt
+                sync_log = ImmichSyncLog(
+                    filename=photo.filename,
+                    file_path=file_path,
+                    status='success' if success else 'error',
+                    immich_asset_id=result if success else None,
+                    error_message=str(result) if not success else None
+                )
+                db.session.add(sync_log)
+                
+                if success:
+                    synced_count += 1
+                else:
+                    error_count += 1
+        
+        # Sync videos
+        if immich_settings['sync_videos']:
+            videos = Photo.query.filter_by(media_type='video').all()
+            for video in videos:
+                file_path = os.path.join(app.config['VIDEO_FOLDER'], video.filename)
+                description = f"Wedding video by {video.uploader_name}"
+                if video.description:
+                    description += f" - {video.description}"
+                
+                success, result = sync_file_to_immich(file_path, video.filename, description)
+                
+                sync_log = ImmichSyncLog(
+                    filename=video.filename,
+                    file_path=file_path,
+                    status='success' if success else 'error',
+                    immich_asset_id=result if success else None,
+                    error_message=str(result) if not success else None
+                )
+                db.session.add(sync_log)
+                
+                if success:
+                    synced_count += 1
+                else:
+                    error_count += 1
+        
+        # Sync guestbook photos
+        if immich_settings['sync_guestbook']:
+            guestbook_entries = GuestbookEntry.query.filter(GuestbookEntry.photo_filename.isnot(None)).all()
+            for entry in guestbook_entries:
+                file_path = os.path.join(app.config['GUESTBOOK_UPLOAD_FOLDER'], entry.photo_filename)
+                description = f"Guestbook photo by {entry.name} from {entry.location}"
+                if entry.message:
+                    description += f" - {entry.message[:100]}"
+                
+                success, result = sync_file_to_immich(file_path, entry.photo_filename, description)
+                
+                sync_log = ImmichSyncLog(
+                    filename=entry.photo_filename,
+                    file_path=file_path,
+                    status='success' if success else 'error',
+                    immich_asset_id=result if success else None,
+                    error_message=str(result) if not success else None
+                )
+                db.session.add(sync_log)
+                
+                if success:
+                    synced_count += 1
+                else:
+                    error_count += 1
+        
+        # Sync message photos
+        if immich_settings['sync_messages']:
+            messages = Message.query.filter(Message.photo_filename.isnot(None)).all()
+            for message in messages:
+                file_path = os.path.join(app.config['MESSAGE_UPLOAD_FOLDER'], message.photo_filename)
+                description = f"Message photo by {message.author_name}"
+                if message.content:
+                    description += f" - {message.content[:100]}"
+                
+                success, result = sync_file_to_immich(file_path, message.photo_filename, description)
+                
+                sync_log = ImmichSyncLog(
+                    filename=message.photo_filename,
+                    file_path=file_path,
+                    status='success' if success else 'error',
+                    immich_asset_id=result if success else None,
+                    error_message=str(result) if not success else None
+                )
+                db.session.add(sync_log)
+                
+                if success:
+                    synced_count += 1
+                else:
+                    error_count += 1
+        
+        # Sync photobooth photos
+        if immich_settings['sync_photobooth']:
+            photobooth_photos = Photo.query.filter_by(is_photobooth=True).all()
+            for photo in photobooth_photos:
+                file_path = os.path.join(app.config['PHOTOBOOTH_FOLDER'], photo.filename)
+                description = f"Photobooth photo by {photo.uploader_name}"
+                if photo.description:
+                    description += f" - {photo.description}"
+                
+                success, result = sync_file_to_immich(file_path, photo.filename, description)
+                
+                sync_log = ImmichSyncLog(
+                    filename=photo.filename,
+                    file_path=file_path,
+                    status='success' if success else 'error',
+                    immich_asset_id=result if success else None,
+                    error_message=str(result) if not success else None
+                )
+                db.session.add(sync_log)
+                
+                if success:
+                    synced_count += 1
+                else:
+                    error_count += 1
+        
+        db.session.commit()
+        return True, f"Synced {synced_count} files, {error_count} errors"
+        
+    except Exception as e:
+        return False, f"Error during sync: {str(e)}"
 
 def process_email_photos():
     """Process incoming emails and extract photos"""
@@ -577,6 +813,25 @@ def upload():
             db.session.add(photo)
             db.session.commit()
             
+            # Sync to Immich if enabled
+            try:
+                immich_settings = get_immich_settings()
+                if immich_settings['enabled']:
+                    if photo.media_type == 'video' and immich_settings['sync_videos']:
+                        file_path = os.path.join(app.config['VIDEO_FOLDER'], photo.filename)
+                        description = f"Wedding video by {photo.uploader_name}"
+                        if photo.description:
+                            description += f" - {photo.description}"
+                        sync_file_to_immich(file_path, photo.filename, description)
+                    elif photo.media_type == 'image' and immich_settings['sync_photos']:
+                        file_path = os.path.join(app.config['UPLOAD_FOLDER'], photo.filename)
+                        description = f"Wedding photo by {photo.uploader_name}"
+                        if photo.description:
+                            description += f" - {photo.description}"
+                        sync_file_to_immich(file_path, photo.filename, description)
+            except Exception as e:
+                print(f"Error syncing to Immich: {e}")
+            
             # Save user name in cookie
             resp = make_response(redirect(url_for('index')))
             resp.set_cookie('user_name', uploader_name, max_age=30*24*60*60)  # 30 days
@@ -635,6 +890,18 @@ def save_photobooth_photo():
             
             db.session.add(photo)
             db.session.commit()
+            
+            # Sync to Immich if enabled
+            try:
+                immich_settings = get_immich_settings()
+                if immich_settings['enabled'] and immich_settings['sync_photobooth']:
+                    file_path = os.path.join(app.config['PHOTOBOOTH_FOLDER'], photo.filename)
+                    description = f"Photobooth photo by {photo.uploader_name}"
+                    if photo.description:
+                        description += f" - {photo.description}"
+                    sync_file_to_immich(file_path, photo.filename, description)
+            except Exception as e:
+                print(f"Error syncing photobooth to Immich: {e}")
             
             # Save user name in cookie
             resp = jsonify({
@@ -703,6 +970,19 @@ def sign_guestbook():
             db.session.add(entry)
             db.session.commit()
             
+            # Sync guestbook photo to Immich if enabled
+            if photo_filename:
+                try:
+                    immich_settings = get_immich_settings()
+                    if immich_settings['enabled'] and immich_settings['sync_guestbook']:
+                        file_path = os.path.join(app.config['GUESTBOOK_UPLOAD_FOLDER'], photo_filename)
+                        description = f"Guestbook photo by {entry.name} from {entry.location}"
+                        if entry.message:
+                            description += f" - {entry.message[:100]}"
+                        sync_file_to_immich(file_path, photo_filename, description)
+                except Exception as e:
+                    print(f"Error syncing guestbook photo to Immich: {e}")
+            
             # Save user name in cookie
             resp = make_response(redirect(url_for('guestbook')))
             resp.set_cookie('user_name', name, max_age=30*24*60*60)  # 30 days
@@ -761,6 +1041,19 @@ def new_message():
             )
             db.session.add(message)
             db.session.commit()
+            
+            # Sync message photo to Immich if enabled
+            if photo_filename:
+                try:
+                    immich_settings = get_immich_settings()
+                    if immich_settings['enabled'] and immich_settings['sync_messages']:
+                        file_path = os.path.join(app.config['MESSAGE_UPLOAD_FOLDER'], photo_filename)
+                        description = f"Message photo by {message.author_name}"
+                        if message.content:
+                            description += f" - {message.content[:100]}"
+                        sync_file_to_immich(file_path, photo_filename, description)
+                except Exception as e:
+                    print(f"Error syncing message photo to Immich: {e}")
             
             # Save user name in cookie
             resp = make_response(redirect(url_for('message_board')))
@@ -937,6 +1230,12 @@ def admin():
     # Get email logs
     email_logs = EmailLog.query.order_by(EmailLog.received_at.desc()).limit(50).all()
     
+    # Get Immich settings
+    immich_settings = get_immich_settings()
+    
+    # Get Immich sync logs
+    immich_sync_logs = ImmichSyncLog.query.order_by(ImmichSyncLog.sync_date.desc()).limit(50).all()
+    
     return render_template('admin.html', 
                          photos=photos, 
                          total_photos=len(photos),
@@ -954,7 +1253,9 @@ def admin():
                          welcome_settings=welcome_settings,
                          border_settings=border_settings,
                          email_settings=email_settings,
-                         email_logs=email_logs)
+                         email_logs=email_logs,
+                         immich_settings=immich_settings,
+                         immich_sync_logs=immich_sync_logs)
 
 @app.route('/admin/batch-download')
 def batch_download():
@@ -1357,6 +1658,20 @@ def save_settings():
         Settings.set('email_imap_password', email_data.get('imap_password', ''))
         Settings.set('email_monitor_email', email_data.get('monitor_email', ''))
     
+    # Save Immich settings
+    if 'immich_settings' in data:
+        immich_data = data['immich_settings']
+        Settings.set('immich_enabled', str(immich_data.get('enabled', False)).lower())
+        Settings.set('immich_server_url', immich_data.get('server_url', ''))
+        Settings.set('immich_api_key', immich_data.get('api_key', ''))
+        Settings.set('immich_user_id', immich_data.get('user_id', ''))
+        Settings.set('immich_album_name', immich_data.get('album_name', 'Wedding Gallery'))
+        Settings.set('immich_sync_photos', str(immich_data.get('sync_photos', True)).lower())
+        Settings.set('immich_sync_videos', str(immich_data.get('sync_videos', True)).lower())
+        Settings.set('immich_sync_guestbook', str(immich_data.get('sync_guestbook', True)).lower())
+        Settings.set('immich_sync_messages', str(immich_data.get('sync_messages', True)).lower())
+        Settings.set('immich_sync_photobooth', str(immich_data.get('sync_photobooth', True)).lower())
+    
     return jsonify({'success': True})
 
 @app.route('/admin/start-email-monitor', methods=['POST'])
@@ -1370,6 +1685,18 @@ def start_email_monitor_route():
         return jsonify({'success': True, 'message': 'Email monitor started successfully'})
     except Exception as e:
         return jsonify({'success': False, 'message': f'Error starting email monitor: {str(e)}'})
+
+@app.route('/admin/sync-immich', methods=['POST'])
+def sync_immich_route():
+    admin_key = request.args.get('key', '')
+    if admin_key != 'wedding2024':
+        return "Unauthorized", 401
+    
+    try:
+        success, message = sync_all_to_immich()
+        return jsonify({'success': success, 'message': message})
+    except Exception as e:
+        return jsonify({'success': False, 'message': str(e)})
 
 @app.route('/admin/generate-qr-pdf')
 def generate_qr_pdf():

@@ -24,6 +24,7 @@ A beautiful, self-hosted wedding photo gallery application that allows wedding g
 - 🔐 **Admin Dashboard** - Secure admin area with simple key authentication
 - 📊 **Statistics** - View total photos, videos, likes, comments, messages, guestbook entries, and photobooth photos
 - 📧 **Email Photo Upload** - Configure email settings to allow guests to email photos directly to the gallery
+- 🔄 **Immich Server Sync** - Automatically sync all uploads to your own Immich server for backup and organization
 - 🗑️ **Content Management** - Delete inappropriate photos, messages, or guestbook entries
 - 👁️ **Hide/Show Messages** - Hide inappropriate messages without deleting them
 - ✏️ **Edit Guestbook** - Modify guestbook entries when needed
