@@ -34,6 +34,17 @@ Show appreciation for beautiful moments with a simple heart click. Track which p
 ### 💬 Leave Comments
 Share memories and messages on photos and videos. Add your name and leave heartfelt comments for the couple.
 
+### 🔔 Smart Notifications
+Get notified when someone likes or comments on your photos and messages. Stay connected with your wedding memories.
+
+**Notification Features:**
+- **Photo Notifications:** Get alerted when someone likes or comments on your photos
+- **Message Notifications:** Receive notifications for message interactions
+- **Smart Filtering:** Only get notified about others' actions, not your own
+- **Mobile Toggle:** Easy enable/disable in the mobile hamburger menu
+- **Browser Integration:** Uses native browser notifications with app icons
+- **Personalized Messages:** Shows actual user names in notifications
+
 ### 💌 Message Board
 Post messages with optional photos that everyone can see, like, and comment on. A digital guestbook for sharing thoughts and memories.
 
@@ -110,6 +121,17 @@ Monitor PWA installation status and troubleshoot issues with comprehensive debug
 - Installation status monitoring
 - Troubleshooting guides
 - Connection analysis
+
+### 🔔 Notification System
+The notification system enhances user engagement by alerting users when others interact with their content.
+
+**System features:**
+- **Smart Filtering:** Only notifies about others' actions
+- **Mobile Integration:** Easy toggle in hamburger menu
+- **Browser Notifications:** Native notification support
+- **Session Persistence:** Settings saved across sessions
+- **Personalized Messages:** Shows actual user names
+- **App Branding:** Uses VowVault icons and styling
 
 ### 🗑️ Content Management
 Delete inappropriate photos, messages, or guestbook entries. Maintain quality control over your gallery.

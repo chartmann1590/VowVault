@@ -152,6 +152,24 @@ tar -xzf backup-20240101.tar.gz
    - Use PWA debug tools in admin panel
    - Verify manifest.json is accessible
 
+### Notification Issues
+
+1. **Notifications Not Working:**
+   - Check browser notification permissions
+   - Verify HTTPS setup (required for notifications)
+   - Test on supported browsers (Chrome, Firefox, Safari)
+   - Check mobile hamburger menu toggle status
+
+2. **Permission Denied:**
+   - Guide users to browser settings
+   - Explain notification benefits
+   - Provide manual permission instructions
+
+3. **Self-Notifications:**
+   - System is designed to exclude self-notifications
+   - Only others' interactions trigger notifications
+   - This is intentional behavior
+
 ### Performance Optimization
 
 1. **Large galleries:**

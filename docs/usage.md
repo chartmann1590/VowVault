@@ -49,6 +49,13 @@
 - **iPhone/Safari:** Share button → Add to Home Screen
 - **Other browsers:** Look for install options in browser menu
 
+### 8. Enable Notifications (Mobile)
+- **Access:** Open the mobile hamburger menu (☰)
+- **Toggle:** Tap "Enable Notifications" to turn on/off
+- **Permission:** Grant browser notification permission when prompted
+- **Status:** Icon shows 🔔 when enabled, 🔕 when disabled
+- **Smart:** Only get notified about others' interactions with your content
+
 ## For Administrators
 
 ### 1. Access Admin Panel
@@ -120,6 +127,13 @@
 - Home screen installation
 - App shortcuts for quick access
 
+### Notification System
+- **Mobile Toggle:** Easy enable/disable in hamburger menu
+- **Smart Notifications:** Only for others' interactions with your content
+- **Browser Integration:** Native notifications with app branding
+- **Permission Management:** One-time setup with browser permission
+- **Session Persistence:** Settings saved across browser sessions
+
 ## Best Practices
 
 ### For Guests
@@ -128,6 +142,8 @@
 3. **Descriptions:** Add meaningful descriptions to help identify photos
 4. **Comments:** Leave thoughtful comments to share memories
 5. **PWA Installation:** Install the app for quick access
+6. **Notifications:** Enable notifications to stay connected with your content
+7. **Interaction:** Like and comment on others' photos to share appreciation
 
 ### For Administrators
 1. **Regular Backups:** Use the batch download feature regularly

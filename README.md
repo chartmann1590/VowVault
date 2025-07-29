@@ -22,6 +22,7 @@ A beautiful, self-hosted wedding photo gallery application that allows wedding g
 - 📧 **Email Photo Upload** - Send photos directly via email
 - 🤳 **Virtual Photobooth** - Take photos with custom wedding borders
 - ❤️ **Like & Comment** - Interact with photos and videos
+- 🔔 **Smart Notifications** - Get notified when someone interacts with your content
 - 💌 **Message Board** - Share messages with optional photos
 - 📖 **Virtual Guestbook** - Sign digital guestbook with photos
 - 📱 **PWA Support** - Install as native app on mobile devices
