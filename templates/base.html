@@ -1075,8 +1075,16 @@
             .then(response => response.json())
             .then(data => {
                 if (data.notifications && data.notifications.length > 0) {
-                    showNotificationBadge(data.notifications.length);
-                    displayNotifications(data.notifications);
+                    const unreadCount = data.notifications.filter(n => !n.is_read).length;
+                    showNotificationBadge(unreadCount);
+                    
+                    // Only show modal and system notifications if there are unread notifications
+                    if (unreadCount > 0) {
+                        displayNotifications(data.notifications);
+                    }
+                } else {
+                    // Hide badges if no notifications
+                    showNotificationBadge(0);
                 }
             })
             .catch(error => {
@@ -1113,18 +1121,56 @@
                 notificationToggle.appendChild(badge);
             }
         }
-        badge.textContent = count;
-        badge.style.display = 'flex';
+        
+        if (count > 0) {
+            badge.textContent = count;
+            badge.style.display = 'flex';
+        } else {
+            badge.style.display = 'none';
+        }
         
         // Also update mobile notification badge
         const mobileBadge = document.getElementById('mobileNotificationBadge');
         if (mobileBadge) {
-            mobileBadge.textContent = count;
-            mobileBadge.style.display = count > 0 ? 'flex' : 'none';
+            if (count > 0) {
+                mobileBadge.textContent = count;
+                mobileBadge.style.display = 'flex';
+            } else {
+                mobileBadge.style.display = 'none';
+            }
         }
     }
 
     function displayNotifications(notifications) {
+        // Send system notifications for new notifications
+        notifications.forEach(notification => {
+            if (notificationEnabled && notificationPermission && 'Notification' in window) {
+                // Only show system notification if it's a new notification (not already read)
+                if (!notification.is_read) {
+                    const systemNotification = new Notification(notification.title, {
+                        body: notification.message,
+                        icon: '/static/icons/icon-192x192.png',
+                        badge: '/static/icons/icon-32x32.png',
+                        tag: `notification-${notification.id}`,
+                        requireInteraction: false
+                    });
+
+                    // Auto close after 5 seconds
+                    setTimeout(() => {
+                        systemNotification.close();
+                    }, 5000);
+
+                    // Handle notification click
+                    systemNotification.onclick = function() {
+                        window.focus();
+                        systemNotification.close();
+                        // Optionally redirect to notifications page
+                        window.location.href = '/notifications';
+                    };
+                }
+            }
+        });
+
         // Create notification modal
         let modal = document.getElementById('notificationModal');
         if (!modal) {
