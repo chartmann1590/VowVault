@@ -221,6 +221,13 @@
             <h3>📤 Send Notifications</h3>
         </div>
         <div class="section-content">
+            <!-- Debug info -->
+            <div style="background: #f0f0f0; padding: 10px; margin-bottom: 10px; border-radius: 5px;">
+                <strong>Debug Info:</strong><br>
+                Admin Key: {{ admin_key }}<br>
+                Users Count: {{ users|length }}
+            </div>
+            
             <div class="notification-form">
                 <div class="form-group">
                     <label for="notificationType">Notification Type</label>
@@ -250,6 +257,9 @@
                 </div>
                 
                 <button class="btn" onclick="sendNotification()">Send Notification</button>
+                
+                <!-- Test button -->
+                <button class="btn btn-secondary" onclick="testFunction()" style="margin-left: 10px;">Test JavaScript</button>
             </div>
         </div>
     </div>
@@ -314,6 +324,9 @@
     function sendNotification() {
         console.log('=== NOTIFICATION DEBUG START ===');
         console.log('sendNotification function called');
+        
+        // Immediate debugging
+        alert('Button clicked! Function is being called.');
         
         const type = document.getElementById('notificationType').value;
         const title = document.getElementById('notificationTitle').value.trim();
@@ -582,6 +595,15 @@
                 errorMessage.remove();
             }, 5000);
         });
+    }
+
+    function testFunction() {
+        console.log('=== TEST FUNCTION DEBUG START ===');
+        console.log('testFunction called');
+        console.log('Admin Key:', '{{ admin_key }}');
+        console.log('Users Count:', '{{ users|length }}');
+        alert('Test function executed. Check console for debug info.');
+        console.log('=== TEST FUNCTION DEBUG END ===');
     }
 </script>
 {% endblock %} 
