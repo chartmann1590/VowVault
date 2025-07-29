@@ -1400,6 +1400,203 @@
         </div>
     </div>
 
+    <!-- SSO Security Settings Section -->
+    <div class="section-card">
+        <div class="section-header">
+            <h3>SSO Security Settings</h3>
+            <div class="monitoring-status">
+                <div class="status-indicator {% if sso_settings.get('enabled', False) %}active{% else %}inactive{% endif %}">
+                    <span class="status-dot"></span>
+                    <span class="status-text">
+                        {% if sso_settings.get('enabled', False) %}
+                            🔐 SSO Active
+                        {% else %}
+                            🔓 Key-based Auth
+                        {% endif %}
+                    </span>
+                </div>
+            </div>
+        </div>
+        <div class="section-content">
+            {% if current_user %}
+            <div style="background: #d4edda; color: #155724; padding: 1rem; border-radius: 10px; margin-bottom: 1.5rem; border: 1px solid #c3e6cb;">
+                <strong>🔐 Currently signed in as:</strong> {{ current_user.name }} ({{ current_user.email }})
+                <a href="/sso/logout" style="float: right; color: #155724; text-decoration: none;">Sign Out</a>
+            </div>
+            {% endif %}
+            
+            <div class="qr-settings-grid">
+                <div class="qr-form-section">
+                    <h4 style="color: #8b7355; margin-bottom: 1.5rem;">SSO Configuration</h4>
+                    
+                    <div class="form-group">
+                        <label style="display: flex; align-items: center; gap: 0.5rem;">
+                            <input type="checkbox" 
+                                   id="sso_enabled" 
+                                   {% if sso_settings.get('enabled', False) %}checked{% endif %}>
+                            Enable SSO Authentication
+                        </label>
+                        <small style="color: #666; display: block; margin-top: 0.5rem;">
+                            When enabled, admin access will require SSO login instead of just the admin key
+                        </small>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="sso_provider">SSO Provider</label>
+                        <select id="sso_provider" class="form-control">
+                            <option value="google" {% if sso_settings.get('provider', 'google') == 'google' %}selected{% endif %}>Google</option>
+                            <option value="azure" {% if sso_settings.get('provider', 'google') == 'azure' %}selected{% endif %}>Microsoft Azure</option>
+                            <option value="okta" {% if sso_settings.get('provider', 'google') == 'okta' %}selected{% endif %}>Okta</option>
+                            <option value="custom" {% if sso_settings.get('provider', 'google') == 'custom' %}selected{% endif %}>Custom OAuth</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="sso_client_id">Client ID</label>
+                        <input type="text" 
+                               id="sso_client_id" 
+                               placeholder="Your OAuth client ID"
+                               value="{{ sso_settings.get('client_id', '') }}">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="sso_client_secret">Client Secret</label>
+                        <input type="password" 
+                               id="sso_client_secret" 
+                               placeholder="Your OAuth client secret"
+                               value="{{ sso_settings.get('client_secret', '') }}">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="sso_redirect_uri">Redirect URI</label>
+                        <input type="url" 
+                               id="sso_redirect_uri" 
+                               placeholder="https://yourdomain.com/sso/callback"
+                               value="{{ sso_settings.get('redirect_uri', '') }}">
+                        <small style="color: #666; display: block; margin-top: 0.5rem;">
+                            Must match the redirect URI configured in your OAuth provider
+                        </small>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="sso_scope">OAuth Scope</label>
+                        <input type="text" 
+                               id="sso_scope" 
+                               placeholder="openid email profile"
+                               value="{{ sso_settings.get('scope', 'openid email profile') }}">
+                    </div>
+
+                    <h5 style="color: #8b7355; margin: 2rem 0 1rem 0;">Custom OAuth URLs (for custom provider)</h5>
+                    
+                    <div class="form-group">
+                        <label for="sso_authorization_url">Authorization URL</label>
+                        <input type="url" 
+                               id="sso_authorization_url" 
+                               placeholder="https://your-oauth-server.com/oauth/authorize"
+                               value="{{ sso_settings.get('authorization_url', '') }}">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="sso_token_url">Token URL</label>
+                        <input type="url" 
+                               id="sso_token_url" 
+                               placeholder="https://your-oauth-server.com/oauth/token"
+                               value="{{ sso_settings.get('token_url', '') }}">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="sso_userinfo_url">User Info URL</label>
+                        <input type="url" 
+                               id="sso_userinfo_url" 
+                               placeholder="https://your-oauth-server.com/oauth/userinfo"
+                               value="{{ sso_settings.get('userinfo_url', '') }}">
+                    </div>
+
+                    <h5 style="color: #8b7355; margin: 2rem 0 1rem 0;">Access Control</h5>
+                    
+                    <div class="form-group">
+                        <label for="sso_allowed_domains">Allowed Domains (comma-separated)</label>
+                        <input type="text" 
+                               id="sso_allowed_domains" 
+                               placeholder="example.com, company.com"
+                               value="{{ sso_settings.get('allowed_domains', [])|join(', ') }}">
+                        <small style="color: #666; display: block; margin-top: 0.5rem;">
+                            Users with emails from these domains will be granted admin access
+                        </small>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="sso_allowed_emails">Allowed Emails (comma-separated)</label>
+                        <input type="text" 
+                               id="sso_allowed_emails" 
+                               placeholder="admin@example.com, user@company.com"
+                               value="{{ sso_settings.get('allowed_emails', [])|join(', ') }}">
+                        <small style="color: #666; display: block; margin-top: 0.5rem;">
+                            Specific email addresses that will be granted admin access
+                        </small>
+                    </div>
+
+                    <div class="form-group">
+                        <label style="display: flex; align-items: center; gap: 0.5rem;">
+                            <input type="checkbox" 
+                                   id="sso_admin_key_fallback" 
+                                   {% if sso_settings.get('admin_key_fallback', True) %}checked{% endif %}>
+                            Allow Admin Key Fallback
+                        </label>
+                        <small style="color: #666; display: block; margin-top: 0.5rem;">
+                            When enabled, the admin key will still work as a backup authentication method
+                        </small>
+                    </div>
+                </div>
+
+                <div class="qr-preview">
+                    <h4>How It Works</h4>
+                    <div class="preview-content" style="text-align: left;">
+                        <div style="background: #f9f5f0; padding: 1.5rem; border-radius: 8px; margin-bottom: 1rem;">
+                            <strong style="color: #8b7355;">SSO Authentication Process:</strong>
+                            <ol style="margin: 0.5rem 0 0 1rem; padding-left: 1rem; color: #666;">
+                                <li>User clicks "Sign in with SSO" on admin page</li>
+                                <li>Redirected to OAuth provider (Google, Azure, etc.)</li>
+                                <li>User authenticates with their credentials</li>
+                                <li>Provider returns user information</li>
+                                <li>System checks email against allowed list</li>
+                                <li>If authorized, user gains admin access</li>
+                            </ol>
+                        </div>
+                        
+                        <div style="background: #e8f5e8; padding: 1rem; border-radius: 8px; margin-bottom: 1rem;">
+                            <strong style="color: #28a745;">Supported Providers:</strong>
+                            <ul style="margin: 0.5rem 0 0 1rem; padding-left: 1rem; color: #666;">
+                                <li>Google OAuth 2.0</li>
+                                <li>Microsoft Azure AD</li>
+                                <li>Okta</li>
+                                <li>Custom OAuth 2.0</li>
+                            </ul>
+                        </div>
+                        
+                        <div style="background: #fff3cd; padding: 1rem; border-radius: 8px;">
+                            <strong style="color: #856404;">Setup Notes:</strong>
+                            <ul style="margin: 0.5rem 0 0 1rem; padding-left: 1rem; color: #666;">
+                                <li>Configure OAuth app in your provider</li>
+                                <li>Set redirect URI to /sso/callback</li>
+                                <li>Add authorized domains/emails</li>
+                                <li>Test with a small group first</li>
+                                <li>Keep admin key as fallback initially</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="button-group">
+                <button class="btn" onclick="saveAllSettings()">Save SSO Settings</button>
+                {% if sso_settings.get('enabled', False) %}
+                <a href="/sso/login" class="btn btn-secondary" target="_blank">Test SSO Login</a>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
     <!-- Email Processing Log Section -->
     <div class="section-card">
         <div class="section-header">
@@ -2034,6 +2231,20 @@
                 sync_guestbook: document.getElementById('immich_sync_guestbook').checked,
                 sync_messages: document.getElementById('immich_sync_messages').checked,
                 sync_photobooth: document.getElementById('immich_sync_photobooth').checked
+            },
+            sso_settings: {
+                enabled: document.getElementById('sso_enabled').checked,
+                provider: document.getElementById('sso_provider').value,
+                client_id: document.getElementById('sso_client_id').value,
+                client_secret: document.getElementById('sso_client_secret').value,
+                authorization_url: document.getElementById('sso_authorization_url').value,
+                token_url: document.getElementById('sso_token_url').value,
+                userinfo_url: document.getElementById('sso_userinfo_url').value,
+                redirect_uri: document.getElementById('sso_redirect_uri').value,
+                scope: document.getElementById('sso_scope').value,
+                allowed_domains: document.getElementById('sso_allowed_domains').value.split(',').map(d => d.trim()).filter(d => d),
+                allowed_emails: document.getElementById('sso_allowed_emails').value.split(',').map(e => e.trim()).filter(e => e),
+                admin_key_fallback: document.getElementById('sso_admin_key_fallback').checked
             }
         };
 

@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, redirect, url_for, jsonify, make_response, send_file, send_from_directory
+from flask import Flask, render_template, request, redirect, url_for, jsonify, make_response, send_file, send_from_directory, session
 from flask_sqlalchemy import SQLAlchemy
 from flask_mail import Mail, Message
 from datetime import datetime
@@ -302,6 +302,67 @@ def get_immich_settings():
             'sync_messages': True,
             'sync_photobooth': True
         }
+
+def get_sso_settings():
+    """Get SSO settings from database"""
+    try:
+        return {
+            'enabled': Settings.get('sso_enabled', 'false').lower() == 'true',
+            'provider': Settings.get('sso_provider', 'google'),  # google, azure, okta, custom
+            'client_id': Settings.get('sso_client_id', ''),
+            'client_secret': Settings.get('sso_client_secret', ''),
+            'authorization_url': Settings.get('sso_authorization_url', ''),
+            'token_url': Settings.get('sso_token_url', ''),
+            'userinfo_url': Settings.get('sso_userinfo_url', ''),
+            'redirect_uri': Settings.get('sso_redirect_uri', ''),
+            'scope': Settings.get('sso_scope', 'openid email profile'),
+            'allowed_domains': Settings.get('sso_allowed_domains', '').split(','),
+            'allowed_emails': Settings.get('sso_allowed_emails', '').split(','),
+            'admin_key_fallback': Settings.get('sso_admin_key_fallback', 'true').lower() == 'true'
+        }
+    except Exception as e:
+        print(f"Error getting SSO settings: {e}")
+        return {
+            'enabled': False,
+            'provider': 'google',
+            'client_id': '',
+            'client_secret': '',
+            'authorization_url': '',
+            'token_url': '',
+            'userinfo_url': '',
+            'redirect_uri': '',
+            'scope': 'openid email profile',
+            'allowed_domains': [],
+            'allowed_emails': [],
+            'admin_key_fallback': True
+        }
+
+def verify_admin_access(admin_key=None, user_email=None, user_domain=None):
+    """Verify admin access using either key-based or SSO authentication"""
+    # First check if SSO is enabled
+    sso_settings = get_sso_settings()
+    
+    if sso_settings['enabled']:
+        # SSO is enabled, check if user is authenticated via SSO
+        if user_email:
+            # Check allowed emails
+            if sso_settings['allowed_emails'] and user_email in sso_settings['allowed_emails']:
+                return True
+            
+            # Check allowed domains
+            if user_domain and sso_settings['allowed_domains']:
+                for domain in sso_settings['allowed_domains']:
+                    if domain.strip() and user_domain.lower().endswith(domain.strip().lower()):
+                        return True
+        
+        # If SSO fallback is enabled, also check admin key
+        if sso_settings['admin_key_fallback'] and admin_key == 'wedding2024':
+            return True
+            
+        return False
+    else:
+        # SSO is disabled, use key-based authentication
+        return admin_key == 'wedding2024'
 
 def send_confirmation_email(recipient_email, photo_count, gallery_url):
     """Send confirmation email to user who uploaded photos via email"""
@@ -1398,10 +1459,19 @@ def mark_welcome_seen():
 
 @app.route('/admin')
 def admin():
-    # Simple admin authentication - in production, use proper authentication
+    # Check for SSO session first
+    sso_user_email = session.get('sso_user_email')
+    sso_user_domain = session.get('sso_user_domain')
     admin_key = request.args.get('key', '')
-    if admin_key != 'wedding2024':  # Change this to a secure key
-        return "Unauthorized", 401
+    
+    # Verify admin access
+    if not verify_admin_access(admin_key, sso_user_email, sso_user_domain):
+        # If SSO is enabled, redirect to SSO login
+        sso_settings = get_sso_settings()
+        if sso_settings['enabled']:
+            return redirect(url_for('sso_login'))
+        else:
+            return "Unauthorized", 401
     
     photos = Photo.query.order_by(Photo.upload_date.desc()).all()
     total_likes = sum(photo.likes for photo in photos)
@@ -1451,6 +1521,18 @@ def admin():
     # Get Immich sync logs
     immich_sync_logs = ImmichSyncLog.query.order_by(ImmichSyncLog.sync_date.desc()).limit(50).all()
     
+    # Get SSO settings
+    sso_settings = get_sso_settings()
+    
+    # Get current user info if SSO is active
+    current_user = None
+    if session.get('sso_user_email'):
+        current_user = {
+            'email': session.get('sso_user_email'),
+            'name': session.get('sso_user_name'),
+            'domain': session.get('sso_user_domain')
+        }
+    
     return render_template('admin.html', 
                          photos=photos, 
                          total_photos=len(photos),
@@ -1470,12 +1552,19 @@ def admin():
                          email_settings=email_settings,
                          email_logs=email_logs,
                          immich_settings=immich_settings,
-                         immich_sync_logs=immich_sync_logs)
+                         immich_sync_logs=immich_sync_logs,
+                         sso_settings=sso_settings,
+                         current_user=current_user)
 
 @app.route('/admin/batch-download')
 def batch_download():
+    # Check for SSO session first
+    sso_user_email = session.get('sso_user_email')
+    sso_user_domain = session.get('sso_user_domain')
     admin_key = request.args.get('key', '')
-    if admin_key != 'wedding2024':
+    
+    # Verify admin access
+    if not verify_admin_access(admin_key, sso_user_email, sso_user_domain):
         return "Unauthorized", 401
     
     try:
@@ -1623,8 +1712,13 @@ def batch_download():
 
 @app.route('/admin/system-reset', methods=['POST'])
 def system_reset():
+    # Check for SSO session first
+    sso_user_email = session.get('sso_user_email')
+    sso_user_domain = session.get('sso_user_domain')
     admin_key = request.args.get('key', '')
-    if admin_key != 'wedding2024':
+    
+    # Verify admin access
+    if not verify_admin_access(admin_key, sso_user_email, sso_user_domain):
         return "Unauthorized", 401
     
     data = request.get_json()
@@ -1677,8 +1771,13 @@ def system_reset():
 
 @app.route('/admin/upload-border', methods=['POST'])
 def upload_border():
+    # Check for SSO session first
+    sso_user_email = session.get('sso_user_email')
+    sso_user_domain = session.get('sso_user_domain')
     admin_key = request.args.get('key', '')
-    if admin_key != 'wedding2024':
+    
+    # Verify admin access
+    if not verify_admin_access(admin_key, sso_user_email, sso_user_domain):
         return "Unauthorized", 401
     
     if 'border' not in request.files:
@@ -1721,8 +1820,13 @@ def upload_border():
 
 @app.route('/admin/delete/<int:photo_id>')
 def delete_photo(photo_id):
+    # Check for SSO session first
+    sso_user_email = session.get('sso_user_email')
+    sso_user_domain = session.get('sso_user_domain')
     admin_key = request.args.get('key', '')
-    if admin_key != 'wedding2024':  # Change this to a secure key
+    
+    # Verify admin access
+    if not verify_admin_access(admin_key, sso_user_email, sso_user_domain):
         return "Unauthorized", 401
     
     photo = Photo.query.get_or_404(photo_id)
@@ -1744,12 +1848,17 @@ def delete_photo(photo_id):
     db.session.delete(photo)
     db.session.commit()
     
-    return redirect(url_for('admin', key=admin_key))
+    return redirect(url_for('admin'))
 
 @app.route('/admin/delete-guestbook/<int:entry_id>')
 def delete_guestbook_entry(entry_id):
+    # Check for SSO session first
+    sso_user_email = session.get('sso_user_email')
+    sso_user_domain = session.get('sso_user_domain')
     admin_key = request.args.get('key', '')
-    if admin_key != 'wedding2024':
+    
+    # Verify admin access
+    if not verify_admin_access(admin_key, sso_user_email, sso_user_domain):
         return "Unauthorized", 401
     
     entry = GuestbookEntry.query.get_or_404(entry_id)
@@ -1764,24 +1873,34 @@ def delete_guestbook_entry(entry_id):
     db.session.delete(entry)
     db.session.commit()
     
-    return redirect(url_for('admin', key=admin_key))
+    return redirect(url_for('admin'))
 
 @app.route('/admin/toggle-message/<int:message_id>')
 def toggle_message_visibility(message_id):
+    # Check for SSO session first
+    sso_user_email = session.get('sso_user_email')
+    sso_user_domain = session.get('sso_user_domain')
     admin_key = request.args.get('key', '')
-    if admin_key != 'wedding2024':
+    
+    # Verify admin access
+    if not verify_admin_access(admin_key, sso_user_email, sso_user_domain):
         return "Unauthorized", 401
     
     message = Message.query.get_or_404(message_id)
     message.is_hidden = not message.is_hidden
     db.session.commit()
     
-    return redirect(url_for('admin', key=admin_key))
+    return redirect(url_for('admin'))
 
 @app.route('/admin/delete-message/<int:message_id>')
 def delete_message(message_id):
+    # Check for SSO session first
+    sso_user_email = session.get('sso_user_email')
+    sso_user_domain = session.get('sso_user_domain')
     admin_key = request.args.get('key', '')
-    if admin_key != 'wedding2024':
+    
+    # Verify admin access
+    if not verify_admin_access(admin_key, sso_user_email, sso_user_domain):
         return "Unauthorized", 401
     
     message = Message.query.get_or_404(message_id)
@@ -1796,36 +1915,51 @@ def delete_message(message_id):
     db.session.delete(message)
     db.session.commit()
     
-    return redirect(url_for('admin', key=admin_key))
+    return redirect(url_for('admin'))
 
 @app.route('/admin/toggle-message-comment/<int:comment_id>')
 def toggle_message_comment_visibility(comment_id):
+    # Check for SSO session first
+    sso_user_email = session.get('sso_user_email')
+    sso_user_domain = session.get('sso_user_domain')
     admin_key = request.args.get('key', '')
-    if admin_key != 'wedding2024':
+    
+    # Verify admin access
+    if not verify_admin_access(admin_key, sso_user_email, sso_user_domain):
         return "Unauthorized", 401
     
     comment = MessageComment.query.get_or_404(comment_id)
     comment.is_hidden = not comment.is_hidden
     db.session.commit()
     
-    return redirect(url_for('admin', key=admin_key))
+    return redirect(url_for('admin'))
 
 @app.route('/admin/delete-message-comment/<int:comment_id>')
 def delete_message_comment(comment_id):
+    # Check for SSO session first
+    sso_user_email = session.get('sso_user_email')
+    sso_user_domain = session.get('sso_user_domain')
     admin_key = request.args.get('key', '')
-    if admin_key != 'wedding2024':
+    
+    # Verify admin access
+    if not verify_admin_access(admin_key, sso_user_email, sso_user_domain):
         return "Unauthorized", 401
     
     comment = MessageComment.query.get_or_404(comment_id)
     db.session.delete(comment)
     db.session.commit()
     
-    return redirect(url_for('admin', key=admin_key))
+    return redirect(url_for('admin'))
 
 @app.route('/admin/edit-guestbook/<int:entry_id>', methods=['POST'])
 def edit_guestbook_entry(entry_id):
+    # Check for SSO session first
+    sso_user_email = session.get('sso_user_email')
+    sso_user_domain = session.get('sso_user_domain')
     admin_key = request.args.get('key', '')
-    if admin_key != 'wedding2024':
+    
+    # Verify admin access
+    if not verify_admin_access(admin_key, sso_user_email, sso_user_domain):
         return "Unauthorized", 401
     
     entry = GuestbookEntry.query.get_or_404(entry_id)
@@ -1841,8 +1975,13 @@ def edit_guestbook_entry(entry_id):
 
 @app.route('/admin/save-settings', methods=['POST'])
 def save_settings():
+    # Check for SSO session first
+    sso_user_email = session.get('sso_user_email')
+    sso_user_domain = session.get('sso_user_domain')
     admin_key = request.args.get('key', '')
-    if admin_key != 'wedding2024':
+    
+    # Verify admin access
+    if not verify_admin_access(admin_key, sso_user_email, sso_user_domain):
         return "Unauthorized", 401
     
     data = request.get_json()
@@ -1887,12 +2026,33 @@ def save_settings():
         Settings.set('immich_sync_messages', str(immich_data.get('sync_messages', True)).lower())
         Settings.set('immich_sync_photobooth', str(immich_data.get('sync_photobooth', True)).lower())
     
+    # Save SSO settings
+    if 'sso_settings' in data:
+        sso_data = data['sso_settings']
+        Settings.set('sso_enabled', str(sso_data.get('enabled', False)).lower())
+        Settings.set('sso_provider', sso_data.get('provider', 'google'))
+        Settings.set('sso_client_id', sso_data.get('client_id', ''))
+        Settings.set('sso_client_secret', sso_data.get('client_secret', ''))
+        Settings.set('sso_authorization_url', sso_data.get('authorization_url', ''))
+        Settings.set('sso_token_url', sso_data.get('token_url', ''))
+        Settings.set('sso_userinfo_url', sso_data.get('userinfo_url', ''))
+        Settings.set('sso_redirect_uri', sso_data.get('redirect_uri', ''))
+        Settings.set('sso_scope', sso_data.get('scope', 'openid email profile'))
+        Settings.set('sso_allowed_domains', ','.join(sso_data.get('allowed_domains', [])))
+        Settings.set('sso_allowed_emails', ','.join(sso_data.get('allowed_emails', [])))
+        Settings.set('sso_admin_key_fallback', str(sso_data.get('admin_key_fallback', True)).lower())
+    
     return jsonify({'success': True})
 
 @app.route('/admin/start-email-monitor', methods=['POST'])
 def start_email_monitor_route():
+    # Check for SSO session first
+    sso_user_email = session.get('sso_user_email')
+    sso_user_domain = session.get('sso_user_domain')
     admin_key = request.args.get('key', '')
-    if admin_key != 'wedding2024':
+    
+    # Verify admin access
+    if not verify_admin_access(admin_key, sso_user_email, sso_user_domain):
         return "Unauthorized", 401
     
     try:
@@ -1903,8 +2063,13 @@ def start_email_monitor_route():
 
 @app.route('/admin/sync-immich', methods=['POST'])
 def sync_immich_route():
+    # Check for SSO session first
+    sso_user_email = session.get('sso_user_email')
+    sso_user_domain = session.get('sso_user_domain')
     admin_key = request.args.get('key', '')
-    if admin_key != 'wedding2024':
+    
+    # Verify admin access
+    if not verify_admin_access(admin_key, sso_user_email, sso_user_domain):
         return jsonify({'success': False, 'message': 'Unauthorized'}), 401
     
     try:
@@ -1915,8 +2080,13 @@ def sync_immich_route():
 
 @app.route('/admin/notification-users')
 def notification_users():
+    # Check for SSO session first
+    sso_user_email = session.get('sso_user_email')
+    sso_user_domain = session.get('sso_user_domain')
     admin_key = request.args.get('key', '')
-    if admin_key != 'wedding2024':
+    
+    # Verify admin access
+    if not verify_admin_access(admin_key, sso_user_email, sso_user_domain):
         return "Unauthorized", 401
     
     users = NotificationUser.query.order_by(NotificationUser.last_seen.desc()).all()
@@ -1924,8 +2094,13 @@ def notification_users():
 
 @app.route('/admin/send-notification', methods=['POST'])
 def send_admin_notification():
+    # Check for SSO session first
+    sso_user_email = session.get('sso_user_email')
+    sso_user_domain = session.get('sso_user_domain')
     admin_key = request.args.get('key', '')
-    if admin_key != 'wedding2024':
+    
+    # Verify admin access
+    if not verify_admin_access(admin_key, sso_user_email, sso_user_domain):
         return jsonify({'success': False, 'message': 'Unauthorized'}), 401
     
     try:
@@ -1988,126 +2163,15 @@ def send_admin_notification():
         db.session.rollback()
         return jsonify({'success': False, 'message': str(e)})
 
-@app.route('/admin/register-notification-user', methods=['POST'])
-def register_notification_user():
-    """Register a user for notifications (called from frontend)"""
-    data = request.get_json()
-    user_identifier = data.get('user_identifier', '')
-    user_name = data.get('user_name', 'Anonymous')
-    device_info = data.get('device_info', '')
-    notifications_enabled = data.get('notifications_enabled', True)
-    
-    print(f"Notification Debug: Received registration request")
-    print(f"Notification Debug: user_identifier: {user_identifier}")
-    print(f"Notification Debug: user_name: {user_name}")
-    print(f"Notification Debug: notifications_enabled: {notifications_enabled}")
-    
-    if not user_identifier:
-        print("Notification Debug: No user identifier provided")
-        return jsonify({'success': False, 'message': 'User identifier required'})
-    
-    try:
-        # Check if user already exists
-        user = NotificationUser.query.filter_by(user_identifier=user_identifier).first()
-        
-        if user:
-            # Update existing user
-            print(f"Notification Debug: Updating existing user {user.user_name}")
-            user.user_name = user_name
-            user.notifications_enabled = notifications_enabled
-            user.last_seen = datetime.utcnow()
-            user.device_info = device_info
-        else:
-            # Create new user
-            print(f"Notification Debug: Creating new user {user_name}")
-            user = NotificationUser(
-                user_identifier=user_identifier,
-                user_name=user_name,
-                notifications_enabled=notifications_enabled,
-                device_info=device_info
-            )
-            db.session.add(user)
-        
-        db.session.commit()
-        print(f"Notification Debug: User registration successful")
-        return jsonify({'success': True, 'message': 'User registered successfully'})
-    
-    except Exception as e:
-        print(f"Notification Debug: Error registering user: {e}")
-        return jsonify({'success': False, 'message': str(e)})
-
-@app.route('/debug/notification-test')
-def debug_notification_test():
-    """Debug route to test notification user registration"""
-    user_identifier = request.cookies.get('user_identifier', '')
-    user_name = request.cookies.get('user_name', 'Anonymous')
-    
-    if not user_identifier:
-        user_identifier = secrets.token_hex(16)
-        resp = make_response(f"""
-        <h1>Notification Debug Test</h1>
-        <p>No user identifier found. Created new one: {user_identifier}</p>
-        <p>User name: {user_name}</p>
-        <p>Device: {request.headers.get('User-Agent', 'Unknown')}</p>
-        <button onclick="testRegistration()">Test Registration</button>
-        <script>
-        function testRegistration() {{
-            fetch('/admin/register-notification-user', {{
-                method: 'POST',
-                headers: {{ 'Content-Type': 'application/json' }},
-                body: JSON.stringify({{
-                    user_identifier: '{user_identifier}',
-                    user_name: '{user_name}',
-                    device_info: navigator.userAgent,
-                    notifications_enabled: true
-                }})
-            }})
-            .then(response => response.json())
-            .then(data => {{
-                alert('Registration result: ' + JSON.stringify(data));
-            }})
-            .catch(error => {{
-                alert('Error: ' + error);
-            }});
-        }}
-        </script>
-        """)
-        resp.set_cookie('user_identifier', user_identifier, max_age=365*24*60*60)
-        return resp
-    
-    return f"""
-    <h1>Notification Debug Test</h1>
-    <p>User identifier: {user_identifier}</p>
-    <p>User name: {user_name}</p>
-    <p>Device: {request.headers.get('User-Agent', 'Unknown')}</p>
-    <button onclick="testRegistration()">Test Registration</button>
-    <script>
-    function testRegistration() {{
-        fetch('/admin/register-notification-user', {{
-            method: 'POST',
-            headers: {{ 'Content-Type': 'application/json' }},
-            body: JSON.stringify({{
-                user_identifier: '{user_identifier}',
-                user_name: '{user_name}',
-                device_info: navigator.userAgent,
-                notifications_enabled: true
-            }})
-        }})
-        .then(response => response.json())
-        .then(data => {{
-            alert('Registration result: ' + JSON.stringify(data));
-        }})
-        .catch(error => {{
-            alert('Error: ' + error);
-        }});
-    }}
-    </script>
-    """
-
 @app.route('/admin/generate-qr-pdf')
 def generate_qr_pdf():
+    # Check for SSO session first
+    sso_user_email = session.get('sso_user_email')
+    sso_user_domain = session.get('sso_user_domain')
     admin_key = request.args.get('key', '')
-    if admin_key != 'wedding2024':
+    
+    # Verify admin access
+    if not verify_admin_access(admin_key, sso_user_email, sso_user_domain):
         return "Unauthorized", 401
     
     public_url = Settings.get('public_url', '')
@@ -2117,7 +2181,7 @@ def generate_qr_pdf():
     qr_settings = Settings.get('qr_settings', '{}')
     qr_settings = json.loads(qr_settings) if qr_settings else {}
     
-    # Get email settings
+    # Get email settings for the welcome modal
     email_settings = get_email_settings()
     monitor_email = email_settings.get('monitor_email', 'your-email@example.com')
     
@@ -2250,8 +2314,13 @@ def generate_qr_pdf():
 
 @app.route('/admin/pwa-debug')
 def pwa_debug():
+    # Check for SSO session first
+    sso_user_email = session.get('sso_user_email')
+    sso_user_domain = session.get('sso_user_domain')
     admin_key = request.args.get('key', '')
-    if admin_key != 'wedding2024':
+    
+    # Verify admin access
+    if not verify_admin_access(admin_key, sso_user_email, sso_user_domain):
         return "Unauthorized", 401
     
     # Check PWA requirements
@@ -2409,6 +2478,135 @@ def delete_notification():
     
     except Exception as e:
         return jsonify({'success': False, 'message': str(e)})
+
+@app.route('/sso/login')
+def sso_login():
+    """SSO login page"""
+    sso_settings = get_sso_settings()
+    
+    if not sso_settings['enabled']:
+        return redirect(url_for('admin'))
+    
+    # Generate state parameter for security
+    state = secrets.token_urlsafe(32)
+    session['sso_state'] = state
+    
+    # Build authorization URL based on provider
+    if sso_settings['provider'] == 'google':
+        auth_url = 'https://accounts.google.com/oauth/authorize'
+        params = {
+            'client_id': sso_settings['client_id'],
+            'redirect_uri': sso_settings['redirect_uri'],
+            'response_type': 'code',
+            'scope': sso_settings['scope'],
+            'state': state
+        }
+    elif sso_settings['provider'] == 'azure':
+        auth_url = f"{sso_settings['authorization_url']}/oauth2/v2.0/authorize"
+        params = {
+            'client_id': sso_settings['client_id'],
+            'redirect_uri': sso_settings['redirect_uri'],
+            'response_type': 'code',
+            'scope': sso_settings['scope'],
+            'state': state
+        }
+    elif sso_settings['provider'] == 'okta':
+        auth_url = f"{sso_settings['authorization_url']}/oauth2/v1/authorize"
+        params = {
+            'client_id': sso_settings['client_id'],
+            'redirect_uri': sso_settings['redirect_uri'],
+            'response_type': 'code',
+            'scope': sso_settings['scope'],
+            'state': state
+        }
+    else:  # custom
+        auth_url = sso_settings['authorization_url']
+        params = {
+            'client_id': sso_settings['client_id'],
+            'redirect_uri': sso_settings['redirect_uri'],
+            'response_type': 'code',
+            'scope': sso_settings['scope'],
+            'state': state
+        }
+    
+    # Build the full authorization URL
+    from urllib.parse import urlencode
+    full_auth_url = f"{auth_url}?{urlencode(params)}"
+    
+    return render_template('sso_login.html', auth_url=full_auth_url, sso_settings=sso_settings)
+
+@app.route('/sso/callback')
+def sso_callback():
+    """Handle SSO callback"""
+    sso_settings = get_sso_settings()
+    
+    if not sso_settings['enabled']:
+        return "SSO not enabled", 400
+    
+    # Verify state parameter
+    state = request.args.get('state')
+    if state != session.get('sso_state'):
+        return "Invalid state parameter", 400
+    
+    # Get authorization code
+    code = request.args.get('code')
+    if not code:
+        return "No authorization code received", 400
+    
+    try:
+        # Exchange code for access token
+        token_data = {
+            'client_id': sso_settings['client_id'],
+            'client_secret': sso_settings['client_secret'],
+            'code': code,
+            'grant_type': 'authorization_code',
+            'redirect_uri': sso_settings['redirect_uri']
+        }
+        
+        token_response = requests.post(sso_settings['token_url'], data=token_data)
+        token_response.raise_for_status()
+        token_info = token_response.json()
+        
+        access_token = token_info.get('access_token')
+        if not access_token:
+            return "No access token received", 400
+        
+        # Get user information
+        headers = {'Authorization': f"Bearer {access_token}"}
+        user_response = requests.get(sso_settings['userinfo_url'], headers=headers)
+        user_response.raise_for_status()
+        user_info = user_response.json()
+        
+        # Extract user email and domain
+        user_email = user_info.get('email', '')
+        user_domain = user_email.split('@')[1] if '@' in user_email else ''
+        
+        # Verify admin access
+        if verify_admin_access(user_email=user_email, user_domain=user_domain):
+            # Store user info in session
+            session['sso_user_email'] = user_email
+            session['sso_user_domain'] = user_domain
+            session['sso_user_name'] = user_info.get('name', user_email)
+            
+            # Redirect to admin panel
+            return redirect(url_for('admin'))
+        else:
+            return "Access denied. Your email is not authorized to access the admin panel.", 403
+            
+    except Exception as e:
+        print(f"SSO callback error: {e}")
+        return f"SSO authentication failed: {str(e)}", 500
+
+@app.route('/sso/logout')
+def sso_logout():
+    """SSO logout"""
+    # Clear SSO session data
+    session.pop('sso_user_email', None)
+    session.pop('sso_user_domain', None)
+    session.pop('sso_user_name', None)
+    session.pop('sso_state', None)
+    
+    return redirect(url_for('admin'))
 
 @app.route('/api/notifications/toggle-enabled', methods=['POST'])
 def toggle_notifications_enabled():

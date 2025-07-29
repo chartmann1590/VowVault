@@ -29,6 +29,7 @@ A beautiful, self-hosted wedding photo gallery application that allows wedding g
 
 ### For Admins
 - 🔐 **Admin Dashboard** - Comprehensive management tools
+- 🔐 **SSO Authentication** - Secure admin access with OAuth providers (Google, Azure, Okta)
 - 📊 **Statistics** - View usage analytics and content metrics
 - 📧 **Email Configuration** - Set up automatic photo processing
 - 🔄 **Immich Sync** - Sync to your own Immich server
@@ -91,6 +92,7 @@ python app.py
 **Access:** 
 - Gallery: http://localhost
 - Admin: http://localhost/admin?key=wedding2024
+- SSO Login: http://localhost/sso/login (when SSO is enabled)
 
 ## 📚 Documentation
 
@@ -98,6 +100,7 @@ For detailed information, see our comprehensive documentation:
 
 - **[Features](docs/features.md)** - Complete feature breakdown and capabilities
 - **[Installation Guide](docs/installation.md)** - Setup instructions and troubleshooting
+- **[SSO Setup](docs/sso_setup.md)** - Configure secure admin authentication
 - **[Usage Guide](docs/usage.md)** - Step-by-step user instructions
 - **[PWA Guide](docs/pwa.md)** - Progressive Web App setup and troubleshooting
 
@@ -105,6 +108,7 @@ For detailed information, see our comprehensive documentation:
 
 ### Security
 - Change the default admin key in `app.py`
+- Enable SSO authentication for enhanced security
 - Set up HTTPS/SSL for production
 - Configure proper backup strategy
 
