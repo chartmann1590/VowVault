@@ -175,27 +175,52 @@ def create_email_log_table(cursor):
     return True
 
 def create_immich_sync_log_table(cursor):
-    """Create Immich sync log table for tracking sync operations"""
-    
-    # Create immich_sync_log table
-    if not check_table_exists(cursor, 'immich_sync_log'):
-        print("Creating 'immich_sync_log' table...")
-        cursor.execute("""
-            CREATE TABLE immich_sync_log (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                filename VARCHAR(255) NOT NULL,
-                file_path VARCHAR(500) NOT NULL,
-                sync_date DATETIME DEFAULT CURRENT_TIMESTAMP,
-                status VARCHAR(50) NOT NULL,
-                immich_asset_id VARCHAR(255),
-                error_message TEXT,
-                retry_count INTEGER DEFAULT 0,
-                last_retry DATETIME
-            )
-        """)
-        print("Created 'immich_sync_log' table successfully!")
-    else:
+    """Create Immich sync log table"""
+    if check_table_exists(cursor, 'immich_sync_log'):
         print("Table 'immich_sync_log' already exists.")
+        return True
+    
+    print("Creating 'immich_sync_log' table...")
+    cursor.execute("""
+        CREATE TABLE immich_sync_log (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            filename VARCHAR(255) NOT NULL,
+            file_path VARCHAR(500) NOT NULL,
+            sync_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            status VARCHAR(50) NOT NULL,
+            immich_asset_id VARCHAR(255),
+            error_message TEXT,
+            retry_count INTEGER DEFAULT 0,
+            last_retry TIMESTAMP
+        )
+    """)
+    print("Table 'immich_sync_log' created successfully!")
+    return True
+
+def add_user_identifier_columns(cursor):
+    """Add user identifier columns to existing tables"""
+    
+    # Add uploader_identifier to photo table
+    if not check_column_exists(cursor, 'photo', 'uploader_identifier'):
+        print("Adding 'uploader_identifier' column to 'photo' table...")
+        cursor.execute("""
+            ALTER TABLE photo 
+            ADD COLUMN uploader_identifier VARCHAR(100)
+        """)
+        print("Added 'uploader_identifier' column successfully!")
+    else:
+        print("Column 'uploader_identifier' already exists in 'photo' table.")
+    
+    # Add author_identifier to message table
+    if not check_column_exists(cursor, 'message', 'author_identifier'):
+        print("Adding 'author_identifier' column to 'message' table...")
+        cursor.execute("""
+            ALTER TABLE message 
+            ADD COLUMN author_identifier VARCHAR(100)
+        """)
+        print("Added 'author_identifier' column successfully!")
+    else:
+        print("Column 'author_identifier' already exists in 'message' table.")
     
     return True
 
@@ -258,6 +283,10 @@ def migrate_database(db_path='wedding_photos.db'):
         
         # Create Immich sync log table
         if not create_immich_sync_log_table(cursor):
+            success = False
+        
+        # Add user identifier columns
+        if not add_user_identifier_columns(cursor):
             success = False
         
         if success:

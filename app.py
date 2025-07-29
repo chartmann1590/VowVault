@@ -78,6 +78,7 @@ class Photo(db.Model):
     filename = db.Column(db.String(255), nullable=False)
     original_filename = db.Column(db.String(255), nullable=False)
     uploader_name = db.Column(db.String(100), default='Anonymous')
+    uploader_identifier = db.Column(db.String(100))  # Track who uploaded the photo
     upload_date = db.Column(db.DateTime, default=datetime.utcnow)
     description = db.Column(db.Text)
     likes = db.Column(db.Integer, default=0)
@@ -112,6 +113,7 @@ class GuestbookEntry(db.Model):
 class Message(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     author_name = db.Column(db.String(100), nullable=False, default='Anonymous')
+    author_identifier = db.Column(db.String(100))  # Track who posted the message
     content = db.Column(db.Text, nullable=False)
     photo_filename = db.Column(db.String(255))
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
@@ -766,6 +768,11 @@ def upload():
             uploader_name = request.form.get('uploader_name', 'Anonymous').strip() or 'Anonymous'
             description = request.form.get('description', '')
             
+            # Get or create user identifier
+            user_identifier = request.cookies.get('user_identifier', '')
+            if not user_identifier:
+                user_identifier = secrets.token_hex(16)
+            
             if is_video(filename):
                 # Handle video upload
                 filename = f"{timestamp}_{filename}"
@@ -791,6 +798,7 @@ def upload():
                     filename=filename,
                     original_filename=file.filename,
                     uploader_name=uploader_name,
+                    uploader_identifier=user_identifier,
                     description=description,
                     media_type='video',
                     thumbnail_filename=thumbnail_filename,
@@ -806,6 +814,7 @@ def upload():
                     filename=filename,
                     original_filename=file.filename,
                     uploader_name=uploader_name,
+                    uploader_identifier=user_identifier,
                     description=description,
                     media_type='image'
                 )
@@ -835,6 +844,7 @@ def upload():
             # Save user name in cookie
             resp = make_response(redirect(url_for('index')))
             resp.set_cookie('user_name', uploader_name, max_age=30*24*60*60)  # 30 days
+            resp.set_cookie('user_identifier', user_identifier, max_age=365*24*60*60)  # 1 year
             return resp
     
     user_name = request.cookies.get('user_name', '')
@@ -1022,6 +1032,11 @@ def new_message():
         content = request.form.get('content', '').strip()
         
         if content:
+            # Get or create user identifier
+            user_identifier = request.cookies.get('user_identifier', '')
+            if not user_identifier:
+                user_identifier = secrets.token_hex(16)
+            
             # Handle optional photo upload
             photo_filename = None
             if 'photo' in request.files:
@@ -1036,6 +1051,7 @@ def new_message():
             
             message = Message(
                 author_name=author_name,
+                author_identifier=user_identifier,
                 content=content,
                 photo_filename=photo_filename
             )
@@ -1058,6 +1074,7 @@ def new_message():
             # Save user name in cookie
             resp = make_response(redirect(url_for('message_board')))
             resp.set_cookie('user_name', author_name, max_age=30*24*60*60)  # 30 days
+            resp.set_cookie('user_identifier', user_identifier, max_age=365*24*60*60)  # 1 year
             return resp
         else:
             return render_template('new_message.html', 
@@ -1095,7 +1112,9 @@ def toggle_message_like(message_id):
         'action': 'liked' if liked else 'unliked',
         'message_id': message_id,
         'message_author': message.author_name,
+        'author_identifier': message.author_identifier,
         'liker_identifier': user_identifier,
+        'liker_name': request.cookies.get('user_name', 'Anonymous'),
         'total_likes': message.likes
     }
     
@@ -1131,6 +1150,7 @@ def add_message_comment(message_id):
         'type': 'message_comment',
         'message_id': message_id,
         'message_author': message.author_name,
+        'author_identifier': message.author_identifier,
         'commenter_name': commenter_name,
         'comment_content': content,
         'comment_id': comment.id
@@ -1174,7 +1194,9 @@ def toggle_like(photo_id):
         'action': 'liked' if liked else 'unliked',
         'photo_id': photo_id,
         'photo_uploader': photo.uploader_name,
+        'uploader_identifier': photo.uploader_identifier,
         'liker_identifier': user_identifier,
+        'liker_name': request.cookies.get('user_name', 'Anonymous'),
         'total_likes': photo.likes
     }
     
@@ -1210,6 +1232,7 @@ def add_comment(photo_id):
         'type': 'comment',
         'photo_id': photo_id,
         'photo_uploader': photo.uploader_name,
+        'uploader_identifier': photo.uploader_identifier,
         'commenter_name': commenter_name,
         'comment_content': content,
         'comment_id': comment.id

@@ -460,18 +460,15 @@
                     const notificationData = data.notification_data;
                     const currentUser = getCookie('user_identifier');
                     
-                    // Only send notification if the current user is not the photo uploader
-                    if (notificationData.liker_identifier !== currentUser) {
-                        const photoUploader = notificationData.photo_uploader;
-                        const action = notificationData.action;
+                    // Send notification if the current user IS the photo uploader and someone else liked it
+                    if (currentUser === notificationData.uploader_identifier && notificationData.action === 'liked') {
+                        const likerName = notificationData.liker_name || 'Someone';
                         
-                        if (action === 'liked') {
-                            window.sendNotification(
-                                '❤️ New Like!',
-                                `${photoUploader} just liked your photo!`,
-                                '/static/icons/icon-192x192.png'
-                            );
-                        }
+                        window.sendNotification(
+                            '❤️ New Like!',
+                            `${likerName} just liked your photo!`,
+                            '/static/icons/icon-192x192.png'
+                        );
                     }
                 }
             }
@@ -532,9 +529,8 @@
                     const notificationData = comment.notification_data;
                     const currentUser = getCookie('user_identifier');
                     
-                    // Only send notification if the current user is not the photo uploader
-                    if (notificationData.commenter_name !== notificationData.photo_uploader) {
-                        const photoUploader = notificationData.photo_uploader;
+                    // Send notification if the current user IS the photo uploader and someone else commented
+                    if (currentUser === notificationData.uploader_identifier) {
                         const commenterName = notificationData.commenter_name;
                         
                         window.sendNotification(

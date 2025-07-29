@@ -424,18 +424,15 @@
                         const notificationData = data.notification_data;
                         const currentUser = getCookie('user_identifier');
                         
-                        // Only send notification if the current user is not the message author
-                        if (notificationData.liker_identifier !== currentUser) {
-                            const messageAuthor = notificationData.message_author;
-                            const action = notificationData.action;
+                        // Send notification if the current user IS the message author and someone else liked it
+                        if (currentUser === notificationData.author_identifier && notificationData.action === 'liked') {
+                            const likerName = notificationData.liker_name || 'Someone';
                             
-                            if (action === 'liked') {
-                                window.sendNotification(
-                                    '❤️ New Like!',
-                                    `${messageAuthor} just liked your message!`,
-                                    '/static/icons/icon-192x192.png'
-                                );
-                            }
+                            window.sendNotification(
+                                '❤️ New Like!',
+                                `${likerName} just liked your message!`,
+                                '/static/icons/icon-192x192.png'
+                            );
                         }
                     }
                 }
@@ -501,9 +498,8 @@
                     const notificationData = comment.notification_data;
                     const currentUser = getCookie('user_identifier');
                     
-                    // Only send notification if the current user is not the message author
-                    if (notificationData.commenter_name !== notificationData.message_author) {
-                        const messageAuthor = notificationData.message_author;
+                    // Send notification if the current user IS the message author and someone else commented
+                    if (currentUser === notificationData.author_identifier) {
                         const commenterName = notificationData.commenter_name;
                         
                         window.sendNotification(
