@@ -1243,8 +1243,10 @@
         fetch('/api/notifications/check')
             .then(response => response.json())
             .then(data => {
+                console.log('Notification check response:', data);
                 if (data.notifications && data.notifications.length > 0) {
                     const unreadCount = data.notifications.filter(n => !n.is_read).length;
+                    console.log('Unread notifications count:', unreadCount);
                     showNotificationBadge(unreadCount);
                     
                     // Update FAB
@@ -1577,6 +1579,12 @@
 
     // Update FAB visibility and badge
     function updateNotificationFab() {
+        // Check if elements exist before accessing them
+        if (!notificationFab || !notificationBadge) {
+            console.warn('Notification FAB elements not found');
+            return;
+        }
+
         if (unreadNotificationCount > 0) {
             notificationFab.style.display = 'flex';
             notificationBadge.style.display = 'flex';
@@ -1589,6 +1597,10 @@
 
     // Open notification modal
     function openNotificationModal() {
+        if (!notificationModal) {
+            console.warn('Notification modal not found');
+            return;
+        }
         loadNotificationModal();
         notificationModal.style.display = 'flex';
         document.body.style.overflow = 'hidden'; // Prevent background scrolling
@@ -1596,6 +1608,10 @@
 
     // Close notification modal
     function closeNotificationModal(event) {
+        if (!notificationModal) {
+            console.warn('Notification modal not found');
+            return;
+        }
         if (event && event.target !== notificationModal) {
             return; // Don't close if clicking inside modal content
         }
@@ -1605,6 +1621,11 @@
 
     // Load notifications into modal
     function loadNotificationModal() {
+        if (!notificationModalList || !notificationModalFooter) {
+            console.warn('Notification modal elements not found');
+            return;
+        }
+
         const userIdentifier = getCookie('user_identifier');
         if (!userIdentifier) {
             notificationModalList.innerHTML = '<div class="notification-modal-empty">Please log in to view notifications</div>';
@@ -1738,8 +1759,17 @@
         updateNotificationFab();
     }
 
-    // Initialize FAB
-    updateNotificationFab();
+    // Initialize FAB after DOM is loaded
+    document.addEventListener('DOMContentLoaded', function() {
+        // Re-get elements after DOM is loaded
+        notificationFab = document.getElementById('notificationFab');
+        notificationBadge = document.getElementById('notificationBadge');
+        notificationModal = document.getElementById('notificationModal');
+        notificationModalList = document.getElementById('notificationModalList');
+        notificationModalFooter = document.getElementById('notificationModalFooter');
+        
+            // FAB will be initialized after DOM is loaded
+    });
 </script>
 {% block scripts %}{% endblock %}
 
