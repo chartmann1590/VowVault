@@ -18,6 +18,7 @@ A beautiful, self-hosted wedding photo gallery application that allows wedding g
 - 💌 **Message Board** - Post messages with optional photos that everyone can see, like, and comment on
 - 📖 **Virtual Guestbook** - Sign a digital guestbook with wishes and optional photos
 - 📱 **Mobile Responsive** - Works perfectly on all devices
+- 📱 **Progressive Web App (PWA)** - Install as a native app on mobile devices for quick access
 - 🎉 **Welcome Modal** - Greet guests with a personalized message and instructions
 
 ### For Admins
@@ -25,6 +26,7 @@ A beautiful, self-hosted wedding photo gallery application that allows wedding g
 - 📊 **Statistics** - View total photos, videos, likes, comments, messages, guestbook entries, and photobooth photos
 - 📧 **Email Photo Upload** - Configure email settings to allow guests to email photos directly to the gallery
 - 🔄 **Immich Server Sync** - Automatically sync all uploads to your own Immich server for backup and organization
+- 📱 **PWA Debug Tools** - Monitor PWA installation status and troubleshoot issues
 - 🗑️ **Content Management** - Delete inappropriate photos, messages, or guestbook entries
 - 👁️ **Hide/Show Messages** - Hide inappropriate messages without deleting them
 - ✏️ **Edit Guestbook** - Modify guestbook entries when needed
@@ -295,34 +297,295 @@ tar -xzf backup-20240101.tar.gz
 
 4. **Configure Virtual Photobooth**
    - Upload a custom border image (PNG with transparency recommended)
-   - The border will appear as an overlay on the camera feed
-   - Test the photobooth to ensure the border looks good
-   - Monitor photobooth photo statistics
+   - Recommended size: 1280x720px or 16:9 aspect ratio
+   - Test the photobooth to ensure proper overlay
 
-5. **Manage Message Board**
-   - View all messages with their comments (visible/hidden tabs)
-   - Hide inappropriate messages (they remain in database but hidden from public)
-   - Unhide previously hidden messages
-   - Delete messages permanently
-   - View and manage message comments
+5. **PWA Debug Tools**
+   - Click "PWA Debug" button in admin panel
+   - View PWA requirements status (HTTPS, manifest, service worker, icons)
+   - Check connection details and user agent information
+   - Get troubleshooting solutions for self-signed certificates
+   - Access quick links to view manifest and service worker files
 
-6. **Manage Guestbook**
-   - View all guestbook entries
-   - Edit entries to fix typos or inappropriate content
-   - Delete inappropriate entries
-   - View photos attached to entries
+## 📱 Progressive Web App (PWA)
 
-7. **Configure Welcome Modal**
-   - Enable/disable the welcome modal
-   - Set custom title, message, and instructions
-   - Add couple photo URL
-   - Choose whether to show once per user or always
+### What is PWA?
+VowVault includes full Progressive Web App functionality, allowing guests to install the wedding gallery as a native app on their mobile devices for quick access.
 
-8. **Generate QR Codes**
-   - Enter your public URL
-   - Customize the message and couple names
-   - Download professionally designed PDF
-   - Print for tables or wedding programs
+### PWA Features
+- **📱 Native App Experience** - Install on home screen like a regular app
+- **🔄 Offline Support** - Caches essential resources for offline viewing
+- **⚡ Fast Loading** - Optimized for quick access and smooth performance
+- **📱 Mobile-First** - Designed specifically for mobile devices
+- **🎨 Custom Icons** - Beautiful wedding-themed app icons
+- **🔗 App Shortcuts** - Quick access to Upload, Photobooth, and Messages
+
+### Installation Instructions
+
+#### For Android/Chrome Users:
+1. Open Chrome browser on your Android device
+2. Navigate to the wedding gallery website
+3. Tap the menu button (⋮) in Chrome
+4. Select "Add to Home screen" or "Install app"
+5. Follow the prompts to install
+
+#### For iPhone/Safari Users:
+1. Open Safari browser on your iPhone
+2. Navigate to the wedding gallery website
+3. Tap the share button (📤) in Safari
+4. Scroll down and tap "Add to Home Screen"
+5. Tap "Add" to install the app
+
+#### For Other Browsers:
+1. Look for an install prompt or menu option
+2. Select "Install" or "Add to Home Screen"
+3. Follow the browser's specific instructions
+
+### PWA Requirements
+- **HTTPS Required** - PWA features only work with valid SSL certificates
+- **Self-signed certificates** will not work for PWA installation
+- **Production deployment** should use proper SSL certificates (Let's Encrypt, etc.)
+
+### Troubleshooting PWA Issues
+
+#### Development/Testing:
+- Use Chrome DevTools → Application → Manifest → "Add to home screen"
+- Check browser console for PWA debug messages
+- Visit `/admin/pwa-debug?key=your-key` for detailed analysis
+
+#### Production Setup:
+- Ensure valid SSL certificate is installed
+- Verify manifest.json is accessible at `/static/manifest.json`
+- Check service worker registration in browser console
+- Test on multiple devices and browsers
+
+### PWA Debug Tools
+The admin panel includes comprehensive PWA debugging tools:
+- **Requirements Check** - Verify HTTPS, manifest, service worker, and icons
+- **Connection Analysis** - View host, URL, and user agent details
+- **Troubleshooting Guide** - Solutions for common PWA issues
+- **Quick Actions** - Direct links to manifest and service worker files
+
+## 🔧 Configuration
+
+### Admin Access
+Change the admin key in `app.py`:
+```python
+if admin_key != 'wedding2024':  # Change this!
+```
+
+### Database
+By default, uses SQLite. For production with many users, consider PostgreSQL:
+```python
+app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://user:pass@localhost/dbname'
+```
+
+### File Uploads
+- Maximum file size: 50MB (supports both photos and videos)
+- Photo formats: PNG, JPG, JPEG, GIF, WEBP
+
+### Environment Variables
+Copy `env.example` to `.env` and configure your settings:
+```bash
+cp env.example .env
+# Edit .env with your actual values
+```
+
+### Git Configuration
+The `.gitignore` file is configured to exclude:
+- Virtual environment (`venv/`)
+- Database files (`*.db`, `*.sqlite`)
+- Upload directories (`static/uploads/`)
+- Environment files (`.env`)
+- Email credentials and logs
+- Python cache files (`__pycache__/`)
+- OS generated files (`.DS_Store`, etc.)
+
+**Important**: Never commit sensitive information like email passwords or API keys!
+- Video formats: MP4, MOV, AVI, WEBM (max 15 seconds)
+
+## 📁 Project Structure
+
+```
+wedding-photo-gallery/
+├── app.py                  # Main Flask application
+├── requirements.txt        # Python dependencies
+├── migration.py           # Database migration script
+├── Dockerfile             # Docker container definition
+├── docker-compose.yml     # Docker Compose configuration
+├── nginx.conf            # Nginx configuration for production
+├── templates/            # HTML templates
+│   ├── base.html        # Base template
+│   ├── index.html       # Gallery page
+│   ├── upload.html      # Upload page
+│   ├── photo_detail.html # Photo/video detail page
+│   ├── photobooth.html  # Virtual photobooth
+│   ├── message_board.html # Message board
+│   ├── new_message.html  # Post new message
+│   ├── admin.html       # Admin dashboard
+│   ├── guestbook.html   # View guestbook
+│   ├── sign_guestbook.html # Sign guestbook
+│   ├── privacy_policy.html # Privacy policy page
+│   └── terms_of_use.html   # Terms of use page
+├── static/              # Static files
+│   └── uploads/        # Uploaded content (created automatically)
+│       ├── guestbook/  # Guestbook photos
+│       ├── messages/   # Message board photos
+│       ├── videos/     # Video uploads
+│       ├── thumbnails/ # Video thumbnails
+│       ├── photobooth/ # Photobooth photos
+│       └── borders/    # Photobooth border images
+└── data/               # Database files (created automatically)
+```
+
+## 🎨 Customization
+
+### Virtual Photobooth
+1. Go to Admin Dashboard
+2. Find "Virtual Photobooth Settings"
+3. Upload a custom border image:
+   - Use PNG format with transparent areas where the photo will show
+   - Recommended size: 1280x720px or 16:9 aspect ratio
+   - The border will overlay on top of the camera feed
+4. Guests can then access the photobooth and take photos with your custom border
+
+### Welcome Modal
+1. Go to Admin Dashboard
+2. Find "Welcome Modal Settings"
+3. Customize:
+   - Enable/disable the modal
+   - Title and message
+   - Upload a couple photo URL
+   - Edit instructions for guests
+   - Choose to show once or always
+
+### QR Code PDFs
+1. Set your public gallery URL
+2. Customize the PDF content (title, subtitle, message, couple names)
+3. Generate and print for your venue
+
+### Video Support
+- Automatic video thumbnail generation using FFmpeg
+- Video duration validation (max 15 seconds)
+- Support for multiple video formats
+- Mobile-friendly video playback
+
+### Styling
+The app uses a warm, elegant color scheme perfect for weddings. To customize:
+- Colors are defined in CSS within each template
+- Main colors: `#8b7355` (primary), `#6b5d54` (secondary)
+
+## 🚢 Production Deployment
+
+### Using Docker
+
+1. Update `nginx.conf` with your domain
+2. Set up SSL certificates
+3. Update environment variables
+4. Deploy:
+```bash
+docker-compose -f docker-compose.prod.yml up -d
+```
+
+### Security Checklist
+- [ ] Change admin key from default
+- [ ] Set up HTTPS/SSL
+- [ ] Configure proper backup strategy
+- [ ] Set up monitoring
+- [ ] Implement rate limiting
+- [ ] Configure firewall rules
+
+### Backup Strategy
+```bash
+# Using the built-in batch download feature (recommended)
+# Access: /admin/batch-download?key=your-key
+
+# Or manual backup
+tar -czf backup-$(date +%Y%m%d).tar.gz uploads/ data/
+
+# Restore
+tar -xzf backup-20240101.tar.gz
+```
+
+## 📱 Usage Guide
+
+### For Wedding Guests
+
+1. **Visit the Gallery**
+   - Scan the QR code or visit the URL
+   - View the welcome message
+   - Choose to sign the guestbook, post a message, or enter the gallery
+
+2. **Upload Photos/Videos**
+   - Click "Upload Photo/Video"
+   - Select your photo or video (videos max 15 seconds, files max 50MB)
+   - Add your name (optional)
+   - Add a description (optional)
+   - Click "Upload"
+
+3. **Use Virtual Photobooth**
+   - Click "Virtual Photobooth" in navigation or from the welcome screen
+   - Allow camera access when prompted
+   - Position yourself in the frame with the wedding border overlay
+   - Click "Take Photo" (3-second countdown)
+   - Download the photo or upload it directly to the gallery
+
+4. **Interact with Photos/Videos**
+   - Click any photo or video to view details
+   - Click the heart to like
+   - Leave comments with your name
+   - Videos play with controls and show duration
+
+5. **Post on Message Board**
+   - Click "Message Board" in navigation
+   - Click "Leave a Message"
+   - Enter your name (optional)
+   - Write your message
+   - Add a photo (optional)
+   - Submit your message
+   - Like and comment on other messages
+
+6. **Sign the Guestbook**
+   - Click "Guestbook" in navigation
+   - Click "Sign the Guestbook"
+   - Enter your name and location (optional)
+   - Write your message
+   - Add a photo (optional)
+   - Submit your entry
+
+### For Administrators
+
+1. **Access Admin Panel**
+   - Visit `/admin?key=your-key`
+   - View comprehensive statistics including photobooth usage
+   - Manage photos, videos, messages, and guestbook entries
+
+2. **Batch Download All Content**
+   - Click "Download All Content" button
+   - Automatically downloads a ZIP file containing:
+     - All photos organized by type (photos/, videos/, photobooth/, etc.)
+     - All video thumbnails
+     - All guestbook and message photos
+     - Complete database export as JSON
+     - Photobooth border images
+
+3. **System Reset**
+   - Click "System Reset" button for complete data wipe
+   - Must type "RESET EVERYTHING" to confirm
+   - Deletes all database records and uploaded files
+   - Returns system to fresh state
+
+4. **Configure Virtual Photobooth**
+   - Upload a custom border image (PNG with transparency recommended)
+   - Recommended size: 1280x720px or 16:9 aspect ratio
+   - Test the photobooth to ensure proper overlay
+
+5. **PWA Debug Tools**
+   - Click "PWA Debug" button in admin panel
+   - View PWA requirements status (HTTPS, manifest, service worker, icons)
+   - Check connection details and user agent information
+   - Get troubleshooting solutions for self-signed certificates
+   - Access quick links to view manifest and service worker files
 
 ## 🐛 Troubleshooting
 
