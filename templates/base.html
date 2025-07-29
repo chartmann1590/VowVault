@@ -572,6 +572,202 @@
     .notification-toggle-btn.active {
         color: #8b7355;
     }
+
+    /* Notification FAB Styles */
+    .notification-fab {
+        position: fixed;
+        bottom: 30px;
+        right: 30px;
+        width: 60px;
+        height: 60px;
+        background: linear-gradient(135deg, #8b7355 0%, #6b5d54 100%);
+        border-radius: 50%;
+        box-shadow: 0 4px 20px rgba(139, 115, 85, 0.3);
+        cursor: pointer;
+        z-index: 1000;
+        display: none;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.3s ease;
+        border: 3px solid white;
+    }
+
+    .notification-fab:hover {
+        transform: scale(1.1);
+        box-shadow: 0 6px 25px rgba(139, 115, 85, 0.4);
+    }
+
+    .notification-fab-icon {
+        color: white;
+        font-size: 24px;
+        position: relative;
+    }
+
+    .notification-badge {
+        position: absolute;
+        top: -8px;
+        right: -8px;
+        background: #e74c3c;
+        color: white;
+        border-radius: 50%;
+        width: 24px;
+        height: 24px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 12px;
+        font-weight: bold;
+        border: 2px solid white;
+        animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+        0% { transform: scale(1); }
+        50% { transform: scale(1.1); }
+        100% { transform: scale(1); }
+    }
+
+    /* Notification Modal Styles */
+    .notification-modal {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.5);
+        z-index: 1001;
+        display: none;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .notification-modal-content {
+        background: white;
+        border-radius: 20px;
+        padding: 2rem;
+        max-width: 500px;
+        width: 90%;
+        max-height: 80vh;
+        overflow-y: auto;
+        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+        position: relative;
+    }
+
+    .notification-modal-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1.5rem;
+        padding-bottom: 1rem;
+        border-bottom: 2px solid #f0f0f0;
+    }
+
+    .notification-modal-title {
+        font-family: 'Playfair Display', serif;
+        font-size: 1.5rem;
+        color: #8b7355;
+        margin: 0;
+    }
+
+    .notification-modal-close {
+        background: none;
+        border: none;
+        font-size: 1.5rem;
+        cursor: pointer;
+        color: #999;
+        padding: 0.5rem;
+        border-radius: 50%;
+        transition: all 0.3s ease;
+    }
+
+    .notification-modal-close:hover {
+        background: #f0f0f0;
+        color: #666;
+    }
+
+    .notification-modal-list {
+        margin-bottom: 1.5rem;
+    }
+
+    .notification-modal-item {
+        padding: 1rem;
+        border-radius: 10px;
+        margin-bottom: 1rem;
+        background: #f9f9f9;
+        border-left: 4px solid #8b7355;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+
+    .notification-modal-item:hover {
+        background: #f0f0f0;
+        transform: translateX(5px);
+    }
+
+    .notification-modal-item.unread {
+        background: #fff3cd;
+        border-left-color: #ffc107;
+    }
+
+    .notification-modal-item-title {
+        font-weight: 600;
+        color: #333;
+        margin-bottom: 0.5rem;
+    }
+
+    .notification-modal-item-message {
+        color: #666;
+        font-size: 0.9rem;
+        margin-bottom: 0.5rem;
+    }
+
+    .notification-modal-item-time {
+        color: #999;
+        font-size: 0.8rem;
+    }
+
+    .notification-modal-footer {
+        text-align: center;
+        padding-top: 1rem;
+        border-top: 2px solid #f0f0f0;
+    }
+
+    .notification-modal-view-all {
+        background: linear-gradient(135deg, #8b7355 0%, #6b5d54 100%);
+        color: white;
+        border: none;
+        padding: 0.75rem 1.5rem;
+        border-radius: 25px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+
+    .notification-modal-view-all:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 15px rgba(139, 115, 85, 0.3);
+    }
+
+    .notification-modal-empty {
+        text-align: center;
+        color: #999;
+        padding: 2rem;
+    }
+
+    /* Mobile responsive adjustments */
+    @media (max-width: 768px) {
+        .notification-fab {
+            bottom: 20px;
+            right: 20px;
+            width: 55px;
+            height: 55px;
+        }
+
+        .notification-modal-content {
+            margin: 20px;
+            max-height: calc(100vh - 40px);
+        }
+    }
 </style>
 {% block extra_styles %}{% endblock %}
 
@@ -1051,6 +1247,10 @@
                     const unreadCount = data.notifications.filter(n => !n.is_read).length;
                     showNotificationBadge(unreadCount);
                     
+                    // Update FAB
+                    unreadNotificationCount = unreadCount;
+                    updateNotificationFab();
+                    
                     // Show system notifications for new unread notifications
                     if (unreadCount > 0) {
                         displayNotifications(data.notifications);
@@ -1058,6 +1258,8 @@
                 } else {
                     // Hide badges if no notifications
                     showNotificationBadge(0);
+                    unreadNotificationCount = 0;
+                    updateNotificationFab();
                 }
             })
             .catch(error => {
@@ -1365,9 +1567,207 @@
 
     // Check for notifications every 30 seconds
     setInterval(checkForNotifications, 30000);
+
+    // Notification FAB and Modal Functions
+    let notificationFab = document.getElementById('notificationFab');
+    let notificationBadge = document.getElementById('notificationBadge');
+    let notificationModal = document.getElementById('notificationModal');
+    let notificationModalList = document.getElementById('notificationModalList');
+    let notificationModalFooter = document.getElementById('notificationModalFooter');
+
+    // Update FAB visibility and badge
+    function updateNotificationFab() {
+        if (unreadNotificationCount > 0) {
+            notificationFab.style.display = 'flex';
+            notificationBadge.style.display = 'flex';
+            notificationBadge.textContent = unreadNotificationCount > 99 ? '99+' : unreadNotificationCount;
+        } else {
+            notificationFab.style.display = 'none';
+            notificationBadge.style.display = 'none';
+        }
+    }
+
+    // Open notification modal
+    function openNotificationModal() {
+        loadNotificationModal();
+        notificationModal.style.display = 'flex';
+        document.body.style.overflow = 'hidden'; // Prevent background scrolling
+    }
+
+    // Close notification modal
+    function closeNotificationModal(event) {
+        if (event && event.target !== notificationModal) {
+            return; // Don't close if clicking inside modal content
+        }
+        notificationModal.style.display = 'none';
+        document.body.style.overflow = ''; // Restore scrolling
+    }
+
+    // Load notifications into modal
+    function loadNotificationModal() {
+        const userIdentifier = getCookie('user_identifier');
+        if (!userIdentifier) {
+            notificationModalList.innerHTML = '<div class="notification-modal-empty">Please log in to view notifications</div>';
+            return;
+        }
+
+        fetch('/api/notifications/check')
+            .then(response => response.json())
+            .then(data => {
+                if (data.success && data.notifications) {
+                    const notifications = data.notifications;
+                    const unreadNotifications = notifications.filter(n => !n.is_read);
+                    
+                    if (unreadNotifications.length === 0) {
+                        notificationModalList.innerHTML = '<div class="notification-modal-empty">No unread notifications</div>';
+                        notificationModalFooter.style.display = 'none';
+                        return;
+                    }
+
+                    // Show only the first 2 unread notifications
+                    const notificationsToShow = unreadNotifications.slice(0, 2);
+                    let modalHtml = '';
+
+                    notificationsToShow.forEach(notification => {
+                        const timeAgo = getTimeAgo(notification.created_at);
+                        const unreadClass = !notification.is_read ? 'unread' : '';
+                        
+                        modalHtml += `
+                            <div class="notification-modal-item ${unreadClass}" onclick="handleModalNotificationClick(${notification.id}, '${notification.content_type || ''}', ${notification.content_id || 'null'})">
+                                <div class="notification-modal-item-title">${notification.title}</div>
+                                <div class="notification-modal-item-message">${notification.message}</div>
+                                <div class="notification-modal-item-time">${timeAgo}</div>
+                            </div>
+                        `;
+                    });
+
+                    notificationModalList.innerHTML = modalHtml;
+                    
+                    // Show "View All" button if there are more than 2 unread notifications
+                    if (unreadNotifications.length > 2) {
+                        notificationModalFooter.style.display = 'block';
+                    } else {
+                        notificationModalFooter.style.display = 'none';
+                    }
+                } else {
+                    notificationModalList.innerHTML = '<div class="notification-modal-empty">No notifications found</div>';
+                    notificationModalFooter.style.display = 'none';
+                }
+            })
+            .catch(error => {
+                console.error('Error loading notifications for modal:', error);
+                notificationModalList.innerHTML = '<div class="notification-modal-empty">Error loading notifications</div>';
+                notificationModalFooter.style.display = 'none';
+            });
+    }
+
+    // Handle notification click in modal
+    function handleModalNotificationClick(notificationId, contentType, contentId) {
+        // Mark as read first
+        markNotificationAsRead(notificationId);
+        
+        // Navigate to content
+        if (contentType && contentId && contentId !== 'null') {
+            if (contentType === 'photo') {
+                window.location.href = `/photo/${contentId}`;
+            } else if (contentType === 'message') {
+                window.location.href = `/messages#message-${contentId}`;
+            } else {
+                window.location.href = '/notifications';
+            }
+        } else {
+            window.location.href = '/notifications';
+        }
+        
+        // Close modal
+        closeNotificationModal();
+    }
+
+    // View all notifications
+    function viewAllNotifications() {
+        window.location.href = '/notifications';
+    }
+
+    // Mark notification as read
+    function markNotificationAsRead(notificationId) {
+        fetch('/api/notifications/mark-read', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                notification_id: notificationId
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                // Update unread count
+                unreadNotificationCount = Math.max(0, unreadNotificationCount - 1);
+                updateNotificationFab();
+            }
+        })
+        .catch(error => {
+            console.error('Error marking notification as read:', error);
+        });
+    }
+
+    // Get time ago string
+    function getTimeAgo(timestamp) {
+        const now = new Date();
+        const notificationTime = new Date(timestamp);
+        const diffInSeconds = Math.floor((now - notificationTime) / 1000);
+        
+        if (diffInSeconds < 60) {
+            return 'Just now';
+        } else if (diffInSeconds < 3600) {
+            const minutes = Math.floor(diffInSeconds / 60);
+            return `${minutes} minute${minutes > 1 ? 's' : ''} ago`;
+        } else if (diffInSeconds < 86400) {
+            const hours = Math.floor(diffInSeconds / 3600);
+            return `${hours} hour${hours > 1 ? 's' : ''} ago`;
+        } else {
+            const days = Math.floor(diffInSeconds / 86400);
+            return `${days} day${days > 1 ? 's' : ''} ago`;
+        }
+    }
+
+    // Update FAB when notifications change
+    function updateNotificationFabFromCount(count) {
+        unreadNotificationCount = count;
+        updateNotificationFab();
+    }
+
+    // Initialize FAB
+    updateNotificationFab();
 </script>
 {% block scripts %}{% endblock %}
 
+    <!-- Notification FAB -->
+    <div id="notificationFab" class="notification-fab" onclick="openNotificationModal()">
+        <div class="notification-fab-icon">
+            🔔
+            <div id="notificationBadge" class="notification-badge" style="display: none;">0</div>
+        </div>
+    </div>
+
+    <!-- Notification Modal -->
+    <div id="notificationModal" class="notification-modal" onclick="closeNotificationModal(event)">
+        <div class="notification-modal-content" onclick="event.stopPropagation()">
+            <div class="notification-modal-header">
+                <h3 class="notification-modal-title">🔔 Notifications</h3>
+                <button class="notification-modal-close" onclick="closeNotificationModal()">×</button>
+            </div>
+            <div id="notificationModalList" class="notification-modal-list">
+                <!-- Notifications will be loaded here -->
+            </div>
+            <div id="notificationModalFooter" class="notification-modal-footer" style="display: none;">
+                <button class="notification-modal-view-all" onclick="viewAllNotifications()">
+                    View All Notifications
+                </button>
+            </div>
+        </div>
+    </div>
 </body>
 </html>
 
