@@ -34,6 +34,7 @@ import threading
 import time
 import requests
 from pathlib import Path
+import sqlite3
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', secrets.token_hex(16))
@@ -2293,27 +2294,34 @@ def check_notifications():
     if not user_identifier:
         return jsonify({'notifications': []})
     
-    # Get unread notifications for this user
-    notifications = Notification.query.filter_by(
-        user_identifier=user_identifier,
-        is_read=False
-    ).order_by(Notification.created_at.desc()).all()
-    
-    notification_list = []
-    for notification in notifications:
-        notification_list.append({
-            'id': notification.id,
-            'title': notification.title,
-            'message': notification.message,
-            'type': notification.notification_type,
-            'created_at': notification.created_at.strftime('%B %d, %Y at %I:%M %p'),
-            'is_read': notification.is_read,
-            'content_type': notification.content_type,
-            'content_id': notification.content_id
-        })
-    
-    print(f"Found {len(notification_list)} unread notifications for user {user_identifier}")
-    return jsonify({'notifications': notification_list})
+    try:
+        # Get unread notifications for this user
+        notifications = Notification.query.filter_by(
+            user_identifier=user_identifier,
+            is_read=False
+        ).order_by(Notification.created_at.desc()).all()
+        
+        notification_list = []
+        for notification in notifications:
+            # Use getattr to safely access columns that might not exist yet
+            notification_list.append({
+                'id': notification.id,
+                'title': notification.title,
+                'message': notification.message,
+                'type': notification.notification_type,
+                'created_at': notification.created_at.strftime('%B %d, %Y at %I:%M %p'),
+                'is_read': notification.is_read,
+                'content_type': getattr(notification, 'content_type', None),
+                'content_id': getattr(notification, 'content_id', None)
+            })
+        
+        print(f"Found {len(notification_list)} unread notifications for user {user_identifier}")
+        return jsonify({'notifications': notification_list})
+        
+    except Exception as e:
+        print(f"Error checking notifications: {e}")
+        # Return empty list if there's an error (e.g., missing columns)
+        return jsonify({'notifications': []})
 
 @app.route('/api/notifications/mark-read', methods=['POST'])
 def mark_notification_read():
@@ -2477,32 +2485,109 @@ def test_notification():
 
 @app.route('/debug/notification-users')
 def debug_notification_users():
-    """Debug route to check notification users"""
-    users = NotificationUser.query.all()
-    user_list = []
-    
-    for user in users:
-        # Count unread notifications for this user
-        unread_count = Notification.query.filter_by(
-            user_identifier=user.user_identifier,
-            is_read=False
-        ).count()
+    """Debug route to show notification users and their unread counts"""
+    try:
+        users = NotificationUser.query.all()
+        result = []
+        for user in users:
+            unread_count = Notification.query.filter_by(
+                user_identifier=user.user_identifier,
+                is_read=False
+            ).count()
+            result.append({
+                'user_identifier': user.user_identifier,
+                'user_name': user.user_name,
+                'notifications_enabled': user.notifications_enabled,
+                'unread_count': unread_count,
+                'last_seen': user.last_seen.isoformat() if user.last_seen else None
+            })
+        return jsonify({'users': result})
+    except Exception as e:
+        return jsonify({'error': str(e)})
+
+@app.route('/admin/migrate-database', methods=['POST'])
+def migrate_database_route():
+    """Admin route to run database migration"""
+    try:
+        # Database path in Docker container
+        db_path = '/app/data/wedding_photos.db'
         
-        user_list.append({
-            'id': user.id,
-            'user_identifier': user.user_identifier,
-            'user_name': user.user_name,
-            'notifications_enabled': user.notifications_enabled,
-            'last_seen': user.last_seen.strftime('%Y-%m-%d %H:%M:%S') if user.last_seen else None,
-            'created_at': user.created_at.strftime('%Y-%m-%d %H:%M:%S'),
-            'device_info': user.device_info,
-            'unread_notifications': unread_count
-        })
-    
-    return jsonify({
-        'total_users': len(user_list),
-        'users': user_list
-    })
+        if not os.path.exists(db_path):
+            return jsonify({'success': False, 'message': f'Database not found at {db_path}'})
+        
+        # Connect to the database
+        conn = sqlite3.connect(db_path)
+        cursor = conn.cursor()
+        
+        # Check if notification table exists
+        cursor.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='notification'")
+        if not cursor.fetchone():
+            print("Creating notification table...")
+            cursor.execute("""
+                CREATE TABLE notification (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    user_identifier VARCHAR(100) NOT NULL,
+                    title VARCHAR(255) NOT NULL,
+                    message TEXT NOT NULL,
+                    notification_type VARCHAR(50) DEFAULT 'admin',
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                    read_at TIMESTAMP,
+                    is_read BOOLEAN DEFAULT 0,
+                    content_type VARCHAR(50),
+                    content_id INTEGER
+                )
+            """)
+            print("✓ Created notification table with navigation columns")
+        else:
+            # Check if columns already exist
+            cursor.execute("PRAGMA table_info(notification)")
+            columns = [column[1] for column in cursor.fetchall()]
+            
+            print("Current notification table columns:", columns)
+            
+            # Add content_type column if it doesn't exist
+            if 'content_type' not in columns:
+                print("Adding content_type column...")
+                cursor.execute("ALTER TABLE notification ADD COLUMN content_type VARCHAR(50)")
+                print("✓ Added content_type column")
+            else:
+                print("content_type column already exists")
+            
+            # Add content_id column if it doesn't exist
+            if 'content_id' not in columns:
+                print("Adding content_id column...")
+                cursor.execute("ALTER TABLE notification ADD COLUMN content_id INTEGER")
+                print("✓ Added content_id column")
+            else:
+                print("content_id column already exists")
+        
+        # Check if notification_user table exists
+        cursor.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='notification_user'")
+        if not cursor.fetchone():
+            print("Creating notification_user table...")
+            cursor.execute("""
+                CREATE TABLE notification_user (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    user_identifier VARCHAR(100) UNIQUE NOT NULL,
+                    user_name VARCHAR(100) DEFAULT 'Anonymous',
+                    notifications_enabled BOOLEAN DEFAULT 1,
+                    last_seen TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                    device_info TEXT
+                )
+            """)
+            print("✓ Created notification_user table")
+        else:
+            print("notification_user table already exists")
+        
+        # Commit the changes
+        conn.commit()
+        conn.close()
+        
+        return jsonify({'success': True, 'message': 'Database migration completed successfully!'})
+        
+    except Exception as e:
+        return jsonify({'success': False, 'message': f'Migration failed: {str(e)}'})
 
 if __name__ == '__main__':
     with app.app_context():
