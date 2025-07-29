@@ -1890,51 +1890,38 @@ def notification_users():
 def send_admin_notification():
     admin_key = request.args.get('key', '')
     if admin_key != 'wedding2024':
-        print(f"Notification Debug: Unauthorized access attempt with key: {admin_key}")
         return jsonify({'success': False, 'message': 'Unauthorized'}), 401
-    
-    print(f"Notification Debug: send_admin_notification route called")
-    print(f"Notification Debug: request method: {request.method}")
-    print(f"Notification Debug: request headers: {dict(request.headers)}")
     
     try:
         data = request.get_json()
-        print(f"Notification Debug: received data: {data}")
-    except Exception as e:
-        print(f"Notification Debug: Error parsing JSON: {e}")
-        return jsonify({'success': False, 'message': 'Invalid JSON data'})
-    
-    notification_type = data.get('type', 'mass')  # 'mass' or 'individual'
-    title = data.get('title', '')
-    message = data.get('message', '')
-    user_identifier = data.get('user_identifier', '')  # For individual notifications
-    
-    print(f"Notification Debug: notification_type: {notification_type}")
-    print(f"Notification Debug: title: {title}")
-    print(f"Notification Debug: message: {message}")
-    print(f"Notification Debug: user_identifier: {user_identifier}")
-    
-    if not title or not message:
-        print(f"Notification Debug: Missing title or message")
-        return jsonify({'success': False, 'message': 'Title and message are required'})
-    
-    try:
+        notification_type = data.get('type', 'mass')  # 'mass' or 'individual'
+        title = data.get('title', '')
+        message = data.get('message', '')
+        user_identifier = data.get('user_identifier', '')  # For individual notifications
+        
+        if not title or not message:
+            return jsonify({'success': False, 'message': 'Title and message are required'})
+        
         if notification_type == 'individual':
             # Send to specific user
+            if not user_identifier:
+                return jsonify({'success': False, 'message': 'User identifier required for individual notification'})
+            
             user = NotificationUser.query.filter_by(user_identifier=user_identifier).first()
             if not user:
-                print(f"Notification Debug: User not found for identifier: {user_identifier}")
                 return jsonify({'success': False, 'message': 'User not found'})
             
-            # Store notification in database with push notification
-            create_notification_with_push(
+            # Create notification in database
+            notification = Notification(
                 user_identifier=user_identifier,
                 title=title,
                 message=message,
                 notification_type='admin'
             )
+            db.session.add(notification)
+            db.session.commit()
             
-            print(f"Individual notification stored for {user.user_name}: {title} - {message}")
+            # The frontend will pick this up when it polls for notifications
             return jsonify({'success': True, 'message': f'Notification sent to {user.user_name}'})
         
         else:
@@ -1942,18 +1929,18 @@ def send_admin_notification():
             users = NotificationUser.query.filter_by(notifications_enabled=True).all()
             sent_count = 0
             
-            print(f"Notification Debug: Found {len(users)} users with notifications enabled")
-            
             for user in users:
-                # Store notification in database with push notification
-                create_notification_with_push(
+                # Create notification in database for each user
+                notification = Notification(
                     user_identifier=user.user_identifier,
                     title=title,
                     message=message,
                     notification_type='admin'
                 )
+                db.session.add(notification)
                 sent_count += 1
-            print(f"Mass notification stored for {sent_count} users: {title} - {message}")
+            
+            db.session.commit()
             
             return jsonify({
                 'success': True, 
@@ -1962,6 +1949,7 @@ def send_admin_notification():
     
     except Exception as e:
         print(f"Error sending notification: {e}")
+        db.session.rollback()
         return jsonify({'success': False, 'message': str(e)})
 
 @app.route('/admin/register-notification-user', methods=['POST'])

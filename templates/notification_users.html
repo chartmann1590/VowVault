@@ -132,6 +132,12 @@
         box-shadow: 0 5px 20px rgba(139, 115, 85, 0.3);
     }
 
+    .btn:disabled {
+        background-color: #ccc;
+        cursor: not-allowed;
+        transform: none;
+    }
+
     .btn-secondary {
         background-color: #e8ddd3;
         color: #6b5d54;
@@ -187,6 +193,46 @@
     .back-link:hover {
         color: #6b5d54;
     }
+
+    /* Message styles */
+    .message {
+        padding: 1rem;
+        border-radius: 10px;
+        margin-top: 1rem;
+        display: none;
+    }
+
+    .message.show {
+        display: block;
+    }
+
+    .success-message {
+        background: #d4edda;
+        color: #155724;
+        border: 1px solid #c3e6cb;
+    }
+
+    .error-message {
+        background: #f8d7da;
+        color: #721c24;
+        border: 1px solid #f5c6cb;
+    }
+
+    .loading {
+        display: inline-block;
+        width: 16px;
+        height: 16px;
+        border: 2px solid #f3f3f3;
+        border-top: 2px solid #8b7355;
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+        margin-left: 10px;
+    }
+
+    @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+    }
 </style>
 {% endblock %}
 
@@ -221,13 +267,6 @@
             <h3>📤 Send Notifications</h3>
         </div>
         <div class="section-content">
-            <!-- Debug info -->
-            <div style="background: #f0f0f0; padding: 10px; margin-bottom: 10px; border-radius: 5px;">
-                <strong>Debug Info:</strong><br>
-                Admin Key: {{ admin_key }}<br>
-                Users Count: {{ users|length }}
-            </div>
-            
             <div class="notification-form">
                 <div class="form-group">
                     <label for="notificationType">Notification Type</label>
@@ -240,6 +279,7 @@
                 <div class="form-group" id="userSelectGroup" style="display: none;">
                     <label for="userSelect">Select User</label>
                     <select id="userSelect">
+                        <option value="">-- Select a user --</option>
                         {% for user in users %}
                         <option value="{{ user.user_identifier }}">{{ user.user_name }} ({{ user.user_identifier[:8] }}...)</option>
                         {% endfor %}
@@ -256,10 +296,9 @@
                     <textarea id="notificationMessage" rows="3" placeholder="Enter notification message..." maxlength="200"></textarea>
                 </div>
                 
-                <button class="btn" onclick="sendNotification()">Send Notification</button>
+                <button class="btn" id="sendButton" onclick="sendNotification()">Send Notification</button>
                 
-                <!-- Test button -->
-                <button class="btn btn-secondary" onclick="testFunction()" style="margin-left: 10px;">Test JavaScript</button>
+                <div id="messageContainer" class="message"></div>
             </div>
         </div>
     </div>
@@ -321,36 +360,36 @@
         }
     }
 
-    function sendNotification() {
-        console.log('=== NOTIFICATION DEBUG START ===');
-        console.log('sendNotification function called');
+    function showMessage(message, isSuccess = true) {
+        const messageContainer = document.getElementById('messageContainer');
+        messageContainer.className = `message ${isSuccess ? 'success-message' : 'error-message'} show`;
+        messageContainer.textContent = message;
         
-        // Immediate debugging
-        alert('Button clicked! Function is being called.');
-        
+        // Hide message after 5 seconds
+        setTimeout(() => {
+            messageContainer.classList.remove('show');
+        }, 5000);
+    }
+
+    async function sendNotification() {
         const type = document.getElementById('notificationType').value;
         const title = document.getElementById('notificationTitle').value.trim();
         const message = document.getElementById('notificationMessage').value.trim();
-        const userIdentifier = document.getElementById('userSelect').value;
+        const userSelect = document.getElementById('userSelect');
+        const userIdentifier = type === 'individual' ? userSelect.value : null;
         
-        console.log('Notification Debug: sendNotification called');
-        console.log('Notification Debug: type:', type);
-        console.log('Notification Debug: title:', title);
-        console.log('Notification Debug: message:', message);
-        console.log('Notification Debug: userIdentifier:', userIdentifier);
-        
+        // Validation
         if (!title || !message) {
-            console.log('Notification Debug: Missing title or message');
-            alert('Please enter both title and message.');
+            showMessage('Please enter both title and message.', false);
             return;
         }
         
         if (type === 'individual' && !userIdentifier) {
-            console.log('Notification Debug: Missing user identifier for individual notification');
-            alert('Please select a user for individual notification.');
+            showMessage('Please select a user for individual notification.', false);
             return;
         }
         
+        // Prepare data
         const data = {
             type: type,
             title: title,
@@ -361,123 +400,46 @@
             data.user_identifier = userIdentifier;
         }
         
-        console.log('Notification Debug: sending data:', data);
-        console.log('Notification Debug: URL:', `/admin/send-notification?key={{ admin_key }}`);
-        
         // Show loading state
-        const sendButton = document.querySelector('.btn');
+        const sendButton = document.getElementById('sendButton');
         const originalText = sendButton.textContent;
-        sendButton.textContent = 'Sending...';
+        sendButton.innerHTML = 'Sending<span class="loading"></span>';
         sendButton.disabled = true;
         
-        // Test the URL construction
-        const url = `/admin/send-notification?key={{ admin_key }}`;
-        console.log('Notification Debug: Constructed URL:', url);
-        
-        fetch(url, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify(data)
-        })
-        .then(response => {
-            console.log('Notification Debug: response status:', response.status);
-            console.log('Notification Debug: response headers:', response.headers);
-            return response.json();
-        })
-        .then(data => {
-            console.log('Notification Debug: response data:', data);
+        try {
+            const response = await fetch(`/admin/send-notification?key={{ admin_key }}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(data)
+            });
             
-            // Reset button state
-            sendButton.textContent = originalText;
-            sendButton.disabled = false;
+            const result = await response.json();
             
-            if (data.success) {
-                // Show success message
-                const successMessage = document.createElement('div');
-                successMessage.style.cssText = `
-                    background: #d4edda;
-                    color: #155724;
-                    padding: 1rem;
-                    border-radius: 10px;
-                    margin-top: 1rem;
-                    border: 1px solid #c3e6cb;
-                `;
-                successMessage.textContent = data.message;
-                
-                // Insert after the form
-                const form = document.querySelector('.notification-form');
-                form.appendChild(successMessage);
+            if (result.success) {
+                showMessage(result.message, true);
                 
                 // Clear form
                 document.getElementById('notificationTitle').value = '';
                 document.getElementById('notificationMessage').value = '';
-                
-                // Remove success message after 5 seconds
-                setTimeout(() => {
-                    successMessage.remove();
-                }, 5000);
+                if (type === 'individual') {
+                    userSelect.value = '';
+                }
             } else {
-                // Show error message
-                const errorMessage = document.createElement('div');
-                errorMessage.style.cssText = `
-                    background: #f8d7da;
-                    color: #721c24;
-                    padding: 1rem;
-                    border-radius: 10px;
-                    margin-top: 1rem;
-                    border: 1px solid #f5c6cb;
-                `;
-                errorMessage.textContent = 'Error: ' + data.message;
-                
-                // Insert after the form
-                const form = document.querySelector('.notification-form');
-                form.appendChild(errorMessage);
-                
-                // Remove error message after 5 seconds
-                setTimeout(() => {
-                    errorMessage.remove();
-                }, 5000);
+                showMessage('Error: ' + result.message, false);
             }
-        })
-        .catch(error => {
-            console.error('Notification Debug: fetch error:', error);
-            
+        } catch (error) {
+            console.error('Error sending notification:', error);
+            showMessage('Error sending notification: ' + error.message, false);
+        } finally {
             // Reset button state
             sendButton.textContent = originalText;
             sendButton.disabled = false;
-            
-            // Show error message
-            const errorMessage = document.createElement('div');
-            errorMessage.style.cssText = `
-                background: #f8d7da;
-                color: #721c24;
-                padding: 1rem;
-                border-radius: 10px;
-                margin-top: 1rem;
-                border: 1px solid #f5c6cb;
-            `;
-            errorMessage.textContent = 'Error sending notification: ' + error;
-            
-            // Insert after the form
-            const form = document.querySelector('.notification-form');
-            form.appendChild(errorMessage);
-            
-            // Remove error message after 5 seconds
-            setTimeout(() => {
-                errorMessage.remove();
-            }, 5000);
-        });
-        
-        console.log('=== NOTIFICATION DEBUG END ===');
+        }
     }
 
-    function sendIndividualNotification(userIdentifier, userName) {
-        console.log('Notification Debug: sendIndividualNotification called');
-        console.log('Notification Debug: userIdentifier:', userIdentifier);
-        console.log('Notification Debug: userName:', userName);
-        
+    async function sendIndividualNotification(userIdentifier, userName) {
         const title = prompt(`Enter notification title for ${userName}:`);
         if (!title) return;
         
@@ -491,119 +453,41 @@
             user_identifier: userIdentifier
         };
         
-        console.log('Notification Debug: sending individual data:', data);
-        
-        // Show loading state
+        // Find the button that was clicked
         const button = event.target;
         const originalText = button.textContent;
-        button.textContent = 'Sending...';
+        button.innerHTML = 'Sending<span class="loading"></span>';
         button.disabled = true;
         
-        fetch(`/admin/send-notification?key={{ admin_key }}`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify(data)
-        })
-        .then(response => {
-            console.log('Notification Debug: individual response status:', response.status);
-            return response.json();
-        })
-        .then(data => {
-            console.log('Notification Debug: individual response data:', data);
+        try {
+            const response = await fetch(`/admin/send-notification?key={{ admin_key }}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(data)
+            });
             
-            // Reset button state
-            button.textContent = originalText;
-            button.disabled = false;
+            const result = await response.json();
             
-            if (data.success) {
-                // Show success message
-                const successMessage = document.createElement('div');
-                successMessage.style.cssText = `
-                    background: #d4edda;
-                    color: #155724;
-                    padding: 1rem;
-                    border-radius: 10px;
-                    margin-top: 1rem;
-                    border: 1px solid #c3e6cb;
-                    position: fixed;
-                    top: 20px;
-                    right: 20px;
-                    z-index: 10000;
-                    max-width: 300px;
-                `;
-                successMessage.textContent = data.message;
-                document.body.appendChild(successMessage);
-                
-                // Remove success message after 5 seconds
-                setTimeout(() => {
-                    successMessage.remove();
-                }, 5000);
+            if (result.success) {
+                alert(result.message);
             } else {
-                // Show error message
-                const errorMessage = document.createElement('div');
-                errorMessage.style.cssText = `
-                    background: #f8d7da;
-                    color: #721c24;
-                    padding: 1rem;
-                    border-radius: 10px;
-                    margin-top: 1rem;
-                    border: 1px solid #f5c6cb;
-                    position: fixed;
-                    top: 20px;
-                    right: 20px;
-                    z-index: 10000;
-                    max-width: 300px;
-                `;
-                errorMessage.textContent = 'Error: ' + data.message;
-                document.body.appendChild(errorMessage);
-                
-                // Remove error message after 5 seconds
-                setTimeout(() => {
-                    errorMessage.remove();
-                }, 5000);
+                alert('Error: ' + result.message);
             }
-        })
-        .catch(error => {
-            console.error('Notification Debug: individual fetch error:', error);
-            
+        } catch (error) {
+            console.error('Error sending notification:', error);
+            alert('Error sending notification: ' + error.message);
+        } finally {
             // Reset button state
             button.textContent = originalText;
             button.disabled = false;
-            
-            // Show error message
-            const errorMessage = document.createElement('div');
-            errorMessage.style.cssText = `
-                background: #f8d7da;
-                color: #721c24;
-                padding: 1rem;
-                border-radius: 10px;
-                margin-top: 1rem;
-                border: 1px solid #f5c6cb;
-                position: fixed;
-                top: 20px;
-                right: 20px;
-                z-index: 10000;
-                max-width: 300px;
-            `;
-            errorMessage.textContent = 'Error sending notification: ' + error;
-            document.body.appendChild(errorMessage);
-            
-            // Remove error message after 5 seconds
-            setTimeout(() => {
-                errorMessage.remove();
-            }, 5000);
-        });
+        }
     }
 
-    function testFunction() {
-        console.log('=== TEST FUNCTION DEBUG START ===');
-        console.log('testFunction called');
-        console.log('Admin Key:', '{{ admin_key }}');
-        console.log('Users Count:', '{{ users|length }}');
-        alert('Test function executed. Check console for debug info.');
-        console.log('=== TEST FUNCTION DEBUG END ===');
-    }
+    // Initialize on page load
+    document.addEventListener('DOMContentLoaded', function() {
+        // Any initialization code here
+    });
 </script>
-{% endblock %} 
+{% endblock %}
