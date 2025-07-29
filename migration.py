@@ -218,6 +218,28 @@ def create_notification_users_table(cursor):
     print("Table 'notification_user' created successfully!")
     return True
 
+def create_notifications_table(cursor):
+    """Create notifications table"""
+    if check_table_exists(cursor, 'notification'):
+        print("Table 'notification' already exists.")
+        return True
+    
+    print("Creating 'notification' table...")
+    cursor.execute("""
+        CREATE TABLE notification (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_identifier VARCHAR(100) NOT NULL,
+            title VARCHAR(255) NOT NULL,
+            message TEXT NOT NULL,
+            notification_type VARCHAR(50) DEFAULT 'admin',
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            read_at TIMESTAMP,
+            is_read BOOLEAN DEFAULT 0
+        )
+    """)
+    print("Table 'notification' created successfully!")
+    return True
+
 def add_user_identifier_columns(cursor):
     """Add user identifier columns to existing tables"""
     
@@ -308,6 +330,10 @@ def migrate_database(db_path='wedding_photos.db'):
         
         # Create notification users table
         if not create_notification_users_table(cursor):
+            success = False
+        
+        # Create notifications table
+        if not create_notifications_table(cursor):
             success = False
         
         # Add user identifier columns

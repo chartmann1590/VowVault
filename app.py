@@ -187,6 +187,16 @@ class NotificationUser(db.Model):
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     device_info = db.Column(db.Text)  # Store browser/device information
 
+class Notification(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    user_identifier = db.Column(db.String(100), nullable=False)
+    title = db.Column(db.String(255), nullable=False)
+    message = db.Column(db.Text, nullable=False)
+    notification_type = db.Column(db.String(50), default='admin')  # 'admin', 'like', 'comment'
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    read_at = db.Column(db.DateTime)  # When user saw the notification
+    is_read = db.Column(db.Boolean, default=False)
+
 def allowed_file(filename):
     """Check if file extension is allowed"""
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in (app.config['ALLOWED_IMAGE_EXTENSIONS'] | app.config['ALLOWED_VIDEO_EXTENSIONS'])
@@ -1852,9 +1862,17 @@ def send_admin_notification():
             if not user:
                 return jsonify({'success': False, 'message': 'User not found'})
             
-            # Store notification for when user next visits
-            # For now, we'll just log it
-            print(f"Individual notification to {user.user_name}: {title} - {message}")
+            # Store notification in database
+            notification = Notification(
+                user_identifier=user_identifier,
+                title=title,
+                message=message,
+                notification_type='admin'
+            )
+            db.session.add(notification)
+            db.session.commit()
+            
+            print(f"Individual notification stored for {user.user_name}: {title} - {message}")
             return jsonify({'success': True, 'message': f'Notification sent to {user.user_name}'})
         
         else:
@@ -1863,10 +1881,18 @@ def send_admin_notification():
             sent_count = 0
             
             for user in users:
-                # Store notification for when user next visits
-                # For now, we'll just log it
-                print(f"Mass notification to {user.user_name}: {title} - {message}")
+                # Store notification in database
+                notification = Notification(
+                    user_identifier=user.user_identifier,
+                    title=title,
+                    message=message,
+                    notification_type='admin'
+                )
+                db.session.add(notification)
                 sent_count += 1
+            
+            db.session.commit()
+            print(f"Mass notification stored for {sent_count} users: {title} - {message}")
             
             return jsonify({
                 'success': True, 
@@ -1874,6 +1900,7 @@ def send_admin_notification():
             })
     
     except Exception as e:
+        print(f"Error sending notification: {e}")
         return jsonify({'success': False, 'message': str(e)})
 
 @app.route('/admin/register-notification-user', methods=['POST'])
@@ -2174,6 +2201,84 @@ def terms_of_use():
 @app.errorhandler(413)
 def too_large(e):
     return "File is too large. Maximum size is 50MB.", 413
+
+@app.route('/api/notifications/check')
+def check_notifications():
+    """Check for new notifications for the current user"""
+    user_identifier = request.cookies.get('user_identifier', '')
+    if not user_identifier:
+        return jsonify({'notifications': []})
+    
+    # Get unread notifications for this user
+    notifications = Notification.query.filter_by(
+        user_identifier=user_identifier,
+        is_read=False
+    ).order_by(Notification.created_at.desc()).all()
+    
+    notification_list = []
+    for notification in notifications:
+        notification_list.append({
+            'id': notification.id,
+            'title': notification.title,
+            'message': notification.message,
+            'type': notification.notification_type,
+            'created_at': notification.created_at.strftime('%B %d, %Y at %I:%M %p')
+        })
+    
+    return jsonify({'notifications': notification_list})
+
+@app.route('/api/notifications/mark-read', methods=['POST'])
+def mark_notification_read():
+    """Mark a notification as read"""
+    user_identifier = request.cookies.get('user_identifier', '')
+    if not user_identifier:
+        return jsonify({'success': False, 'message': 'User not authenticated'})
+    
+    data = request.get_json()
+    notification_id = data.get('notification_id')
+    
+    if not notification_id:
+        return jsonify({'success': False, 'message': 'Notification ID required'})
+    
+    try:
+        notification = Notification.query.filter_by(
+            id=notification_id,
+            user_identifier=user_identifier
+        ).first()
+        
+        if notification:
+            notification.is_read = True
+            notification.read_at = datetime.utcnow()
+            db.session.commit()
+            return jsonify({'success': True})
+        else:
+            return jsonify({'success': False, 'message': 'Notification not found'})
+    
+    except Exception as e:
+        return jsonify({'success': False, 'message': str(e)})
+
+@app.route('/api/notifications/mark-all-read', methods=['POST'])
+def mark_all_notifications_read():
+    """Mark all notifications as read for the current user"""
+    user_identifier = request.cookies.get('user_identifier', '')
+    if not user_identifier:
+        return jsonify({'success': False, 'message': 'User not authenticated'})
+    
+    try:
+        notifications = Notification.query.filter_by(
+            user_identifier=user_identifier,
+            is_read=False
+        ).all()
+        
+        for notification in notifications:
+            notification.is_read = True
+            notification.read_at = datetime.utcnow()
+        
+        db.session.commit()
+        return jsonify({'success': True, 'message': f'Marked {len(notifications)} notifications as read'})
+    
+    except Exception as e:
+        return jsonify({'success': False, 'message': str(e)})
 
 if __name__ == '__main__':
     with app.app_context():

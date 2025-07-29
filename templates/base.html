@@ -1050,6 +1050,232 @@
 
     // Make getCookie available globally
     window.getCookie = getCookie;
+
+    // Notification checking and display
+    function checkForNotifications() {
+        fetch('/api/notifications/check')
+            .then(response => response.json())
+            .then(data => {
+                if (data.notifications && data.notifications.length > 0) {
+                    showNotificationBadge(data.notifications.length);
+                    displayNotifications(data.notifications);
+                }
+            })
+            .catch(error => {
+                console.error('Error checking notifications:', error);
+            });
+    }
+
+    function showNotificationBadge(count) {
+        // Create or update notification badge
+        let badge = document.getElementById('notificationBadge');
+        if (!badge) {
+            badge = document.createElement('span');
+            badge.id = 'notificationBadge';
+            badge.style.cssText = `
+                position: absolute;
+                top: -5px;
+                right: -5px;
+                background: #ff4444;
+                color: white;
+                border-radius: 50%;
+                width: 20px;
+                height: 20px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                font-size: 12px;
+                font-weight: bold;
+            `;
+            
+            // Add badge to notification toggle button
+            const notificationToggle = document.getElementById('notificationToggle');
+            if (notificationToggle) {
+                notificationToggle.style.position = 'relative';
+                notificationToggle.appendChild(badge);
+            }
+        }
+        badge.textContent = count;
+        badge.style.display = 'flex';
+    }
+
+    function displayNotifications(notifications) {
+        // Create notification modal
+        let modal = document.getElementById('notificationModal');
+        if (!modal) {
+            modal = document.createElement('div');
+            modal.id = 'notificationModal';
+            modal.style.cssText = `
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                background: rgba(0, 0, 0, 0.5);
+                z-index: 10000;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+            `;
+            document.body.appendChild(modal);
+        }
+
+        const notificationsHtml = notifications.map(notification => `
+            <div class="notification-item" style="
+                background: white;
+                padding: 1rem;
+                margin-bottom: 1rem;
+                border-radius: 10px;
+                box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+                border-left: 4px solid #8b7355;
+            ">
+                <h4 style="margin: 0 0 0.5rem 0; color: #8b7355;">${notification.title}</h4>
+                <p style="margin: 0 0 0.5rem 0; color: #666;">${notification.message}</p>
+                <small style="color: #999;">${notification.created_at}</small>
+                <button onclick="markNotificationRead(${notification.id})" style="
+                    float: right;
+                    background: #8b7355;
+                    color: white;
+                    border: none;
+                    padding: 0.25rem 0.5rem;
+                    border-radius: 5px;
+                    cursor: pointer;
+                    font-size: 0.8rem;
+                ">Mark Read</button>
+            </div>
+        `).join('');
+
+        modal.innerHTML = `
+            <div style="
+                background: white;
+                border-radius: 15px;
+                max-width: 500px;
+                width: 90%;
+                max-height: 80vh;
+                overflow-y: auto;
+                padding: 1.5rem;
+                box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            ">
+                <div style="
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: center;
+                    margin-bottom: 1rem;
+                    border-bottom: 1px solid #eee;
+                    padding-bottom: 1rem;
+                ">
+                    <h3 style="margin: 0; color: #8b7355;">🔔 New Notifications</h3>
+                    <button onclick="closeNotificationModal()" style="
+                        background: none;
+                        border: none;
+                        font-size: 1.5rem;
+                        cursor: pointer;
+                        color: #666;
+                    ">&times;</button>
+                </div>
+                <div>
+                    ${notificationsHtml}
+                </div>
+                <div style="
+                    margin-top: 1rem;
+                    padding-top: 1rem;
+                    border-top: 1px solid #eee;
+                    text-align: center;
+                ">
+                    <button onclick="markAllNotificationsRead()" style="
+                        background: #8b7355;
+                        color: white;
+                        border: none;
+                        padding: 0.5rem 1rem;
+                        border-radius: 5px;
+                        cursor: pointer;
+                    ">Mark All as Read</button>
+                </div>
+            </div>
+        `;
+        modal.style.display = 'flex';
+    }
+
+    function markNotificationRead(notificationId) {
+        fetch('/api/notifications/mark-read', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                notification_id: notificationId
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                // Remove the notification item from the modal
+                const notificationItem = event.target.closest('.notification-item');
+                if (notificationItem) {
+                    notificationItem.remove();
+                }
+                
+                // Update badge count
+                updateNotificationBadge();
+            }
+        })
+        .catch(error => {
+            console.error('Error marking notification as read:', error);
+        });
+    }
+
+    function markAllNotificationsRead() {
+        fetch('/api/notifications/mark-all-read', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                closeNotificationModal();
+                updateNotificationBadge();
+            }
+        })
+        .catch(error => {
+            console.error('Error marking all notifications as read:', error);
+        });
+    }
+
+    function closeNotificationModal() {
+        const modal = document.getElementById('notificationModal');
+        if (modal) {
+            modal.style.display = 'none';
+        }
+    }
+
+    function updateNotificationBadge() {
+        fetch('/api/notifications/check')
+            .then(response => response.json())
+            .then(data => {
+                const badge = document.getElementById('notificationBadge');
+                if (badge) {
+                    if (data.notifications && data.notifications.length > 0) {
+                        badge.textContent = data.notifications.length;
+                        badge.style.display = 'flex';
+                    } else {
+                        badge.style.display = 'none';
+                    }
+                }
+            })
+            .catch(error => {
+                console.error('Error updating notification badge:', error);
+            });
+    }
+
+    // Check for notifications when page loads
+    setTimeout(() => {
+        checkForNotifications();
+    }, 2000);
+
+    // Check for notifications every 30 seconds
+    setInterval(checkForNotifications, 30000);
 </script>
 {% block scripts %}{% endblock %}
 
