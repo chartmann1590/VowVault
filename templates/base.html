@@ -665,6 +665,12 @@
     let pwaInstallItem = document.getElementById('pwaInstallItem');
     let pwaInstallBtn = document.getElementById('pwaInstallBtn');
 
+    // Debug logging
+    console.log('PWA Debug: Script loaded');
+    console.log('PWA Debug: HTTPS:', window.location.protocol === 'https:');
+    console.log('PWA Debug: Service Worker support:', 'serviceWorker' in navigator);
+    console.log('PWA Debug: Standalone mode:', window.matchMedia('(display-mode: standalone)').matches);
+
     // Register Service Worker
     if ('serviceWorker' in navigator) {
         window.addEventListener('load', () => {
@@ -676,10 +682,13 @@
                     console.log('SW registration failed: ', registrationError);
                 });
         });
+    } else {
+        console.log('PWA Debug: Service Worker not supported');
     }
 
     // Listen for beforeinstallprompt event
     window.addEventListener('beforeinstallprompt', (e) => {
+        console.log('PWA Debug: beforeinstallprompt event fired');
         // Prevent Chrome 67 and earlier from automatically showing the prompt
         e.preventDefault();
         // Stash the event so it can be triggered later
@@ -688,6 +697,7 @@
         // Show install button in mobile menu
         if (pwaInstallItem) {
             pwaInstallItem.style.display = 'block';
+            console.log('PWA Debug: Install button shown');
         }
         
         // Show install prompt after a delay
@@ -800,6 +810,32 @@
     if (isPwaInstalled() && pwaInstallItem) {
         pwaInstallItem.style.display = 'none';
     }
+
+    // Add manual install button for testing (always visible)
+    function addManualInstallButton() {
+        const manualBtn = document.createElement('div');
+        manualBtn.style.cssText = `
+            position: fixed;
+            top: 10px;
+            right: 10px;
+            background: #8b7355;
+            color: white;
+            padding: 10px;
+            border-radius: 5px;
+            z-index: 10000;
+            font-size: 12px;
+            cursor: pointer;
+        `;
+        manualBtn.innerHTML = '📱 Test PWA';
+        manualBtn.onclick = () => {
+            console.log('PWA Debug: Manual install button clicked');
+            showPwaModal();
+        };
+        document.body.appendChild(manualBtn);
+    }
+
+    // Add manual button for testing
+    addManualInstallButton();
 </script>
 {% block scripts %}{% endblock %}
 

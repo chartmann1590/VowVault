@@ -1,0 +1,128 @@
+{% extends "base.html" %}
+
+{% block title %}PWA Debug - Wedding Gallery{% endblock %}
+
+{% block content %}
+<div class="admin-header">
+    <h2>PWA Debug Information</h2>
+    <p>Check PWA requirements and configuration</p>
+</div>
+
+<div class="section-card">
+    <div class="section-header">
+        <h3>PWA Requirements Check</h3>
+    </div>
+    <div class="section-content">
+        <div class="debug-grid">
+            <div class="debug-item">
+                <strong>HTTPS:</strong>
+                <span class="{% if debug_info.https %}status-success{% else %}status-error{% endif %}">
+                    {{ "✅ Yes" if debug_info.https else "❌ No (Required for PWA)" }}
+                </span>
+            </div>
+            
+            <div class="debug-item">
+                <strong>Manifest File:</strong>
+                <span class="{% if debug_info.manifest_exists %}status-success{% else %}status-error{% endif %}">
+                    {{ "✅ Exists" if debug_info.manifest_exists else "❌ Missing" }}
+                </span>
+            </div>
+            
+            <div class="debug-item">
+                <strong>Service Worker:</strong>
+                <span class="{% if debug_info.sw_exists %}status-success{% else %}status-error{% endif %}">
+                    {{ "✅ Exists" if debug_info.sw_exists else "❌ Missing" }}
+                </span>
+            </div>
+            
+            <div class="debug-item">
+                <strong>Icons:</strong>
+                <span class="{% if debug_info.icons_exist %}status-success{% else %}status-error{% endif %}">
+                    {{ "✅ Exist" if debug_info.icons_exist else "❌ Missing" }}
+                </span>
+            </div>
+        </div>
+        
+        <div class="debug-details">
+            <h4>Connection Details:</h4>
+            <ul>
+                <li><strong>Host:</strong> {{ debug_info.host }}</li>
+                <li><strong>URL:</strong> {{ debug_info.url }}</li>
+                <li><strong>User Agent:</strong> {{ debug_info.user_agent }}</li>
+                <li><strong>Accept Language:</strong> {{ debug_info.accept_language }}</li>
+            </ul>
+        </div>
+        
+        <div class="debug-solutions">
+            <h4>Solutions for Self-Signed Certificate Issues:</h4>
+            <ol>
+                <li><strong>For Development:</strong> Use Chrome DevTools → Application → Manifest → Add to home screen</li>
+                <li><strong>For Testing:</strong> Use ngrok or similar to get a valid HTTPS certificate</li>
+                <li><strong>For Production:</strong> Use a proper SSL certificate (Let's Encrypt, etc.)</li>
+                <li><strong>Manual Install:</strong> Look for the "📱 Test PWA" button in the top-right corner</li>
+            </ol>
+        </div>
+        
+        <div class="debug-actions">
+            <h4>Quick Actions:</h4>
+            <button class="btn" onclick="window.open('/static/manifest.json', '_blank')">View Manifest</button>
+            <button class="btn" onclick="window.open('/static/sw.js', '_blank')">View Service Worker</button>
+            <button class="btn" onclick="location.reload()">Reload Page</button>
+        </div>
+    </div>
+</div>
+
+<style>
+.debug-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 1rem;
+    margin-bottom: 2rem;
+}
+
+.debug-item {
+    background: #f9f5f0;
+    padding: 1rem;
+    border-radius: 8px;
+    border-left: 4px solid #8b7355;
+}
+
+.status-success {
+    color: #28a745;
+    font-weight: bold;
+}
+
+.status-error {
+    color: #dc3545;
+    font-weight: bold;
+}
+
+.debug-details, .debug-solutions, .debug-actions {
+    background: #f9f5f0;
+    padding: 1.5rem;
+    border-radius: 8px;
+    margin-bottom: 1rem;
+}
+
+.debug-details h4, .debug-solutions h4, .debug-actions h4 {
+    color: #8b7355;
+    margin-bottom: 1rem;
+    font-family: 'Playfair Display', serif;
+}
+
+.debug-details ul, .debug-solutions ol {
+    margin: 0;
+    padding-left: 1.5rem;
+}
+
+.debug-details li, .debug-solutions li {
+    margin-bottom: 0.5rem;
+    line-height: 1.6;
+}
+
+.debug-actions .btn {
+    margin-right: 0.5rem;
+    margin-bottom: 0.5rem;
+}
+</style>
+{% endblock %} 

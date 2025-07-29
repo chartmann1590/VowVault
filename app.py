@@ -1842,6 +1842,27 @@ def generate_qr_pdf():
         download_name='wedding_photo_qr.pdf'
     )
 
+@app.route('/admin/pwa-debug')
+def pwa_debug():
+    admin_key = request.args.get('key', '')
+    if admin_key != 'wedding2024':
+        return "Unauthorized", 401
+    
+    # Check PWA requirements
+    debug_info = {
+        'https': request.is_secure,
+        'host': request.host,
+        'url': request.url,
+        'manifest_exists': os.path.exists('static/manifest.json'),
+        'sw_exists': os.path.exists('static/sw.js'),
+        'icons_exist': all(os.path.exists(f'static/icons/icon-{size}x{size}.png') 
+                         for size in [192, 512]),
+        'user_agent': request.headers.get('User-Agent', ''),
+        'accept_language': request.headers.get('Accept-Language', ''),
+    }
+    
+    return render_template('pwa_debug.html', debug_info=debug_info)
+
 @app.route('/static/manifest.json')
 def serve_manifest():
     return send_from_directory('static', 'manifest.json', mimetype='application/manifest+json')
