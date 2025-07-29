@@ -223,4 +223,7 @@ dmypy.json
 cython_debug/
 
 # Email setup documentation (optional - remove if you want to track it)
-EMAIL_SETUP.md 
+EMAIL_SETUP.md
+
+# Immich setup documentation (optional - remove if you want to track it)
+IMMICH_SETUP.md 
