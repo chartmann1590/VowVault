@@ -196,6 +196,9 @@ class Notification(db.Model):
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     read_at = db.Column(db.DateTime)  # When user saw the notification
     is_read = db.Column(db.Boolean, default=False)
+    # Navigation fields
+    content_type = db.Column(db.String(50))  # 'photo', 'message', 'admin'
+    content_id = db.Column(db.Integer)  # ID of the photo, message, etc.
 
 def allowed_file(filename):
     """Check if file extension is allowed"""
@@ -1175,7 +1178,9 @@ def toggle_message_like(message_id):
             user_identifier=message.author_identifier,
             title='❤️ New Like!',
             message=f'{liker_name} just liked your message!',
-            notification_type='like'
+            notification_type='like',
+            content_type='message',
+            content_id=message_id
         )
     
     # Prepare notification data for the message author
@@ -1225,7 +1230,9 @@ def add_message_comment(message_id):
             user_identifier=message.author_identifier,
             title='💬 New Comment!',
             message=f'{commenter_name} commented on your message!',
-            notification_type='comment'
+            notification_type='comment',
+            content_type='message',
+            content_id=message_id
         )
     
     # Prepare notification data for the message author
@@ -1285,7 +1292,9 @@ def toggle_like(photo_id):
             user_identifier=photo.uploader_identifier,
             title='❤️ New Like!',
             message=f'{liker_name} just liked your photo!',
-            notification_type='like'
+            notification_type='like',
+            content_type='photo',
+            content_id=photo_id
         )
         
         if notification:
@@ -1347,7 +1356,9 @@ def add_comment(photo_id):
             user_identifier=photo.uploader_identifier,
             title='💬 New Comment!',
             message=f'{commenter_name} commented on your photo!',
-            notification_type='comment'
+            notification_type='comment',
+            content_type='photo',
+            content_id=photo_id
         )
         
         if notification:
@@ -2296,7 +2307,9 @@ def check_notifications():
             'message': notification.message,
             'type': notification.notification_type,
             'created_at': notification.created_at.strftime('%B %d, %Y at %I:%M %p'),
-            'is_read': notification.is_read
+            'is_read': notification.is_read,
+            'content_type': notification.content_type,
+            'content_id': notification.content_id
         })
     
     print(f"Found {len(notification_list)} unread notifications for user {user_identifier}")
@@ -2410,7 +2423,7 @@ def trigger_push_notification(user_identifier, title, message, notification_type
         print(f"Error triggering push notification: {e}")
         return False
 
-def create_notification_with_push(user_identifier, title, message, notification_type='admin'):
+def create_notification_with_push(user_identifier, title, message, notification_type='admin', content_type=None, content_id=None):
     """Create a notification in database and trigger push notification"""
     try:
         # Create notification in database
@@ -2418,7 +2431,9 @@ def create_notification_with_push(user_identifier, title, message, notification_
             user_identifier=user_identifier,
             title=title,
             message=message,
-            notification_type=notification_type
+            notification_type=notification_type,
+            content_type=content_type,
+            content_id=content_id
         )
         db.session.add(notification)
         db.session.commit()

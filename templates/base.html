@@ -1185,8 +1185,21 @@
                     systemNotification.onclick = function() {
                         window.focus();
                         systemNotification.close();
-                        // Redirect to notifications page
-                        window.location.href = '/notifications';
+                        
+                        // Navigate to specific content if available
+                        if (notification.content_type && notification.content_id) {
+                            if (notification.content_type === 'photo') {
+                                window.location.href = `/photo/${notification.content_id}`;
+                            } else if (notification.content_type === 'message') {
+                                window.location.href = `/messages#message-${notification.content_id}`;
+                            } else {
+                                // Fallback to notifications page
+                                window.location.href = '/notifications';
+                            }
+                        } else {
+                            // Fallback to notifications page
+                            window.location.href = '/notifications';
+                        }
                     };
                 }
             }

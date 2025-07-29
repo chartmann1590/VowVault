@@ -232,25 +232,46 @@
             `;
             summary.style.display = 'block';
 
-            const notificationsHtml = notifications.map(notification => `
-                <div class="notification-item ${notification.is_read ? '' : 'unread'}" data-id="${notification.id}">
-                    <div class="notification-header">
-                        <h3 class="notification-title">${notification.title}</h3>
-                        <p class="notification-time">${notification.created_at}</p>
-                    </div>
-                    <p class="notification-message">${notification.message}</p>
-                    <div class="notification-actions">
-                        ${!notification.is_read ? `
-                            <button class="btn" onclick="markAsRead(${notification.id})">
-                                Mark as Read
+            const notificationsHtml = notifications.map(notification => {
+                // Generate navigation button based on content type
+                let navigationButton = '';
+                if (notification.content_type && notification.content_id) {
+                    if (notification.content_type === 'photo') {
+                        navigationButton = `
+                            <button class="btn btn-secondary" onclick="viewPhoto(${notification.content_id})">
+                                📸 View Photo
                             </button>
-                        ` : ''}
-                        <button class="btn btn-secondary" onclick="deleteNotification(${notification.id})">
-                            Delete
-                        </button>
+                        `;
+                    } else if (notification.content_type === 'message') {
+                        navigationButton = `
+                            <button class="btn btn-secondary" onclick="viewMessage(${notification.content_id})">
+                                💬 View Message
+                            </button>
+                        `;
+                    }
+                }
+                
+                return `
+                    <div class="notification-item ${notification.is_read ? '' : 'unread'}" data-id="${notification.id}">
+                        <div class="notification-header">
+                            <h3 class="notification-title">${notification.title}</h3>
+                            <p class="notification-time">${notification.created_at}</p>
+                        </div>
+                        <p class="notification-message">${notification.message}</p>
+                        <div class="notification-actions">
+                            ${!notification.is_read ? `
+                                <button class="btn" onclick="markAsRead(${notification.id})">
+                                    Mark as Read
+                                </button>
+                            ` : ''}
+                            ${navigationButton}
+                            <button class="btn btn-secondary" onclick="deleteNotification(${notification.id})">
+                                Delete
+                            </button>
+                        </div>
                     </div>
-                </div>
-            `).join('');
+                `;
+            }).join('');
 
             container.innerHTML = notificationsHtml;
         }
@@ -372,6 +393,17 @@
                 badge.style.display = 'none';
             }
         }
+    }
+
+    // Navigation functions
+    function viewPhoto(photoId) {
+        console.log('Navigating to photo:', photoId);
+        window.location.href = `/photo/${photoId}`;
+    }
+
+    function viewMessage(messageId) {
+        console.log('Navigating to message:', messageId);
+        window.location.href = `/messages#message-${messageId}`;
     }
 
     // Load notifications when page loads
