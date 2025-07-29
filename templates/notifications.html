@@ -194,7 +194,7 @@
             .then(response => response.json())
             .then(data => {
                 notifications = data.notifications || [];
-                displayNotifications();
+                displayNotificationsPage();
                 updateNotificationBadge();
             })
             .catch(error => {
@@ -208,7 +208,7 @@
             });
     }
 
-    function displayNotifications() {
+    function displayNotificationsPage() {
         const container = document.getElementById('notificationsList');
         const summary = document.getElementById('notificationsSummary');
         const summaryText = document.getElementById('summaryText');

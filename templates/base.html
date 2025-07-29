@@ -1142,6 +1142,12 @@
     }
 
     function displayNotifications(notifications) {
+        // Safety check for notifications parameter
+        if (!notifications || !Array.isArray(notifications)) {
+            console.warn('displayNotifications called with invalid notifications:', notifications);
+            return;
+        }
+
         // Send system notifications for new notifications
         notifications.forEach(notification => {
             if (notificationEnabled && notificationPermission && 'Notification' in window) {
