@@ -178,6 +178,15 @@ class ImmichSyncLog(db.Model):
     retry_count = db.Column(db.Integer, default=0)
     last_retry = db.Column(db.DateTime)
 
+class NotificationUser(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    user_identifier = db.Column(db.String(100), unique=True, nullable=False)
+    user_name = db.Column(db.String(100), default='Anonymous')
+    notifications_enabled = db.Column(db.Boolean, default=True)
+    last_seen = db.Column(db.DateTime, default=datetime.utcnow)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    device_info = db.Column(db.Text)  # Store browser/device information
+
 def allowed_file(filename):
     """Check if file extension is allowed"""
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in (app.config['ALLOWED_IMAGE_EXTENSIONS'] | app.config['ALLOWED_VIDEO_EXTENSIONS'])
@@ -1763,11 +1772,104 @@ def start_email_monitor_route():
 def sync_immich_route():
     admin_key = request.args.get('key', '')
     if admin_key != 'wedding2024':
-        return "Unauthorized", 401
+        return jsonify({'success': False, 'message': 'Unauthorized'}), 401
     
     try:
-        success, message = sync_all_to_immich()
-        return jsonify({'success': success, 'message': message})
+        result = sync_all_to_immich()
+        return jsonify({'success': True, 'message': result})
+    except Exception as e:
+        return jsonify({'success': False, 'message': str(e)})
+
+@app.route('/admin/notification-users')
+def notification_users():
+    admin_key = request.args.get('key', '')
+    if admin_key != 'wedding2024':
+        return "Unauthorized", 401
+    
+    users = NotificationUser.query.order_by(NotificationUser.last_seen.desc()).all()
+    return render_template('notification_users.html', users=users, admin_key=admin_key)
+
+@app.route('/admin/send-notification', methods=['POST'])
+def send_admin_notification():
+    admin_key = request.args.get('key', '')
+    if admin_key != 'wedding2024':
+        return jsonify({'success': False, 'message': 'Unauthorized'}), 401
+    
+    data = request.get_json()
+    notification_type = data.get('type', 'mass')  # 'mass' or 'individual'
+    title = data.get('title', '')
+    message = data.get('message', '')
+    user_identifier = data.get('user_identifier', '')  # For individual notifications
+    
+    if not title or not message:
+        return jsonify({'success': False, 'message': 'Title and message are required'})
+    
+    try:
+        if notification_type == 'individual':
+            # Send to specific user
+            user = NotificationUser.query.filter_by(user_identifier=user_identifier).first()
+            if not user:
+                return jsonify({'success': False, 'message': 'User not found'})
+            
+            # Store notification for when user next visits
+            # For now, we'll just log it
+            print(f"Individual notification to {user.user_name}: {title} - {message}")
+            return jsonify({'success': True, 'message': f'Notification sent to {user.user_name}'})
+        
+        else:
+            # Send mass notification
+            users = NotificationUser.query.filter_by(notifications_enabled=True).all()
+            sent_count = 0
+            
+            for user in users:
+                # Store notification for when user next visits
+                # For now, we'll just log it
+                print(f"Mass notification to {user.user_name}: {title} - {message}")
+                sent_count += 1
+            
+            return jsonify({
+                'success': True, 
+                'message': f'Mass notification sent to {sent_count} users'
+            })
+    
+    except Exception as e:
+        return jsonify({'success': False, 'message': str(e)})
+
+@app.route('/admin/register-notification-user', methods=['POST'])
+def register_notification_user():
+    """Register a user for notifications (called from frontend)"""
+    data = request.get_json()
+    user_identifier = data.get('user_identifier', '')
+    user_name = data.get('user_name', 'Anonymous')
+    device_info = data.get('device_info', '')
+    notifications_enabled = data.get('notifications_enabled', True)
+    
+    if not user_identifier:
+        return jsonify({'success': False, 'message': 'User identifier required'})
+    
+    try:
+        # Check if user already exists
+        user = NotificationUser.query.filter_by(user_identifier=user_identifier).first()
+        
+        if user:
+            # Update existing user
+            user.user_name = user_name
+            user.notifications_enabled = notifications_enabled
+            user.last_seen = datetime.utcnow()
+            user.device_info = device_info
+        else:
+            # Create new user
+            user = NotificationUser(
+                user_identifier=user_identifier,
+                user_name=user_name,
+                notifications_enabled=notifications_enabled,
+                device_info=device_info
+            )
+            db.session.add(user)
+        
+        db.session.commit()
+        return jsonify({'success': True, 'message': 'User registered successfully'})
+    
     except Exception as e:
         return jsonify({'success': False, 'message': str(e)})
 

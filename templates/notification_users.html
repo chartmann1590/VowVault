@@ -1,0 +1,396 @@
+{% extends "base.html" %}
+
+{% block title %}Notification Users - Admin Dashboard{% endblock %}
+
+{% block extra_styles %}
+<style>
+    .notification-users-container {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 2rem;
+    }
+
+    .section-card {
+        background: white;
+        border-radius: 15px;
+        overflow: hidden;
+        box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+        margin-bottom: 2rem;
+    }
+
+    .section-header {
+        background: #f9f5f0;
+        padding: 1.5rem 2rem;
+        border-bottom: 1px solid #e8ddd3;
+    }
+
+    .section-header h3 {
+        color: #8b7355;
+        font-family: 'Playfair Display', serif;
+        font-size: 1.8rem;
+        margin: 0;
+    }
+
+    .section-content {
+        padding: 2rem;
+    }
+
+    .users-table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 1rem;
+    }
+
+    .users-table th,
+    .users-table td {
+        padding: 1rem;
+        text-align: left;
+        border-bottom: 1px solid #e8ddd3;
+    }
+
+    .users-table th {
+        background: #f9f5f0;
+        font-weight: 600;
+        color: #8b7355;
+    }
+
+    .users-table tr:hover {
+        background: #f9f5f0;
+    }
+
+    .status-badge {
+        padding: 0.25rem 0.75rem;
+        border-radius: 15px;
+        font-size: 0.8rem;
+        font-weight: 600;
+    }
+
+    .status-enabled {
+        background: #d4edda;
+        color: #155724;
+    }
+
+    .status-disabled {
+        background: #f8d7da;
+        color: #721c24;
+    }
+
+    .notification-form {
+        background: #f9f5f0;
+        padding: 1.5rem;
+        border-radius: 10px;
+        margin-bottom: 2rem;
+    }
+
+    .form-group {
+        margin-bottom: 1rem;
+    }
+
+    .form-group label {
+        display: block;
+        margin-bottom: 0.5rem;
+        font-weight: 600;
+        color: #6b5d54;
+    }
+
+    .form-group input,
+    .form-group textarea,
+    .form-group select {
+        width: 100%;
+        padding: 0.75rem;
+        border: 2px solid #e8ddd3;
+        border-radius: 10px;
+        font-size: 1rem;
+        transition: border-color 0.3s ease;
+    }
+
+    .form-group input:focus,
+    .form-group textarea:focus,
+    .form-group select:focus {
+        outline: none;
+        border-color: #8b7355;
+    }
+
+    .btn {
+        display: inline-block;
+        padding: 0.75rem 2rem;
+        background-color: #8b7355;
+        color: white;
+        text-decoration: none;
+        border-radius: 30px;
+        font-weight: 500;
+        transition: all 0.3s ease;
+        border: none;
+        cursor: pointer;
+        font-size: 1rem;
+        margin-right: 1rem;
+    }
+
+    .btn:hover {
+        background-color: #6b5d54;
+        transform: translateY(-2px);
+        box-shadow: 0 5px 20px rgba(139, 115, 85, 0.3);
+    }
+
+    .btn-secondary {
+        background-color: #e8ddd3;
+        color: #6b5d54;
+    }
+
+    .btn-secondary:hover {
+        background-color: #d4c4b5;
+    }
+
+    .btn-danger {
+        background-color: #dc3545;
+    }
+
+    .btn-danger:hover {
+        background-color: #c82333;
+    }
+
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 1rem;
+        margin-bottom: 2rem;
+    }
+
+    .stat-card {
+        background: white;
+        padding: 1.5rem;
+        border-radius: 10px;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        text-align: center;
+    }
+
+    .stat-value {
+        font-size: 2rem;
+        font-weight: 700;
+        color: #8b7355;
+        margin-bottom: 0.5rem;
+    }
+
+    .stat-label {
+        color: #6b5d54;
+        font-size: 0.9rem;
+    }
+
+    .back-link {
+        display: inline-block;
+        margin-bottom: 2rem;
+        color: #8b7355;
+        text-decoration: none;
+        font-weight: 600;
+    }
+
+    .back-link:hover {
+        color: #6b5d54;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="notification-users-container">
+    <a href="/admin?key={{ admin_key }}" class="back-link">← Back to Admin Dashboard</a>
+    
+    <div class="section-card">
+        <div class="section-header">
+            <h3>📊 Notification Users Overview</h3>
+        </div>
+        <div class="section-content">
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-value">{{ users|length }}</div>
+                    <div class="stat-label">Total Users</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">{{ users|selectattr('notifications_enabled', 'equalto', True)|list|length }}</div>
+                    <div class="stat-label">Notifications Enabled</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">{{ users|selectattr('notifications_enabled', 'equalto', False)|list|length }}</div>
+                    <div class="stat-label">Notifications Disabled</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="section-card">
+        <div class="section-header">
+            <h3>📤 Send Notifications</h3>
+        </div>
+        <div class="section-content">
+            <div class="notification-form">
+                <div class="form-group">
+                    <label for="notificationType">Notification Type</label>
+                    <select id="notificationType" onchange="toggleUserSelect()">
+                        <option value="mass">Mass Notification (All Users)</option>
+                        <option value="individual">Individual Notification</option>
+                    </select>
+                </div>
+                
+                <div class="form-group" id="userSelectGroup" style="display: none;">
+                    <label for="userSelect">Select User</label>
+                    <select id="userSelect">
+                        {% for user in users %}
+                        <option value="{{ user.user_identifier }}">{{ user.user_name }} ({{ user.user_identifier[:8] }}...)</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label for="notificationTitle">Notification Title</label>
+                    <input type="text" id="notificationTitle" placeholder="Enter notification title..." maxlength="50">
+                </div>
+                
+                <div class="form-group">
+                    <label for="notificationMessage">Notification Message</label>
+                    <textarea id="notificationMessage" rows="3" placeholder="Enter notification message..." maxlength="200"></textarea>
+                </div>
+                
+                <button class="btn" onclick="sendNotification()">Send Notification</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="section-card">
+        <div class="section-header">
+            <h3>👥 Registered Users</h3>
+        </div>
+        <div class="section-content">
+            {% if users %}
+            <table class="users-table">
+                <thead>
+                    <tr>
+                        <th>User Name</th>
+                        <th>User ID</th>
+                        <th>Status</th>
+                        <th>Last Seen</th>
+                        <th>Device Info</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for user in users %}
+                    <tr>
+                        <td>{{ user.user_name }}</td>
+                        <td><code>{{ user.user_identifier[:16] }}...</code></td>
+                        <td>
+                            <span class="status-badge {% if user.notifications_enabled %}status-enabled{% else %}status-disabled{% endif %}">
+                                {% if user.notifications_enabled %}Enabled{% else %}Disabled{% endif %}
+                            </span>
+                        </td>
+                        <td>{{ user.last_seen.strftime('%b %d, %Y at %I:%M %p') if user.last_seen else 'Never' }}</td>
+                        <td>{{ user.device_info[:50] + '...' if user.device_info and user.device_info|length > 50 else user.device_info or 'Unknown' }}</td>
+                        <td>
+                            <button class="btn btn-secondary" onclick="sendIndividualNotification('{{ user.user_identifier }}', '{{ user.user_name }}')">
+                                Send Notification
+                            </button>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            {% else %}
+            <p>No users have registered for notifications yet.</p>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<script>
+    function toggleUserSelect() {
+        const type = document.getElementById('notificationType').value;
+        const userGroup = document.getElementById('userSelectGroup');
+        
+        if (type === 'individual') {
+            userGroup.style.display = 'block';
+        } else {
+            userGroup.style.display = 'none';
+        }
+    }
+
+    function sendNotification() {
+        const type = document.getElementById('notificationType').value;
+        const title = document.getElementById('notificationTitle').value.trim();
+        const message = document.getElementById('notificationMessage').value.trim();
+        const userIdentifier = document.getElementById('userSelect').value;
+        
+        if (!title || !message) {
+            alert('Please enter both title and message.');
+            return;
+        }
+        
+        if (type === 'individual' && !userIdentifier) {
+            alert('Please select a user for individual notification.');
+            return;
+        }
+        
+        const data = {
+            type: type,
+            title: title,
+            message: message
+        };
+        
+        if (type === 'individual') {
+            data.user_identifier = userIdentifier;
+        }
+        
+        fetch(`/admin/send-notification?key={{ admin_key }}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(data)
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert('Notification sent successfully!');
+                document.getElementById('notificationTitle').value = '';
+                document.getElementById('notificationMessage').value = '';
+            } else {
+                alert('Error sending notification: ' + data.message);
+            }
+        })
+        .catch(error => {
+            alert('Error sending notification: ' + error);
+        });
+    }
+
+    function sendIndividualNotification(userIdentifier, userName) {
+        const title = prompt(`Enter notification title for ${userName}:`);
+        if (!title) return;
+        
+        const message = prompt(`Enter notification message for ${userName}:`);
+        if (!message) return;
+        
+        const data = {
+            type: 'individual',
+            title: title,
+            message: message,
+            user_identifier: userIdentifier
+        };
+        
+        fetch(`/admin/send-notification?key={{ admin_key }}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(data)
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert('Individual notification sent successfully!');
+            } else {
+                alert('Error sending notification: ' + data.message);
+            }
+        })
+        .catch(error => {
+            alert('Error sending notification: ' + error);
+        });
+    }
+</script>
+{% endblock %} 

@@ -975,6 +975,44 @@
     // Initialize notifications on page load
     initNotifications();
 
+    // Register user for notifications
+    function registerNotificationUser() {
+        const userIdentifier = getCookie('user_identifier');
+        const userName = getCookie('user_name') || 'Anonymous';
+        const deviceInfo = navigator.userAgent;
+        
+        if (userIdentifier && notificationEnabled) {
+            fetch('/admin/register-notification-user', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    user_identifier: userIdentifier,
+                    user_name: userName,
+                    device_info: deviceInfo,
+                    notifications_enabled: notificationEnabled
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    console.log('User registered for notifications');
+                } else {
+                    console.error('Failed to register user:', data.message);
+                }
+            })
+            .catch(error => {
+                console.error('Error registering user:', error);
+            });
+        }
+    }
+
+    // Register user when notifications are enabled
+    if (notificationEnabled && notificationPermission) {
+        registerNotificationUser();
+    }
+
     // Make sendNotification available globally
     window.sendNotification = sendNotification;
 

@@ -197,6 +197,27 @@ def create_immich_sync_log_table(cursor):
     print("Table 'immich_sync_log' created successfully!")
     return True
 
+def create_notification_users_table(cursor):
+    """Create notification users table"""
+    if check_table_exists(cursor, 'notification_user'):
+        print("Table 'notification_user' already exists.")
+        return True
+    
+    print("Creating 'notification_user' table...")
+    cursor.execute("""
+        CREATE TABLE notification_user (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_identifier VARCHAR(100) UNIQUE NOT NULL,
+            user_name VARCHAR(100) DEFAULT 'Anonymous',
+            notifications_enabled BOOLEAN DEFAULT 1,
+            last_seen TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            device_info TEXT
+        )
+    """)
+    print("Table 'notification_user' created successfully!")
+    return True
+
 def add_user_identifier_columns(cursor):
     """Add user identifier columns to existing tables"""
     
@@ -283,6 +304,10 @@ def migrate_database(db_path='wedding_photos.db'):
         
         # Create Immich sync log table
         if not create_immich_sync_log_table(cursor):
+            success = False
+        
+        # Create notification users table
+        if not create_notification_users_table(cursor):
             success = False
         
         # Add user identifier columns
