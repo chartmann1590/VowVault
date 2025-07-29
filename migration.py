@@ -8,10 +8,23 @@ import os
 
 def migrate_database():
     """Add tags column to Photo table if it doesn't exist"""
-    db_path = 'instance/wedding_photos.db'
+    # Try Docker path first, then local path
+    db_paths = [
+        '/app/data/wedding_photos.db',  # Docker container path
+        'instance/wedding_photos.db',    # Local development path
+        'wedding_photos.db'              # Fallback path
+    ]
     
-    # Create instance directory if it doesn't exist
-    os.makedirs('instance', exist_ok=True)
+    db_path = None
+    for path in db_paths:
+        if os.path.exists(path):
+            db_path = path
+            print(f"Using database at: {db_path}")
+            break
+    
+    if not db_path:
+        print("No database file found. It will be created when the app runs.")
+        return True
     
     # Connect to database
     conn = sqlite3.connect(db_path)
@@ -42,8 +55,16 @@ def migrate_database():
     except Exception as e:
         print(f"❌ Error during migration: {e}")
         conn.rollback()
+        return False
     finally:
         conn.close()
+    
+    return True
 
 if __name__ == "__main__":
-    migrate_database()
+    print("🔄 Starting database migration...")
+    success = migrate_database()
+    if success:
+        print("🎉 Migration completed! The search and tagging system should now work properly.")
+    else:
+        print("💥 Migration failed. Please check the error messages above.")
