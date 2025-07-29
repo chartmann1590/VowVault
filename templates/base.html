@@ -1744,8 +1744,27 @@
 
     // Get time ago string
     function getTimeAgo(timestamp) {
+        let notificationTime;
+        
+        // Check if timestamp is already a formatted string (from API)
+        if (typeof timestamp === 'string' && timestamp.includes(' at ')) {
+            // Parse the formatted string like "December 15, 2024 at 2:30 PM"
+            try {
+                notificationTime = new Date(timestamp);
+                if (isNaN(notificationTime.getTime())) {
+                    // If parsing fails, return the original string
+                    return timestamp;
+                }
+            } catch (error) {
+                console.warn('Could not parse timestamp:', timestamp);
+                return timestamp;
+            }
+        } else {
+            // Handle as regular date
+            notificationTime = new Date(timestamp);
+        }
+        
         const now = new Date();
-        const notificationTime = new Date(timestamp);
         const diffInSeconds = Math.floor((now - notificationTime) / 1000);
         
         if (diffInSeconds < 60) {
