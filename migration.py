@@ -29,6 +29,15 @@ def migrate_database():
             print("✅ Tags column added successfully!")
         else:
             print("✅ Tags column already exists")
+        
+        # Check if uploader_identifier column exists
+        if 'uploader_identifier' not in columns:
+            print("Adding uploader_identifier column to Photo table...")
+            cursor.execute("ALTER TABLE photo ADD COLUMN uploader_identifier VARCHAR(100)")
+            conn.commit()
+            print("✅ uploader_identifier column added successfully!")
+        else:
+            print("✅ uploader_identifier column already exists")
             
     except Exception as e:
         print(f"❌ Error during migration: {e}")
