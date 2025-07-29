@@ -1632,14 +1632,21 @@
             return;
         }
 
+        console.log('Loading notifications for modal...');
         fetch('/api/notifications/check')
             .then(response => response.json())
             .then(data => {
-                if (data.success && data.notifications) {
+                console.log('Modal notification data:', data);
+                console.log('Data notifications:', data.notifications);
+                
+                if (data.notifications && Array.isArray(data.notifications)) {
                     const notifications = data.notifications;
                     const unreadNotifications = notifications.filter(n => !n.is_read);
+                    console.log('All notifications:', notifications);
+                    console.log('Unread notifications:', unreadNotifications);
                     
                     if (unreadNotifications.length === 0) {
+                        console.log('No unread notifications found');
                         notificationModalList.innerHTML = '<div class="notification-modal-empty">No unread notifications</div>';
                         notificationModalFooter.style.display = 'none';
                         return;
@@ -1647,6 +1654,7 @@
 
                     // Show only the first 2 unread notifications
                     const notificationsToShow = unreadNotifications.slice(0, 2);
+                    console.log('Notifications to show in modal:', notificationsToShow);
                     let modalHtml = '';
 
                     notificationsToShow.forEach(notification => {
@@ -1671,6 +1679,7 @@
                         notificationModalFooter.style.display = 'none';
                     }
                 } else {
+                    console.log('No notifications array in response');
                     notificationModalList.innerHTML = '<div class="notification-modal-empty">No notifications found</div>';
                     notificationModalFooter.style.display = 'none';
                 }
