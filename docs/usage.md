@@ -1,0 +1,137 @@
+# 📱 Usage Guide
+
+## For Wedding Guests
+
+### 1. Visit the Gallery
+- Scan the QR code or visit the URL
+- View the welcome message
+- Choose to sign the guestbook, post a message, or enter the gallery
+
+### 2. Upload Photos/Videos
+- Click "Upload Photo/Video"
+- Select your photo or video (videos max 15 seconds, files max 50MB)
+- Add your name (optional)
+- Add a description (optional)
+- Click "Upload"
+
+### 3. Use Virtual Photobooth
+- Click "Virtual Photobooth" in navigation or from the welcome screen
+- Allow camera access when prompted
+- Position yourself in the frame with the wedding border overlay
+- Click "Take Photo" (3-second countdown)
+- Download the photo or upload it directly to the gallery
+
+### 4. Interact with Photos/Videos
+- Click any photo or video to view details
+- Click the heart to like
+- Leave comments with your name
+- Videos play with controls and show duration
+
+### 5. Post on Message Board
+- Click "Message Board" in navigation
+- Click "Leave a Message"
+- Enter your name (optional)
+- Write your message
+- Add a photo (optional)
+- Submit your message
+- Like and comment on other messages
+
+### 6. Sign the Guestbook
+- Click "Guestbook" in navigation
+- Click "Sign the Guestbook"
+- Enter your name and location (optional)
+- Write your message
+- Add a photo (optional)
+- Submit your entry
+
+### 7. Install as PWA (Mobile)
+- **Android/Chrome:** Menu → Add to Home screen
+- **iPhone/Safari:** Share button → Add to Home Screen
+- **Other browsers:** Look for install options in browser menu
+
+## For Administrators
+
+### 1. Access Admin Panel
+- Visit `/admin?key=your-key`
+- View comprehensive statistics including photobooth usage
+- Manage photos, videos, messages, and guestbook entries
+
+### 2. Batch Download All Content
+- Click "Download All Content" button
+- Automatically downloads a ZIP file containing:
+  - All photos organized by type (photos/, videos/, photobooth/, etc.)
+  - All video thumbnails
+  - All guestbook and message photos
+  - Complete database export as JSON
+  - Photobooth border images
+
+### 3. System Reset
+- Click "System Reset" button for complete data wipe
+- Must type "RESET EVERYTHING" to confirm
+- Deletes all database records and uploaded files
+- Returns system to fresh state
+
+### 4. Configure Virtual Photobooth
+- Upload a custom border image (PNG with transparency recommended)
+- Recommended size: 1280x720px or 16:9 aspect ratio
+- Test the photobooth to ensure proper overlay
+
+### 5. PWA Debug Tools
+- Click "PWA Debug" button in admin panel
+- View PWA requirements status (HTTPS, manifest, service worker, icons)
+- Check connection details and user agent information
+- Get troubleshooting solutions for self-signed certificates
+- Access quick links to view manifest and service worker files
+
+### 6. Email Configuration
+- Configure SMTP settings for email photo uploads
+- Set up email monitoring for automatic photo processing
+- Test email functionality with confirmation messages
+
+### 7. Immich Server Sync
+- Configure Immich server settings
+- Enable sync for different content types
+- Monitor sync status and logs
+- Manage album organization
+
+### 8. Content Management
+- Delete inappropriate content
+- Hide/show messages without deletion
+- Edit guestbook entries
+- Manage photo attachments
+
+### 9. QR Code Generation
+- Create custom QR code PDFs
+- Set wedding couple names and messages
+- Include email upload instructions
+- Download and print for distribution
+
+## Mobile Experience
+
+### Responsive Design
+- Optimized for all screen sizes
+- Touch-friendly interface
+- Fast loading on mobile networks
+- PWA installation support
+
+### PWA Features
+- Native app experience
+- Offline functionality
+- Home screen installation
+- App shortcuts for quick access
+
+## Best Practices
+
+### For Guests
+1. **Photo Quality:** Upload high-quality photos for best results
+2. **Video Length:** Keep videos under 15 seconds for optimal performance
+3. **Descriptions:** Add meaningful descriptions to help identify photos
+4. **Comments:** Leave thoughtful comments to share memories
+5. **PWA Installation:** Install the app for quick access
+
+### For Administrators
+1. **Regular Backups:** Use the batch download feature regularly
+2. **Content Moderation:** Monitor and moderate content as needed
+3. **Email Monitoring:** Check email processing logs regularly
+4. **PWA Testing:** Test PWA functionality on multiple devices
+5. **Performance Monitoring:** Monitor upload sizes and system performance 
