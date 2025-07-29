@@ -1,128 +1,321 @@
 {% extends "base.html" %}
 
-{% block title %}PWA Debug - Wedding Gallery{% endblock %}
+{% block title %}PWA Debug - VowVault{% endblock %}
+
+{% block extra_styles %}
+<style>
+    .debug-container {
+        max-width: 800px;
+        margin: 0 auto;
+        padding: 2rem;
+    }
+
+    .debug-section {
+        background: white;
+        border-radius: 15px;
+        padding: 2rem;
+        margin-bottom: 2rem;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    }
+
+    .debug-section h2 {
+        color: #8b7355;
+        font-family: 'Playfair Display', serif;
+        margin-bottom: 1rem;
+    }
+
+    .debug-info {
+        background: #f9f5f0;
+        padding: 1rem;
+        border-radius: 10px;
+        margin-bottom: 1rem;
+        font-family: monospace;
+        font-size: 0.9rem;
+        white-space: pre-wrap;
+    }
+
+    .debug-button {
+        background: linear-gradient(135deg, #8b7355 0%, #6b5d54 100%);
+        color: white;
+        border: none;
+        padding: 1rem 2rem;
+        border-radius: 30px;
+        font-size: 1.1rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        margin: 0.5rem;
+    }
+
+    .debug-button:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 15px rgba(139, 115, 85, 0.3);
+    }
+
+    .debug-button:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+        transform: none;
+    }
+
+    .status-indicator {
+        display: inline-block;
+        padding: 0.5rem 1rem;
+        border-radius: 20px;
+        font-weight: 600;
+        margin: 0.5rem;
+    }
+
+    .status-success {
+        background: #4CAF50;
+        color: white;
+    }
+
+    .status-error {
+        background: #f44336;
+        color: white;
+    }
+
+    .status-warning {
+        background: #ff9800;
+        color: white;
+    }
+
+    .status-info {
+        background: #2196F3;
+        color: white;
+    }
+</style>
+{% endblock %}
 
 {% block content %}
-<div class="admin-header">
-    <h2>PWA Debug Information</h2>
-    <p>Check PWA requirements and configuration</p>
-</div>
-
-<div class="section-card">
-    <div class="section-header">
-        <h3>PWA Requirements Check</h3>
+<div class="debug-container">
+    <div class="debug-section">
+        <h2>🔧 PWA & Push Notification Debug</h2>
+        <p>This page helps diagnose PWA and push notification issues.</p>
     </div>
-    <div class="section-content">
-        <div class="debug-grid">
-            <div class="debug-item">
-                <strong>HTTPS:</strong>
-                <span class="{% if debug_info.https %}status-success{% else %}status-error{% endif %}">
-                    {{ "✅ Yes" if debug_info.https else "❌ No (Required for PWA)" }}
-                </span>
-            </div>
-            
-            <div class="debug-item">
-                <strong>Manifest File:</strong>
-                <span class="{% if debug_info.manifest_exists %}status-success{% else %}status-error{% endif %}">
-                    {{ "✅ Exists" if debug_info.manifest_exists else "❌ Missing" }}
-                </span>
-            </div>
-            
-            <div class="debug-item">
-                <strong>Service Worker:</strong>
-                <span class="{% if debug_info.sw_exists %}status-success{% else %}status-error{% endif %}">
-                    {{ "✅ Exists" if debug_info.sw_exists else "❌ Missing" }}
-                </span>
-            </div>
-            
-            <div class="debug-item">
-                <strong>Icons:</strong>
-                <span class="{% if debug_info.icons_exist %}status-success{% else %}status-error{% endif %}">
-                    {{ "✅ Exist" if debug_info.icons_exist else "❌ Missing" }}
-                </span>
-            </div>
-        </div>
-        
-        <div class="debug-details">
-            <h4>Connection Details:</h4>
-            <ul>
-                <li><strong>Host:</strong> {{ debug_info.host }}</li>
-                <li><strong>URL:</strong> {{ debug_info.url }}</li>
-                <li><strong>User Agent:</strong> {{ debug_info.user_agent }}</li>
-                <li><strong>Accept Language:</strong> {{ debug_info.accept_language }}</li>
-            </ul>
-        </div>
-        
-        <div class="debug-solutions">
-            <h4>Solutions for Self-Signed Certificate Issues:</h4>
-            <ol>
-                <li><strong>For Development:</strong> Use Chrome DevTools → Application → Manifest → Add to home screen</li>
-                <li><strong>For Testing:</strong> Use ngrok or similar to get a valid HTTPS certificate</li>
-                <li><strong>For Production:</strong> Use a proper SSL certificate (Let's Encrypt, etc.)</li>
-                <li><strong>Manual Install:</strong> Look for the "📱 Test PWA" button in the top-right corner</li>
-            </ol>
-        </div>
-        
-        <div class="debug-actions">
-            <h4>Quick Actions:</h4>
-            <button class="btn" onclick="window.open('/static/manifest.json', '_blank')">View Manifest</button>
-            <button class="btn" onclick="window.open('/static/sw.js', '_blank')">View Service Worker</button>
-            <button class="btn" onclick="location.reload()">Reload Page</button>
-        </div>
+
+    <div class="debug-section">
+        <h2>📱 PWA Status</h2>
+        <div id="pwaStatus">Loading...</div>
+        <button class="debug-button" onclick="checkPWAStatus()">Refresh PWA Status</button>
+    </div>
+
+    <div class="debug-section">
+        <h2>🔔 Push Notification Status</h2>
+        <div id="pushStatus">Loading...</div>
+        <button class="debug-button" onclick="checkPushStatus()">Refresh Push Status</button>
+        <button class="debug-button" onclick="testPushNotification()">Test Push Notification</button>
+        <button class="debug-button" onclick="requestNotificationPermission()">Request Permission</button>
+    </div>
+
+    <div class="debug-section">
+        <h2>🌐 Browser Information</h2>
+        <div id="browserInfo">Loading...</div>
+    </div>
+
+    <div class="debug-section">
+        <h2>📊 Service Worker Status</h2>
+        <div id="swStatus">Loading...</div>
+        <button class="debug-button" onclick="checkServiceWorker()">Check Service Worker</button>
+        <button class="debug-button" onclick="unregisterServiceWorker()">Unregister SW</button>
+    </div>
+
+    <div class="debug-section">
+        <h2>👥 Notification Users</h2>
+        <div id="notificationUsers">Loading...</div>
+        <button class="debug-button" onclick="loadNotificationUsers()">Refresh Users</button>
     </div>
 </div>
 
-<style>
-.debug-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-    gap: 1rem;
-    margin-bottom: 2rem;
-}
+<script>
+    // PWA Status Check
+    function checkPWAStatus() {
+        const statusDiv = document.getElementById('pwaStatus');
+        let status = '';
+        
+        // Check HTTPS
+        if (window.location.protocol === 'https:' || window.location.hostname === 'localhost') {
+            status += '<span class="status-indicator status-success">✅ HTTPS/Localhost</span>';
+        } else {
+            status += '<span class="status-indicator status-error">❌ HTTP (Push notifications require HTTPS)</span>';
+        }
+        
+        // Check Service Worker support
+        if ('serviceWorker' in navigator) {
+            status += '<span class="status-indicator status-success">✅ Service Worker Supported</span>';
+        } else {
+            status += '<span class="status-indicator status-error">❌ Service Worker Not Supported</span>';
+        }
+        
+        // Check Notification support
+        if ('Notification' in window) {
+            status += '<span class="status-indicator status-success">✅ Notifications Supported</span>';
+        } else {
+            status += '<span class="status-indicator status-error">❌ Notifications Not Supported</span>';
+        }
+        
+        // Check Push Manager support
+        if ('PushManager' in window) {
+            status += '<span class="status-indicator status-success">✅ Push Manager Supported</span>';
+        } else {
+            status += '<span class="status-indicator status-error">❌ Push Manager Not Supported</span>';
+        }
+        
+        // Check standalone mode
+        if (window.matchMedia('(display-mode: standalone)').matches) {
+            status += '<span class="status-indicator status-info">📱 Running as PWA</span>';
+        } else {
+            status += '<span class="status-indicator status-info">🌐 Running in Browser</span>';
+        }
+        
+        statusDiv.innerHTML = status;
+    }
 
-.debug-item {
-    background: #f9f5f0;
-    padding: 1rem;
-    border-radius: 8px;
-    border-left: 4px solid #8b7355;
-}
+    // Push Notification Status Check
+    function checkPushStatus() {
+        const statusDiv = document.getElementById('pushStatus');
+        let status = '';
+        
+        if ('Notification' in window) {
+            const permission = Notification.permission;
+            if (permission === 'granted') {
+                status += '<span class="status-indicator status-success">✅ Permission Granted</span>';
+            } else if (permission === 'denied') {
+                status += '<span class="status-indicator status-error">❌ Permission Denied</span>';
+            } else {
+                status += '<span class="status-indicator status-warning">⚠️ Permission Not Set</span>';
+            }
+        }
+        
+        // Check if notifications are enabled in localStorage
+        const notificationsEnabled = localStorage.getItem('notifications_enabled') === 'true';
+        if (notificationsEnabled) {
+            status += '<span class="status-indicator status-success">✅ Notifications Enabled</span>';
+        } else {
+            status += '<span class="status-indicator status-warning">⚠️ Notifications Disabled</span>';
+        }
+        
+        statusDiv.innerHTML = status;
+    }
 
-.status-success {
-    color: #28a745;
-    font-weight: bold;
-}
+    // Test Push Notification
+    function testPushNotification() {
+        fetch('/debug/push-notification-test')
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert('✅ Test notification created successfully! Check your notifications.');
+                } else {
+                    alert('❌ Failed to create test notification: ' + data.message);
+                }
+            })
+            .catch(error => {
+                console.error('Error testing push notification:', error);
+                alert('❌ Error testing push notification: ' + error.message);
+            });
+    }
 
-.status-error {
-    color: #dc3545;
-    font-weight: bold;
-}
+    // Request Notification Permission
+    function requestNotificationPermission() {
+        if ('Notification' in window) {
+            Notification.requestPermission().then(permission => {
+                alert('Permission result: ' + permission);
+                checkPushStatus();
+            });
+        } else {
+            alert('Notifications not supported in this browser');
+        }
+    }
 
-.debug-details, .debug-solutions, .debug-actions {
-    background: #f9f5f0;
-    padding: 1.5rem;
-    border-radius: 8px;
-    margin-bottom: 1rem;
-}
+    // Browser Information
+    function loadBrowserInfo() {
+        const infoDiv = document.getElementById('browserInfo');
+        const info = {
+            'User Agent': navigator.userAgent,
+            'Platform': navigator.platform,
+            'Language': navigator.language,
+            'Protocol': window.location.protocol,
+            'Hostname': window.location.hostname,
+            'Port': window.location.port,
+            'Pathname': window.location.pathname,
+            'Screen Size': `${screen.width}x${screen.height}`,
+            'Window Size': `${window.innerWidth}x${window.innerHeight}`,
+            'Device Pixel Ratio': window.devicePixelRatio,
+            'Cookies Enabled': navigator.cookieEnabled,
+            'Online': navigator.onLine
+        };
+        
+        let infoText = '';
+        for (const [key, value] of Object.entries(info)) {
+            infoText += `${key}: ${value}\n`;
+        }
+        
+        infoDiv.innerHTML = `<div class="debug-info">${infoText}</div>`;
+    }
 
-.debug-details h4, .debug-solutions h4, .debug-actions h4 {
-    color: #8b7355;
-    margin-bottom: 1rem;
-    font-family: 'Playfair Display', serif;
-}
+    // Service Worker Status
+    function checkServiceWorker() {
+        const statusDiv = document.getElementById('swStatus');
+        
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.getRegistrations().then(registrations => {
+                if (registrations.length > 0) {
+                    statusDiv.innerHTML = '<span class="status-indicator status-success">✅ Service Worker Registered</span>';
+                } else {
+                    statusDiv.innerHTML = '<span class="status-indicator status-warning">⚠️ No Service Worker Found</span>';
+                }
+            });
+        } else {
+            statusDiv.innerHTML = '<span class="status-indicator status-error">❌ Service Worker Not Supported</span>';
+        }
+    }
 
-.debug-details ul, .debug-solutions ol {
-    margin: 0;
-    padding-left: 1.5rem;
-}
+    // Unregister Service Worker
+    function unregisterServiceWorker() {
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.getRegistrations().then(registrations => {
+                for (let registration of registrations) {
+                    registration.unregister();
+                }
+                alert('Service Worker unregistered. Refresh the page to re-register.');
+                checkServiceWorker();
+            });
+        }
+    }
 
-.debug-details li, .debug-solutions li {
-    margin-bottom: 0.5rem;
-    line-height: 1.6;
-}
+    // Load Notification Users
+    function loadNotificationUsers() {
+        const usersDiv = document.getElementById('notificationUsers');
+        
+        fetch('/debug/notification-users')
+            .then(response => response.json())
+            .then(data => {
+                if (data.users) {
+                    let usersText = '';
+                    data.users.forEach(user => {
+                        usersText += `User: ${user.user_name} (${user.user_identifier})\n`;
+                        usersText += `  Enabled: ${user.notifications_enabled}\n`;
+                        usersText += `  Unread: ${user.unread_count}\n`;
+                        usersText += `  Last Seen: ${user.last_seen || 'Never'}\n\n`;
+                    });
+                    usersDiv.innerHTML = `<div class="debug-info">${usersText}</div>`;
+                } else {
+                    usersDiv.innerHTML = '<span class="status-indicator status-warning">⚠️ No notification users found</span>';
+                }
+            })
+            .catch(error => {
+                usersDiv.innerHTML = '<span class="status-indicator status-error">❌ Error loading users: ' + error.message + '</span>';
+            });
+    }
 
-.debug-actions .btn {
-    margin-right: 0.5rem;
-    margin-bottom: 0.5rem;
-}
-</style>
+    // Initialize debug page
+    document.addEventListener('DOMContentLoaded', function() {
+        checkPWAStatus();
+        checkPushStatus();
+        loadBrowserInfo();
+        checkServiceWorker();
+        loadNotificationUsers();
+    });
+</script>
 {% endblock %} 

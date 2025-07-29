@@ -2545,6 +2545,42 @@ def debug_notification_users():
     except Exception as e:
         return jsonify({'error': str(e)})
 
+@app.route('/debug/push-notification-test')
+def debug_push_notification_test():
+    """Debug route to test push notifications"""
+    user_identifier = request.cookies.get('user_identifier', '')
+    if not user_identifier:
+        return jsonify({'error': 'No user identifier found'})
+    
+    try:
+        # Create a test notification
+        notification = create_notification_with_push(
+            user_identifier=user_identifier,
+            title='🧪 Test Push Notification',
+            message='This is a test push notification to verify the system is working!',
+            notification_type='test',
+            content_type='photo',
+            content_id=1
+        )
+        
+        if notification:
+            return jsonify({
+                'success': True,
+                'message': 'Test push notification created successfully',
+                'notification_id': notification.id,
+                'user_identifier': user_identifier
+            })
+        else:
+            return jsonify({
+                'success': False,
+                'message': 'Failed to create test notification'
+            })
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'message': f'Error creating test notification: {str(e)}'
+        })
+
 
 
 if __name__ == '__main__':

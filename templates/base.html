@@ -729,6 +729,8 @@
     console.log('PWA Debug: HTTPS:', window.location.protocol === 'https:');
     console.log('PWA Debug: Service Worker support:', 'serviceWorker' in navigator);
     console.log('PWA Debug: Standalone mode:', window.matchMedia('(display-mode: standalone)').matches);
+    console.log('PWA Debug: Notification support:', 'Notification' in window);
+    console.log('PWA Debug: Push Manager support:', 'PushManager' in window);
 
     // Register Service Worker
     if ('serviceWorker' in navigator) {
@@ -736,6 +738,17 @@
             navigator.serviceWorker.register('/static/sw.js')
                 .then((registration) => {
                     console.log('SW registered: ', registration);
+                    
+                    // Check if we're on HTTPS
+                    if (window.location.protocol !== 'https:' && window.location.hostname !== 'localhost') {
+                        console.warn('PWA Debug: Push notifications require HTTPS (except on localhost)');
+                        console.warn('PWA Debug: Current protocol:', window.location.protocol);
+                    }
+                    
+                    // Check notification permission
+                    if ('Notification' in window) {
+                        console.log('PWA Debug: Notification permission:', Notification.permission);
+                    }
                 })
                 .catch((registrationError) => {
                     console.log('SW registration failed: ', registrationError);
