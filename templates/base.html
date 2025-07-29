@@ -921,6 +921,8 @@
                 if (notificationPermission) {
                     localStorage.setItem('notifications_enabled', 'true');
                     notificationEnabled = true;
+                    // Register user immediately when permission is granted
+                    registerNotificationUser();
                 } else {
                     localStorage.setItem('notifications_enabled', 'false');
                     notificationEnabled = false;
@@ -981,7 +983,14 @@
         const userName = getCookie('user_name') || 'Anonymous';
         const deviceInfo = navigator.userAgent;
         
-        if (userIdentifier && notificationEnabled) {
+        console.log('Notification Debug: Attempting to register user');
+        console.log('Notification Debug: userIdentifier:', userIdentifier);
+        console.log('Notification Debug: notificationEnabled:', notificationEnabled);
+        console.log('Notification Debug: notificationPermission:', notificationPermission);
+        
+        if (userIdentifier && notificationEnabled && notificationPermission) {
+            console.log('Notification Debug: Registering user for notifications');
+            
             fetch('/admin/register-notification-user', {
                 method: 'POST',
                 headers: {
@@ -994,24 +1003,39 @@
                     notifications_enabled: notificationEnabled
                 })
             })
-            .then(response => response.json())
+            .then(response => {
+                console.log('Notification Debug: Response status:', response.status);
+                return response.json();
+            })
             .then(data => {
                 if (data.success) {
-                    console.log('User registered for notifications');
+                    console.log('Notification Debug: User registered successfully');
                 } else {
-                    console.error('Failed to register user:', data.message);
+                    console.error('Notification Debug: Failed to register user:', data.message);
                 }
             })
             .catch(error => {
-                console.error('Error registering user:', error);
+                console.error('Notification Debug: Error registering user:', error);
             });
+        } else {
+            console.log('Notification Debug: Cannot register user - missing requirements');
+            console.log('Notification Debug: userIdentifier exists:', !!userIdentifier);
+            console.log('Notification Debug: notificationEnabled:', notificationEnabled);
+            console.log('Notification Debug: notificationPermission:', notificationPermission);
         }
     }
 
-    // Register user when notifications are enabled
+    // Register user when notifications are enabled and permission is granted
     if (notificationEnabled && notificationPermission) {
         registerNotificationUser();
     }
+
+    // Also try to register on page load if we have the required data
+    setTimeout(() => {
+        if (notificationEnabled && notificationPermission) {
+            registerNotificationUser();
+        }
+    }, 1000);
 
     // Make sendNotification available globally
     window.sendNotification = sendNotification;
@@ -1031,3 +1055,4 @@
 
 </body>
 </html>
+

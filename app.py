@@ -724,7 +724,12 @@ def start_email_monitor():
 
 @app.route('/')
 def index():
-    photos = Photo.query.order_by(Photo.upload_date.desc()).all()
+    # Get or create user identifier for all visitors
+    user_identifier = request.cookies.get('user_identifier', '')
+    if not user_identifier:
+        user_identifier = secrets.token_hex(16)
+    
+    # Get user name from cookie
     user_name = request.cookies.get('user_name', '')
     has_seen_welcome = request.cookies.get('has_seen_welcome', '')
     
@@ -750,11 +755,35 @@ def index():
     
     show_modal = welcome_settings.get('enabled', True) and (not has_seen_welcome or not welcome_settings.get('show_once', True))
     
-    # Get email settings for the template
+    # Get photos with pagination
+    page = request.args.get('page', 1, type=int)
+    per_page = 12
+    
+    # Get all photos, ordered by upload date (newest first)
+    photos_query = Photo.query.filter_by(is_photobooth=False).order_by(Photo.upload_date.desc())
+    photos = photos_query.paginate(page=page, per_page=per_page, error_out=False)
+    
+    # Get photobooth photos for the carousel
+    photobooth_photos = Photo.query.filter_by(is_photobooth=True).order_by(Photo.upload_date.desc()).limit(10).all()
+    
+    # Get email settings for the welcome modal
     email_settings = get_email_settings()
+    
+    # Create response with user identifier cookie if needed
+    if not request.cookies.get('user_identifier'):
+        resp = make_response(render_template('index.html', 
+                                          photos=photos, 
+                                          photobooth_photos=photobooth_photos,
+                                          user_name=user_name,
+                                          welcome_settings=welcome_settings,
+                                          show_modal=show_modal,
+                                          email_settings=email_settings))
+        resp.set_cookie('user_identifier', user_identifier, max_age=365*24*60*60)  # 1 year
+        return resp
     
     return render_template('index.html', 
                          photos=photos, 
+                         photobooth_photos=photobooth_photos,
                          user_name=user_name,
                          welcome_settings=welcome_settings,
                          show_modal=show_modal,
@@ -856,8 +885,20 @@ def upload():
             resp.set_cookie('user_identifier', user_identifier, max_age=365*24*60*60)  # 1 year
             return resp
     
+    # Get or create user identifier for visitors to upload page
+    user_identifier = request.cookies.get('user_identifier', '')
+    if not user_identifier:
+        user_identifier = secrets.token_hex(16)
+    
     user_name = request.cookies.get('user_name', '')
     email_settings = get_email_settings()
+    
+    # Create response with user identifier cookie if needed
+    if not request.cookies.get('user_identifier'):
+        resp = make_response(render_template('upload.html', user_name=user_name, email_settings=email_settings))
+        resp.set_cookie('user_identifier', user_identifier, max_age=365*24*60*60)  # 1 year
+        return resp
+    
     return render_template('upload.html', user_name=user_name, email_settings=email_settings)
 
 @app.route('/photobooth')
@@ -1844,7 +1885,13 @@ def register_notification_user():
     device_info = data.get('device_info', '')
     notifications_enabled = data.get('notifications_enabled', True)
     
+    print(f"Notification Debug: Received registration request")
+    print(f"Notification Debug: user_identifier: {user_identifier}")
+    print(f"Notification Debug: user_name: {user_name}")
+    print(f"Notification Debug: notifications_enabled: {notifications_enabled}")
+    
     if not user_identifier:
+        print("Notification Debug: No user identifier provided")
         return jsonify({'success': False, 'message': 'User identifier required'})
     
     try:
@@ -1853,12 +1900,14 @@ def register_notification_user():
         
         if user:
             # Update existing user
+            print(f"Notification Debug: Updating existing user {user.user_name}")
             user.user_name = user_name
             user.notifications_enabled = notifications_enabled
             user.last_seen = datetime.utcnow()
             user.device_info = device_info
         else:
             # Create new user
+            print(f"Notification Debug: Creating new user {user_name}")
             user = NotificationUser(
                 user_identifier=user_identifier,
                 user_name=user_name,
@@ -1868,10 +1917,80 @@ def register_notification_user():
             db.session.add(user)
         
         db.session.commit()
+        print(f"Notification Debug: User registration successful")
         return jsonify({'success': True, 'message': 'User registered successfully'})
     
     except Exception as e:
+        print(f"Notification Debug: Error registering user: {e}")
         return jsonify({'success': False, 'message': str(e)})
+
+@app.route('/debug/notification-test')
+def debug_notification_test():
+    """Debug route to test notification user registration"""
+    user_identifier = request.cookies.get('user_identifier', '')
+    user_name = request.cookies.get('user_name', 'Anonymous')
+    
+    if not user_identifier:
+        user_identifier = secrets.token_hex(16)
+        resp = make_response(f"""
+        <h1>Notification Debug Test</h1>
+        <p>No user identifier found. Created new one: {user_identifier}</p>
+        <p>User name: {user_name}</p>
+        <p>Device: {request.headers.get('User-Agent', 'Unknown')}</p>
+        <button onclick="testRegistration()">Test Registration</button>
+        <script>
+        function testRegistration() {{
+            fetch('/admin/register-notification-user', {{
+                method: 'POST',
+                headers: {{ 'Content-Type': 'application/json' }},
+                body: JSON.stringify({{
+                    user_identifier: '{user_identifier}',
+                    user_name: '{user_name}',
+                    device_info: navigator.userAgent,
+                    notifications_enabled: true
+                }})
+            }})
+            .then(response => response.json())
+            .then(data => {{
+                alert('Registration result: ' + JSON.stringify(data));
+            }})
+            .catch(error => {{
+                alert('Error: ' + error);
+            }});
+        }}
+        </script>
+        """)
+        resp.set_cookie('user_identifier', user_identifier, max_age=365*24*60*60)
+        return resp
+    
+    return f"""
+    <h1>Notification Debug Test</h1>
+    <p>User identifier: {user_identifier}</p>
+    <p>User name: {user_name}</p>
+    <p>Device: {request.headers.get('User-Agent', 'Unknown')}</p>
+    <button onclick="testRegistration()">Test Registration</button>
+    <script>
+    function testRegistration() {{
+        fetch('/admin/register-notification-user', {{
+            method: 'POST',
+            headers: {{ 'Content-Type': 'application/json' }},
+            body: JSON.stringify({{
+                user_identifier: '{user_identifier}',
+                user_name: '{user_name}',
+                device_info: navigator.userAgent,
+                notifications_enabled: true
+            }})
+        }})
+        .then(response => response.json())
+        .then(data => {{
+            alert('Registration result: ' + JSON.stringify(data));
+        }})
+        .catch(error => {{
+            alert('Error: ' + error);
+        }});
+    }}
+    </script>
+    """
 
 @app.route('/admin/generate-qr-pdf')
 def generate_qr_pdf():
