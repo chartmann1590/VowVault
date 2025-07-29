@@ -706,8 +706,8 @@
         // Stash the event so it can be triggered later
         deferredPrompt = e;
         
-        // Show install button in mobile menu (if on mobile)
-        if (pwaInstallItem && window.innerWidth <= 768) {
+        // Show install button in mobile menu (if on mobile and not already installed)
+        if (pwaInstallItem && window.innerWidth <= 768 && !isPwaInstalled()) {
             pwaInstallItem.style.display = 'block';
             console.log('PWA Debug: Install button shown');
         }
@@ -769,8 +769,8 @@
     // Dismiss install prompt
     function dismissInstallPrompt() {
         hideInstallPrompt();
-        // Hide install button for this session
-        if (pwaInstallItem) {
+        // Hide install button for this session (only if not already installed)
+        if (pwaInstallItem && !isPwaInstalled()) {
             pwaInstallItem.style.display = 'none';
         }
     }
@@ -810,6 +810,21 @@
                window.navigator.standalone === true;
     }
 
+    // Hide install button if PWA is already installed
+    function hideInstallButtonIfInstalled() {
+        if (isPwaInstalled() && pwaInstallItem) {
+            pwaInstallItem.style.display = 'none';
+            console.log('PWA Debug: Install button hidden - PWA already installed');
+        }
+    }
+
+    // Show install option in mobile menu (always show on mobile for manual install)
+    function showMobileInstallOption() {
+        if (window.innerWidth <= 768 && pwaInstallItem && !isPwaInstalled()) {
+            pwaInstallItem.style.display = 'block';
+        }
+    }
+
     // Close modal when clicking outside
     document.addEventListener('click', (e) => {
         const modal = document.getElementById('pwaInstallModal');
@@ -819,20 +834,18 @@
     });
 
     // Hide install button if PWA is already installed
-    if (isPwaInstalled() && pwaInstallItem) {
-        pwaInstallItem.style.display = 'none';
-    }
-
-    // Show install option in mobile menu (always show on mobile for manual install)
-    function showMobileInstallOption() {
-        if (window.innerWidth <= 768 && pwaInstallItem) {
-            pwaInstallItem.style.display = 'block';
-        }
-    }
+    hideInstallButtonIfInstalled();
 
     // Call on page load and resize
     showMobileInstallOption();
     window.addEventListener('resize', showMobileInstallOption);
+
+    // Listen for display mode changes (when PWA is installed)
+    window.matchMedia('(display-mode: standalone)').addEventListener('change', (e) => {
+        if (e.matches) {
+            hideInstallButtonIfInstalled();
+        }
+    });
 </script>
 {% block scripts %}{% endblock %}
 
