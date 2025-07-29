@@ -1010,10 +1010,16 @@ def save_photobooth_photo():
             uploader_name = data.get('uploader_name', 'Anonymous').strip() or 'Anonymous'
             description = data.get('description', 'Photo from Virtual Photobooth')
             
+            # Get or create user identifier
+            user_identifier = request.cookies.get('user_identifier', '')
+            if not user_identifier:
+                user_identifier = secrets.token_hex(16)
+            
             photo = Photo(
                 filename=filename,
                 original_filename=filename,
                 uploader_name=uploader_name,
+                uploader_identifier=user_identifier,
                 description=description,
                 media_type='image',
                 is_photobooth=True
@@ -1034,14 +1040,15 @@ def save_photobooth_photo():
             except Exception as e:
                 print(f"Error syncing photobooth to Immich: {e}")
             
-            # Save user name in cookie
+            # Save user name and identifier in cookies
             resp = jsonify({
                 'success': True,
                 'filename': filename,
                 'uploaded': True,
                 'photo_id': photo.id
             })
-            resp.set_cookie('user_name', uploader_name, max_age=30*24*60*60)
+            resp.set_cookie('user_name', uploader_name, max_age=30*24*60*60)  # 30 days
+            resp.set_cookie('user_identifier', user_identifier, max_age=365*24*60*60)  # 1 year
             return resp
         
         return jsonify({
@@ -2603,6 +2610,52 @@ def sso_logout():
     session.pop('sso_state', None)
     
     return redirect(url_for('admin'))
+
+@app.route('/admin/register-notification-user', methods=['POST'])
+def register_notification_user():
+    """Register a user for notifications"""
+    data = request.get_json()
+    user_identifier = data.get('user_identifier', '')
+    user_name = data.get('user_name', 'Anonymous')
+    device_info = data.get('device_info', '')
+    notifications_enabled = data.get('notifications_enabled', True)
+    
+    if not user_identifier:
+        return jsonify({'success': False, 'message': 'User identifier required'})
+    
+    try:
+        # Find or create notification user
+        notification_user = NotificationUser.query.filter_by(
+            user_identifier=user_identifier
+        ).first()
+        
+        if notification_user:
+            # Update existing user
+            notification_user.user_name = user_name
+            notification_user.notifications_enabled = notifications_enabled
+            notification_user.last_seen = datetime.utcnow()
+            notification_user.device_info = device_info
+        else:
+            # Create new notification user
+            notification_user = NotificationUser(
+                user_identifier=user_identifier,
+                user_name=user_name,
+                notifications_enabled=notifications_enabled,
+                last_seen=datetime.utcnow(),
+                device_info=device_info
+            )
+            db.session.add(notification_user)
+        
+        db.session.commit()
+        
+        return jsonify({
+            'success': True, 
+            'message': f'User registered for notifications successfully'
+        })
+    
+    except Exception as e:
+        print(f"Error registering notification user: {e}")
+        return jsonify({'success': False, 'message': str(e)})
 
 @app.route('/api/notifications/toggle-enabled', methods=['POST'])
 def toggle_notifications_enabled():
