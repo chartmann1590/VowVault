@@ -1743,9 +1743,9 @@ def generate_qr_pdf():
     title_style = ParagraphStyle(
         'CustomTitle',
         parent=styles['Heading1'],
-        fontSize=36,
+        fontSize=28,
         textColor=colors.HexColor('#8b7355'),
-        spaceAfter=12,
+        spaceAfter=8,
         alignment=TA_CENTER,
         fontName='Helvetica-Bold'
     )
@@ -1753,9 +1753,9 @@ def generate_qr_pdf():
     subtitle_style = ParagraphStyle(
         'CustomSubtitle',
         parent=styles['Heading2'],
-        fontSize=20,
+        fontSize=16,
         textColor=colors.HexColor('#6b5d54'),
-        spaceAfter=30,
+        spaceAfter=20,
         alignment=TA_CENTER,
         fontName='Helvetica'
     )
@@ -1763,17 +1763,17 @@ def generate_qr_pdf():
     body_style = ParagraphStyle(
         'CustomBody',
         parent=styles['BodyText'],
-        fontSize=14,
+        fontSize=12,
         textColor=colors.HexColor('#444444'),
         alignment=TA_CENTER,
-        spaceAfter=30,
-        leading=20
+        spaceAfter=20,
+        leading=16
     )
     
     couple_style = ParagraphStyle(
         'CoupleNames',
         parent=styles['BodyText'],
-        fontSize=18,
+        fontSize=14,
         textColor=colors.HexColor('#8b7355'),
         alignment=TA_CENTER,
         fontName='Helvetica-Oblique'
@@ -1782,52 +1782,39 @@ def generate_qr_pdf():
     url_style = ParagraphStyle(
         'URLStyle',
         parent=styles['BodyText'],
-        fontSize=12,
+        fontSize=10,
         textColor=colors.HexColor('#666666'),
         alignment=TA_CENTER,
-        spaceAfter=20
+        spaceAfter=15
     )
     
     # Build PDF content
     story = []
     
-    # Decorative line
-    story.append(Spacer(1, 0.5*inch))
-    
     # Title
     story.append(Paragraph(title, title_style))
     story.append(Paragraph(subtitle, subtitle_style))
     
-    # Message
+    # Message (shorter version)
     story.append(Paragraph(message, body_style))
     
-    # Email instructions
+    # Email instructions (condensed)
     email_instructions = f"""
-    <b>📧 Alternative: Email Your Photos</b><br/>
-    Can't scan the QR code? You can also email your photos to us!<br/>
-    <br/>
-    <b>How to email photos:</b><br/>
-    1. Attach your photos to an email<br/>
-    2. Send to: <b>{monitor_email}</b><br/>
-    3. We'll automatically add them to the gallery<br/>
-    4. You'll receive a confirmation email with a link<br/>
-    <br/>
-    <i>📸 Only photo files (JPG, PNG, GIF, WebP) are accepted via email</i>
+    <b>📧 Email Photos:</b> Send to <b>{monitor_email}</b><br/>
+    <i>Only photos (JPG, PNG, GIF, WebP) accepted</i>
     """
     story.append(Paragraph(email_instructions, body_style))
-    story.append(Spacer(1, 0.3*inch))
+    story.append(Spacer(1, 0.2*inch))
     
     # QR Code
-    qr_image = Image(qr_buffer, width=3*inch, height=3*inch)
+    qr_image = Image(qr_buffer, width=2.5*inch, height=2.5*inch)
     qr_image.hAlign = 'CENTER'
     story.append(qr_image)
     
-    story.append(Spacer(1, 0.3*inch))
+    story.append(Spacer(1, 0.2*inch))
     
     # URL
     story.append(Paragraph(f"<i>{public_url}</i>", url_style))
-    
-    story.append(Spacer(1, 0.5*inch))
     
     # Couple names
     story.append(Paragraph(f"With love,<br/>{couple_names}", couple_style))
@@ -1837,10 +1824,10 @@ def generate_qr_pdf():
     decoration.setStyle(TableStyle([
         ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
         ('FONTNAME', (0, 0), (-1, -1), 'Helvetica'),
-        ('FONTSIZE', (0, 0), (-1, -1), 20),
+        ('FONTSIZE', (0, 0), (-1, -1), 16),
         ('TEXTCOLOR', (0, 0), (-1, -1), colors.HexColor('#8b7355')),
     ]))
-    story.append(Spacer(1, 0.5*inch))
+    story.append(Spacer(1, 0.3*inch))
     story.append(decoration)
     
     # Build PDF
