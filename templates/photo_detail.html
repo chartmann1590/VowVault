@@ -455,22 +455,8 @@
                     this.classList.remove('liked');
                 }
 
-                // Handle notification for photo uploader
-                if (data.notification_data && window.sendNotification) {
-                    const notificationData = data.notification_data;
-                    const currentUser = getCookie('user_identifier');
-                    
-                    // Send notification if the current user IS the photo uploader and someone else liked it
-                    if (currentUser === notificationData.uploader_identifier && notificationData.action === 'liked') {
-                        const likerName = notificationData.liker_name || 'Someone';
-                        
-                        window.sendNotification(
-                            '❤️ New Like!',
-                            `${likerName} just liked your photo!`,
-                            '/static/icons/icon-192x192.png'
-                        );
-                    }
-                }
+                // Backend handles notifications automatically - no frontend logic needed
+                console.log('Like toggled successfully');
             }
         } catch (error) {
             console.error('Error toggling like:', error);
@@ -524,22 +510,8 @@
                 // Clear comment form
                 document.getElementById('comment_content').value = '';
 
-                // Handle notification for photo uploader
-                if (comment.notification_data && window.sendNotification) {
-                    const notificationData = comment.notification_data;
-                    const currentUser = getCookie('user_identifier');
-                    
-                    // Send notification if the current user IS the photo uploader and someone else commented
-                    if (currentUser === notificationData.uploader_identifier) {
-                        const commenterName = notificationData.commenter_name;
-                        
-                        window.sendNotification(
-                            '💬 New Comment!',
-                            `${commenterName} commented on your photo!`,
-                            '/static/icons/icon-192x192.png'
-                        );
-                    }
-                }
+                // Backend handles notifications automatically - no frontend logic needed
+                console.log('Comment posted successfully');
             }
         } catch (error) {
             console.error('Error posting comment:', error);

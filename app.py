@@ -1275,13 +1275,25 @@ def toggle_like(photo_id):
     if liked and photo.uploader_identifier and photo.uploader_identifier != user_identifier:
         liker_name = request.cookies.get('user_name', 'Anonymous')
         
+        print(f"DEBUG: Creating like notification for photo {photo_id}")
+        print(f"DEBUG: Photo uploader: {photo.uploader_identifier}")
+        print(f"DEBUG: Liker: {user_identifier}")
+        print(f"DEBUG: Liker name: {liker_name}")
+        
         # Create notification with push notification
-        create_notification_with_push(
+        notification = create_notification_with_push(
             user_identifier=photo.uploader_identifier,
             title='❤️ New Like!',
             message=f'{liker_name} just liked your photo!',
             notification_type='like'
         )
+        
+        if notification:
+            print(f"DEBUG: Like notification created successfully for {photo.uploader_identifier}")
+        else:
+            print(f"DEBUG: Failed to create like notification for {photo.uploader_identifier}")
+    else:
+        print(f"DEBUG: No like notification needed - liked: {liked}, uploader: {photo.uploader_identifier}, user: {user_identifier}")
     
     # Prepare notification data for the photo uploader
     notification_data = {
@@ -1325,13 +1337,25 @@ def add_comment(photo_id):
     # Create database notification for the photo uploader if someone else commented
     user_identifier = request.cookies.get('user_identifier', '')
     if photo.uploader_identifier and photo.uploader_identifier != user_identifier:
+        print(f"DEBUG: Creating comment notification for photo {photo_id}")
+        print(f"DEBUG: Photo uploader: {photo.uploader_identifier}")
+        print(f"DEBUG: Commenter: {user_identifier}")
+        print(f"DEBUG: Commenter name: {commenter_name}")
+        
         # Create notification with push notification
-        create_notification_with_push(
+        notification = create_notification_with_push(
             user_identifier=photo.uploader_identifier,
             title='💬 New Comment!',
             message=f'{commenter_name} commented on your photo!',
             notification_type='comment'
         )
+        
+        if notification:
+            print(f"DEBUG: Comment notification created successfully for {photo.uploader_identifier}")
+        else:
+            print(f"DEBUG: Failed to create comment notification for {photo.uploader_identifier}")
+    else:
+        print(f"DEBUG: No comment notification needed - uploader: {photo.uploader_identifier}, commenter: {user_identifier}")
     
     # Prepare notification data for the photo uploader
     notification_data = {
