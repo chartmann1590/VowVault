@@ -19,6 +19,7 @@ A beautiful, self-hosted wedding photo gallery application that allows wedding g
 
 ### For Guests
 - 📸 **Easy Photo/Video Upload** - No login required, drag-and-drop interface
+- 🔍 **Search & Tagging** - Find photos quickly with search and custom tags
 - 📧 **Email Photo Upload** - Send photos directly via email
 - 🤳 **Virtual Photobooth** - Take photos with custom wedding borders
 - ❤️ **Like & Comment** - Interact with photos and videos

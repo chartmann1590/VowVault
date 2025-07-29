@@ -12,22 +12,32 @@
 - Select your photo or video (videos max 15 seconds, files max 50MB)
 - Add your name (optional)
 - Add a description (optional)
+- Add tags (optional) - e.g., "ceremony, reception, dance" (comma-separated)
 - Click "Upload"
 
-### 3. Use Virtual Photobooth
+### 3. Search and Filter Photos
+- Use the search bar to find photos by uploader name, description, or tags
+- Filter by media type: All Media, Photos Only, Videos Only, or Photobooth Only
+- Filter by specific tags using the tag dropdown
+- Click "Apply Filters" to see results
+- Click "Clear All" to reset filters
+- Tags are displayed on photo cards for easy identification
+
+### 4. Use Virtual Photobooth
 - Click "Virtual Photobooth" in navigation or from the welcome screen
 - Allow camera access when prompted
 - Position yourself in the frame with the wedding border overlay
 - Click "Take Photo" (3-second countdown)
 - Download the photo or upload it directly to the gallery
+- When uploading, add your name, description, and tags (optional)
 
-### 4. Interact with Photos/Videos
+### 5. Interact with Photos/Videos
 - Click any photo or video to view details
 - Click the heart to like
 - Leave comments with your name
 - Videos play with controls and show duration
 
-### 5. Post on Message Board
+### 6. Post on Message Board
 - Click "Message Board" in navigation
 - Click "Leave a Message"
 - Enter your name (optional)
@@ -36,7 +46,7 @@
 - Submit your message
 - Like and comment on other messages
 
-### 6. Sign the Guestbook
+### 7. Sign the Guestbook
 - Click "Guestbook" in navigation
 - Click "Sign the Guestbook"
 - Enter your name and location (optional)
@@ -44,12 +54,12 @@
 - Add a photo (optional)
 - Submit your entry
 
-### 7. Install as PWA (Mobile)
+### 8. Install as PWA (Mobile)
 - **Android/Chrome:** Menu → Add to Home screen
 - **iPhone/Safari:** Share button → Add to Home Screen
 - **Other browsers:** Look for install options in browser menu
 
-### 8. Enable Notifications (Mobile)
+### 9. Enable Notifications (Mobile)
 - **Access:** Open the mobile hamburger menu (☰)
 - **Toggle:** Tap "Enable Notifications" to turn on/off
 - **Permission:** Grant browser notification permission when prompted
@@ -140,10 +150,12 @@
 1. **Photo Quality:** Upload high-quality photos for best results
 2. **Video Length:** Keep videos under 15 seconds for optimal performance
 3. **Descriptions:** Add meaningful descriptions to help identify photos
-4. **Comments:** Leave thoughtful comments to share memories
-5. **PWA Installation:** Install the app for quick access
-6. **Notifications:** Enable notifications to stay connected with your content
-7. **Interaction:** Like and comment on others' photos to share appreciation
+4. **Tags:** Use descriptive tags like "ceremony", "reception", "dance" to help others find photos
+5. **Comments:** Leave thoughtful comments to share memories
+6. **PWA Installation:** Install the app for quick access
+7. **Notifications:** Enable notifications to stay connected with your content
+8. **Interaction:** Like and comment on others' photos to share appreciation
+9. **Search:** Use the search and filter features to find specific photos quickly
 
 ### For Administrators
 1. **Regular Backups:** Use the batch download feature regularly

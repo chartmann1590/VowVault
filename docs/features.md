@@ -9,6 +9,33 @@ No login required, just upload and share! Supports photos and videos up to 50MB,
 - **Photos:** PNG, JPG, JPEG, GIF, WEBP
 - **Videos:** MP4, MOV, AVI (max 15 seconds)
 
+### 🔍 Search & Tagging
+Find photos quickly with powerful search and tagging features. Organize and discover memories with ease.
+
+**Search Features:**
+- **Text Search:** Search by uploader name, description, or tags
+- **Media Type Filter:** Filter by photos, videos, or photobooth images
+- **Tag Filter:** Filter by specific tags like "ceremony", "reception", "dance"
+- **Real-time Results:** Instant search results as you type
+- **Mobile Optimized:** Responsive search interface for all devices
+
+**Tagging System:**
+- **Custom Tags:** Add tags when uploading (e.g., "ceremony", "reception", "cake")
+- **Tag Display:** Tags shown on photo cards for easy identification
+- **Tag Suggestions:** Common wedding tags available in dropdown
+- **Comma-separated:** Multiple tags per photo (e.g., "ceremony, dance, family")
+- **Search Integration:** Tags included in search results
+
+**Example Tags:**
+- `ceremony` - Wedding ceremony photos
+- `reception` - Reception and party photos
+- `dance` - Dancing and celebration moments
+- `cake` - Cake cutting and dessert photos
+- `family` - Family group photos
+- `friends` - Friend group photos
+- `decorations` - Wedding decorations and venue
+- `food` - Catering and meal photos
+
 ### 📧 Email Photo Upload
 Send photos directly via email to automatically add them to the gallery. Perfect for guests who prefer email over web uploads.
 
