@@ -425,6 +425,60 @@
         background: #e0e0e0;
     }
 
+    /* Pagination Styles */
+    .pagination-container {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        margin: 3rem 0;
+        gap: 1rem;
+    }
+
+    .pagination-info {
+        color: #6b5d54;
+        font-size: 0.9rem;
+    }
+
+    .pagination-controls {
+        display: flex;
+        gap: 0.5rem;
+        align-items: center;
+    }
+
+    .pagination-btn {
+        background: #8b7355;
+        color: white;
+        border: none;
+        padding: 0.5rem 1rem;
+        border-radius: 5px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        font-size: 0.9rem;
+        text-decoration: none;
+        display: inline-block;
+    }
+
+    .pagination-btn:hover {
+        background: #6b5d54;
+        transform: translateY(-1px);
+    }
+
+    .pagination-btn:disabled {
+        background: #ccc;
+        cursor: not-allowed;
+        transform: none;
+    }
+
+    .pagination-btn.current {
+        background: #6b5d54;
+        font-weight: bold;
+    }
+
+    .pagination-ellipsis {
+        color: #6b5d54;
+        padding: 0.5rem;
+    }
+
     @media (max-width: 768px) {
         .gallery-header h2 {
             font-size: 2rem;
@@ -462,6 +516,21 @@
 
         .instructions-section {
             padding: 1.5rem;
+        }
+
+        .pagination-container {
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .pagination-controls {
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .pagination-btn {
+            padding: 0.4rem 0.8rem;
+            font-size: 0.8rem;
         }
     }
 </style>
@@ -592,6 +661,40 @@
         </div>
         {% endfor %}
     </div>
+    
+    <!-- Pagination Controls -->
+    {% if photos.pages > 1 %}
+    <div class="pagination-container">
+        <div class="pagination-info">
+            Showing {{ photos.items|length }} of {{ photos.total }} items
+        </div>
+        <div class="pagination-controls">
+            {% if photos.has_prev %}
+                <a href="{{ url_for('index', page=photos.prev_num) }}" class="pagination-btn">Previous</a>
+            {% else %}
+                <button class="pagination-btn" disabled>Previous</button>
+            {% endif %}
+            
+            {% for page_num in photos.iter_pages(left_edge=2, left_current=2, right_current=3, right_edge=2) %}
+                {% if page_num %}
+                    {% if page_num != photos.page %}
+                        <a href="{{ url_for('index', page=page_num) }}" class="pagination-btn">{{ page_num }}</a>
+                    {% else %}
+                        <button class="pagination-btn current" disabled>{{ page_num }}</button>
+                    {% endif %}
+                {% else %}
+                    <span class="pagination-ellipsis">...</span>
+                {% endif %}
+            {% endfor %}
+            
+            {% if photos.has_next %}
+                <a href="{{ url_for('index', page=photos.next_num) }}" class="pagination-btn">Next</a>
+            {% else %}
+                <button class="pagination-btn" disabled>Next</button>
+            {% endif %}
+        </div>
+    </div>
+    {% endif %}
 {% else %}
     <div class="empty-state">
         <h3>No photos or videos yet!</h3>

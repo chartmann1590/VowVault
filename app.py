@@ -830,16 +830,14 @@ def index():
     
     show_modal = welcome_settings.get('enabled', True) and (not has_seen_welcome or not welcome_settings.get('show_once', True))
     
-    # Get photos with pagination
+    # Get all content with pagination (photos, videos, photobooth, and emailed content)
     page = request.args.get('page', 1, type=int)
-    per_page = 12
+    per_page = 10
     
-    # Get all photos, ordered by upload date (newest first)
-    photos_query = Photo.query.filter_by(is_photobooth=False).order_by(Photo.upload_date.desc())
+    # Get all photos and videos, ordered by upload date (newest first)
+    # This includes regular uploads, photobooth photos, and emailed content
+    photos_query = Photo.query.order_by(Photo.upload_date.desc())
     photos = photos_query.paginate(page=page, per_page=per_page, error_out=False)
-    
-    # Get photobooth photos for the carousel
-    photobooth_photos = Photo.query.filter_by(is_photobooth=True).order_by(Photo.upload_date.desc()).limit(10).all()
     
     # Get email settings for the welcome modal
     email_settings = get_email_settings()
@@ -848,7 +846,6 @@ def index():
     if not request.cookies.get('user_identifier'):
         resp = make_response(render_template('index.html', 
                                           photos=photos, 
-                                          photobooth_photos=photobooth_photos,
                                           user_name=user_name,
                                           welcome_settings=welcome_settings,
                                           show_modal=show_modal,
@@ -858,7 +855,6 @@ def index():
     
     return render_template('index.html', 
                          photos=photos, 
-                         photobooth_photos=photobooth_photos,
                          user_name=user_name,
                          welcome_settings=welcome_settings,
                          show_modal=show_modal,
