@@ -5,6 +5,20 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}Wedding Photo Gallery{% endblock %}</title>
+    
+    <!-- PWA Meta Tags -->
+    <meta name="theme-color" content="#8b7355">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="apple-mobile-web-app-title" content="VowVault">
+    <meta name="description" content="Share and view wedding photos with friends and family">
+    
+    <!-- PWA Icons -->
+    <link rel="icon" type="image/png" sizes="32x32" href="/static/icons/icon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="/static/icons/icon-16x16.png">
+    <link rel="apple-touch-icon" href="/static/icons/icon-152x152.png">
+    <link rel="manifest" href="/static/manifest.json">
+    
     <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
     <style>
         * {
@@ -360,6 +374,163 @@
             padding: 0 15px;
         }
     }
+
+    /* PWA Styles */
+    .pwa-install-btn {
+        background: #8b7355;
+        color: white;
+        border: none;
+        padding: 0.75rem 1rem;
+        border-radius: 8px;
+        font-size: 1rem;
+        cursor: pointer;
+        width: 100%;
+        text-align: left;
+        transition: background-color 0.3s ease;
+    }
+
+    .pwa-install-btn:hover {
+        background: #6b5d54;
+    }
+
+    .pwa-modal {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.5);
+        z-index: 1000;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .pwa-modal-content {
+        background: white;
+        border-radius: 15px;
+        max-width: 500px;
+        width: 90%;
+        max-height: 80vh;
+        overflow-y: auto;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+    }
+
+    .pwa-modal-header {
+        background: #f9f5f0;
+        padding: 1.5rem;
+        border-radius: 15px 15px 0 0;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        border-bottom: 1px solid #e8ddd3;
+    }
+
+    .pwa-modal-header h3 {
+        color: #8b7355;
+        margin: 0;
+        font-family: 'Playfair Display', serif;
+    }
+
+    .pwa-modal-close {
+        background: none;
+        border: none;
+        font-size: 1.5rem;
+        cursor: pointer;
+        color: #6b5d54;
+        padding: 0;
+        width: 30px;
+        height: 30px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 50%;
+        transition: background-color 0.3s ease;
+    }
+
+    .pwa-modal-close:hover {
+        background-color: #e8ddd3;
+    }
+
+    .pwa-modal-body {
+        padding: 1.5rem;
+    }
+
+    .pwa-instructions h4 {
+        color: #8b7355;
+        margin: 1.5rem 0 0.5rem 0;
+        font-family: 'Playfair Display', serif;
+    }
+
+    .pwa-instructions h4:first-child {
+        margin-top: 0;
+    }
+
+    .pwa-instructions ol {
+        margin: 0.5rem 0 1rem 1.5rem;
+        color: #444444;
+        line-height: 1.6;
+    }
+
+    .pwa-instructions li {
+        margin-bottom: 0.5rem;
+    }
+
+    /* PWA Install Prompt */
+    .pwa-install-prompt {
+        position: fixed;
+        bottom: 20px;
+        left: 20px;
+        right: 20px;
+        background: #8b7355;
+        color: white;
+        padding: 1rem;
+        border-radius: 10px;
+        box-shadow: 0 5px 20px rgba(0, 0, 0, 0.2);
+        z-index: 999;
+        display: none;
+        align-items: center;
+        justify-content: space-between;
+    }
+
+    .pwa-install-prompt.show {
+        display: flex;
+    }
+
+    .pwa-install-prompt-text {
+        flex: 1;
+        margin-right: 1rem;
+    }
+
+    .pwa-install-prompt-buttons {
+        display: flex;
+        gap: 0.5rem;
+    }
+
+    .pwa-install-prompt-btn {
+        background: white;
+        color: #8b7355;
+        border: none;
+        padding: 0.5rem 1rem;
+        border-radius: 5px;
+        cursor: pointer;
+        font-weight: 500;
+        transition: background-color 0.3s ease;
+    }
+
+    .pwa-install-prompt-btn:hover {
+        background: #f5e6d3;
+    }
+
+    .pwa-install-prompt-btn.secondary {
+        background: transparent;
+        color: white;
+        border: 1px solid white;
+    }
+
+    .pwa-install-prompt-btn.secondary:hover {
+        background: rgba(255, 255, 255, 0.1);
+    }
 </style>
 {% block extra_styles %}{% endblock %}
 
@@ -394,8 +565,47 @@
         <li><a href="{{ url_for('photobooth') }}">Virtual Photobooth</a></li>
         <li><a href="{{ url_for('message_board') }}">Message Board</a></li>
         <li><a href="{{ url_for('guestbook') }}">Guestbook</a></li>
+        <li id="pwaInstallItem" style="display: none;">
+            <button id="pwaInstallBtn" class="pwa-install-btn">
+                📱 Install App
+            </button>
+        </li>
     </ul>
 </nav>
+
+<!-- PWA Install Modal -->
+<div id="pwaInstallModal" class="pwa-modal" style="display: none;">
+    <div class="pwa-modal-content">
+        <div class="pwa-modal-header">
+            <h3>📱 Install VowVault</h3>
+            <button class="pwa-modal-close" onclick="closePwaModal()">&times;</button>
+        </div>
+        <div class="pwa-modal-body">
+            <div class="pwa-instructions">
+                <h4>For Android/Chrome:</h4>
+                <ol>
+                    <li>Tap the menu button (⋮) in your browser</li>
+                    <li>Select "Add to Home screen" or "Install app"</li>
+                    <li>Follow the prompts to install</li>
+                </ol>
+                
+                <h4>For iPhone/Safari:</h4>
+                <ol>
+                    <li>Tap the share button (📤) in Safari</li>
+                    <li>Scroll down and tap "Add to Home Screen"</li>
+                    <li>Tap "Add" to install the app</li>
+                </ol>
+                
+                <h4>For other browsers:</h4>
+                <ol>
+                    <li>Look for an install prompt or menu option</li>
+                    <li>Select "Install" or "Add to Home Screen"</li>
+                    <li>Follow the browser's instructions</li>
+                </ol>
+            </div>
+        </div>
+    </div>
+</div>
 
 <div class="mobile-menu-overlay" id="mobileMenuOverlay"></div>
 
@@ -449,6 +659,147 @@
             body.style.overflow = '';
         }
     });
+
+    // PWA Functionality
+    let deferredPrompt;
+    let pwaInstallItem = document.getElementById('pwaInstallItem');
+    let pwaInstallBtn = document.getElementById('pwaInstallBtn');
+
+    // Register Service Worker
+    if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+            navigator.serviceWorker.register('/static/sw.js')
+                .then((registration) => {
+                    console.log('SW registered: ', registration);
+                })
+                .catch((registrationError) => {
+                    console.log('SW registration failed: ', registrationError);
+                });
+        });
+    }
+
+    // Listen for beforeinstallprompt event
+    window.addEventListener('beforeinstallprompt', (e) => {
+        // Prevent Chrome 67 and earlier from automatically showing the prompt
+        e.preventDefault();
+        // Stash the event so it can be triggered later
+        deferredPrompt = e;
+        
+        // Show install button in mobile menu
+        if (pwaInstallItem) {
+            pwaInstallItem.style.display = 'block';
+        }
+        
+        // Show install prompt after a delay
+        setTimeout(() => {
+            showInstallPrompt();
+        }, 3000);
+    });
+
+    // Handle install button click
+    if (pwaInstallBtn) {
+        pwaInstallBtn.addEventListener('click', () => {
+            showPwaModal();
+        });
+    }
+
+    // Show install prompt
+    function showInstallPrompt() {
+        if (deferredPrompt && !isPwaInstalled()) {
+            // Create and show install prompt
+            const prompt = document.createElement('div');
+            prompt.className = 'pwa-install-prompt';
+            prompt.innerHTML = `
+                <div class="pwa-install-prompt-text">
+                    <strong>📱 Install VowVault</strong><br>
+                    Get quick access to the wedding gallery
+                </div>
+                <div class="pwa-install-prompt-buttons">
+                    <button class="pwa-install-prompt-btn secondary" onclick="dismissInstallPrompt()">Not now</button>
+                    <button class="pwa-install-prompt-btn" onclick="installPwa()">Install</button>
+                </div>
+            `;
+            document.body.appendChild(prompt);
+            
+            // Show the prompt
+            setTimeout(() => {
+                prompt.classList.add('show');
+            }, 100);
+        }
+    }
+
+    // Install PWA
+    function installPwa() {
+        if (deferredPrompt) {
+            deferredPrompt.prompt();
+            deferredPrompt.userChoice.then((choiceResult) => {
+                if (choiceResult.outcome === 'accepted') {
+                    console.log('User accepted the install prompt');
+                    hideInstallPrompt();
+                } else {
+                    console.log('User dismissed the install prompt');
+                }
+                deferredPrompt = null;
+            });
+        }
+    }
+
+    // Dismiss install prompt
+    function dismissInstallPrompt() {
+        hideInstallPrompt();
+        // Hide install button for this session
+        if (pwaInstallItem) {
+            pwaInstallItem.style.display = 'none';
+        }
+    }
+
+    // Hide install prompt
+    function hideInstallPrompt() {
+        const prompt = document.querySelector('.pwa-install-prompt');
+        if (prompt) {
+            prompt.classList.remove('show');
+            setTimeout(() => {
+                if (prompt.parentNode) {
+                    prompt.parentNode.removeChild(prompt);
+                }
+            }, 300);
+        }
+    }
+
+    // Show PWA modal with instructions
+    function showPwaModal() {
+        const modal = document.getElementById('pwaInstallModal');
+        if (modal) {
+            modal.style.display = 'flex';
+        }
+    }
+
+    // Close PWA modal
+    function closePwaModal() {
+        const modal = document.getElementById('pwaInstallModal');
+        if (modal) {
+            modal.style.display = 'none';
+        }
+    }
+
+    // Check if PWA is installed
+    function isPwaInstalled() {
+        return window.matchMedia('(display-mode: standalone)').matches ||
+               window.navigator.standalone === true;
+    }
+
+    // Close modal when clicking outside
+    document.addEventListener('click', (e) => {
+        const modal = document.getElementById('pwaInstallModal');
+        if (modal && e.target === modal) {
+            closePwaModal();
+        }
+    });
+
+    // Hide install button if PWA is already installed
+    if (isPwaInstalled() && pwaInstallItem) {
+        pwaInstallItem.style.display = 'none';
+    }
 </script>
 {% block scripts %}{% endblock %}
 

@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, redirect, url_for, jsonify, make_response, send_file
+from flask import Flask, render_template, request, redirect, url_for, jsonify, make_response, send_file, send_from_directory
 from flask_sqlalchemy import SQLAlchemy
 from flask_mail import Mail, Message
 from datetime import datetime
@@ -1841,6 +1841,10 @@ def generate_qr_pdf():
         as_attachment=True,
         download_name='wedding_photo_qr.pdf'
     )
+
+@app.route('/static/manifest.json')
+def serve_manifest():
+    return send_from_directory('static', 'manifest.json', mimetype='application/manifest+json')
 
 @app.route('/privacy-policy')
 def privacy_policy():
