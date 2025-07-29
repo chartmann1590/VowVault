@@ -40,8 +40,8 @@ A beautiful, self-hosted wedding photo gallery application that allows wedding g
 
 1. Clone the repository:
 ```bash
-git clone https://github.com/chartmann1590/WeddingShare.git
-cd WeddingShare
+git clone https://github.com/chartmann1590/VowVault.git
+cd VowVault
 ```
 
 2. Create necessary directories:
@@ -64,8 +64,8 @@ The migration script will run automatically when the container starts.
 
 1. Clone and setup:
 ```bash
-git clone https://github.com/chartmann1590/WeddingShare.git
-cd WeddingShare
+git clone https://github.com/chartmann1590/VowVault.git
+cd VowVault
 python -m venv venv
 source venv/bin/activate  # On Windows: venv\Scripts\activate
 pip install -r requirements.txt
