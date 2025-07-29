@@ -418,6 +418,26 @@
                     } else {
                         this.classList.remove('liked');
                     }
+
+                    // Handle notification for message author
+                    if (data.notification_data && window.sendNotification) {
+                        const notificationData = data.notification_data;
+                        const currentUser = getCookie('user_identifier');
+                        
+                        // Only send notification if the current user is not the message author
+                        if (notificationData.liker_identifier !== currentUser) {
+                            const messageAuthor = notificationData.message_author;
+                            const action = notificationData.action;
+                            
+                            if (action === 'liked') {
+                                window.sendNotification(
+                                    '❤️ New Like!',
+                                    `${messageAuthor} just liked your message!`,
+                                    '/static/icons/icon-192x192.png'
+                                );
+                            }
+                        }
+                    }
                 }
             } catch (error) {
                 console.error('Error toggling like:', error);
@@ -475,6 +495,24 @@
                 const commentBtn = document.querySelector(`.comment-btn[onclick="toggleComments(${messageId})"]`);
                 const countSpan = commentBtn.querySelector('span');
                 countSpan.textContent = parseInt(countSpan.textContent) + 1;
+
+                // Handle notification for message author
+                if (comment.notification_data && window.sendNotification) {
+                    const notificationData = comment.notification_data;
+                    const currentUser = getCookie('user_identifier');
+                    
+                    // Only send notification if the current user is not the message author
+                    if (notificationData.commenter_name !== notificationData.message_author) {
+                        const messageAuthor = notificationData.message_author;
+                        const commenterName = notificationData.commenter_name;
+                        
+                        window.sendNotification(
+                            '💬 New Comment!',
+                            `${commenterName} commented on your message!`,
+                            '/static/icons/icon-192x192.png'
+                        );
+                    }
+                }
             }
         } catch (error) {
             console.error('Error posting comment:', error);

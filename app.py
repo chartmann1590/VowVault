@@ -1089,7 +1089,21 @@ def toggle_message_like(message_id):
     
     db.session.commit()
     
-    resp = jsonify({'likes': message.likes, 'liked': liked})
+    # Prepare notification data for the message author
+    notification_data = {
+        'type': 'message_like',
+        'action': 'liked' if liked else 'unliked',
+        'message_id': message_id,
+        'message_author': message.author_name,
+        'liker_identifier': user_identifier,
+        'total_likes': message.likes
+    }
+    
+    resp = jsonify({
+        'likes': message.likes, 
+        'liked': liked,
+        'notification_data': notification_data
+    })
     resp.set_cookie('user_identifier', user_identifier, max_age=365*24*60*60)  # 1 year
     return resp
 
@@ -1112,11 +1126,22 @@ def add_message_comment(message_id):
     db.session.add(comment)
     db.session.commit()
     
+    # Prepare notification data for the message author
+    notification_data = {
+        'type': 'message_comment',
+        'message_id': message_id,
+        'message_author': message.author_name,
+        'commenter_name': commenter_name,
+        'comment_content': content,
+        'comment_id': comment.id
+    }
+    
     resp = jsonify({
         'id': comment.id,
         'commenter_name': comment.commenter_name,
         'content': comment.content,
-        'created_at': comment.created_at.strftime('%B %d, %Y at %I:%M %p')
+        'created_at': comment.created_at.strftime('%B %d, %Y at %I:%M %p'),
+        'notification_data': notification_data
     })
     resp.set_cookie('user_name', commenter_name, max_age=30*24*60*60)  # 30 days
     return resp
@@ -1143,7 +1168,21 @@ def toggle_like(photo_id):
     
     db.session.commit()
     
-    resp = jsonify({'likes': photo.likes, 'liked': liked})
+    # Prepare notification data for the photo uploader
+    notification_data = {
+        'type': 'like',
+        'action': 'liked' if liked else 'unliked',
+        'photo_id': photo_id,
+        'photo_uploader': photo.uploader_name,
+        'liker_identifier': user_identifier,
+        'total_likes': photo.likes
+    }
+    
+    resp = jsonify({
+        'likes': photo.likes, 
+        'liked': liked,
+        'notification_data': notification_data
+    })
     resp.set_cookie('user_identifier', user_identifier, max_age=365*24*60*60)  # 1 year
     return resp
 
@@ -1166,11 +1205,22 @@ def add_comment(photo_id):
     db.session.add(comment)
     db.session.commit()
     
+    # Prepare notification data for the photo uploader
+    notification_data = {
+        'type': 'comment',
+        'photo_id': photo_id,
+        'photo_uploader': photo.uploader_name,
+        'commenter_name': commenter_name,
+        'comment_content': content,
+        'comment_id': comment.id
+    }
+    
     resp = jsonify({
         'id': comment.id,
         'commenter_name': comment.commenter_name,
         'content': comment.content,
-        'created_at': comment.created_at.strftime('%B %d, %Y at %I:%M %p')
+        'created_at': comment.created_at.strftime('%B %d, %Y at %I:%M %p'),
+        'notification_data': notification_data
     })
     resp.set_cookie('user_name', commenter_name, max_age=30*24*60*60)  # 30 days
     return resp

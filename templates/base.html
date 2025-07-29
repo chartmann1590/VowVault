@@ -543,6 +543,35 @@
     .pwa-install-prompt-btn.secondary:hover {
         background: rgba(255, 255, 255, 0.1);
     }
+
+    /* Notification Toggle Styles */
+    .notification-toggle-item {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.75rem 2rem;
+        border-bottom: 1px solid #f0f0f0;
+    }
+
+    .notification-toggle-btn {
+        background: none;
+        border: none;
+        cursor: pointer;
+        font-size: 1.1rem;
+        color: #6b5d54;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        transition: color 0.3s ease;
+    }
+
+    .notification-toggle-btn:hover {
+        color: #8b7355;
+    }
+
+    .notification-toggle-btn.active {
+        color: #8b7355;
+    }
 </style>
 {% block extra_styles %}{% endblock %}
 
@@ -577,6 +606,12 @@
         <li><a href="{{ url_for('photobooth') }}">Virtual Photobooth</a></li>
         <li><a href="{{ url_for('message_board') }}">Message Board</a></li>
         <li><a href="{{ url_for('guestbook') }}">Guestbook</a></li>
+        <li class="notification-toggle-item">
+            <button id="notificationToggle" class="notification-toggle-btn">
+                <span id="notificationIcon">🔕</span>
+                <span id="notificationText">Enable Notifications</span>
+            </button>
+        </li>
         <li id="pwaInstallItem" class="mobile-only">
             <button id="pwaInstallBtn" class="pwa-install-btn">
                 📱 Install App
@@ -846,6 +881,113 @@
             hideInstallButtonIfInstalled();
         }
     });
+
+    // Notification System
+    let notificationPermission = false;
+    let notificationEnabled = localStorage.getItem('notifications_enabled') === 'true';
+    const notificationToggle = document.getElementById('notificationToggle');
+    const notificationIcon = document.getElementById('notificationIcon');
+    const notificationText = document.getElementById('notificationText');
+
+    // Initialize notification system
+    function initNotifications() {
+        updateNotificationUI();
+        
+        if (notificationEnabled) {
+            requestNotificationPermission();
+        }
+    }
+
+    // Update notification UI
+    function updateNotificationUI() {
+        if (notificationEnabled && notificationPermission) {
+            notificationIcon.textContent = '🔔';
+            notificationText.textContent = 'Notifications On';
+            notificationToggle.classList.add('active');
+        } else {
+            notificationIcon.textContent = '🔕';
+            notificationText.textContent = 'Enable Notifications';
+            notificationToggle.classList.remove('active');
+        }
+    }
+
+    // Request notification permission
+    function requestNotificationPermission() {
+        if ('Notification' in window) {
+            Notification.requestPermission().then(permission => {
+                notificationPermission = permission === 'granted';
+                updateNotificationUI();
+                
+                if (notificationPermission) {
+                    localStorage.setItem('notifications_enabled', 'true');
+                    notificationEnabled = true;
+                } else {
+                    localStorage.setItem('notifications_enabled', 'false');
+                    notificationEnabled = false;
+                }
+            });
+        } else {
+            alert('Notifications are not supported in this browser.');
+        }
+    }
+
+    // Toggle notifications
+    function toggleNotifications() {
+        if (notificationEnabled) {
+            // Disable notifications
+            notificationEnabled = false;
+            localStorage.setItem('notifications_enabled', 'false');
+            updateNotificationUI();
+        } else {
+            // Enable notifications
+            requestNotificationPermission();
+        }
+    }
+
+    // Send notification
+    function sendNotification(title, body, icon = null) {
+        if (notificationEnabled && notificationPermission && 'Notification' in window) {
+            const notification = new Notification(title, {
+                body: body,
+                icon: icon || '/static/icons/icon-192x192.png',
+                badge: '/static/icons/icon-32x32.png',
+                tag: 'vowvault-notification'
+            });
+
+            // Auto close after 5 seconds
+            setTimeout(() => {
+                notification.close();
+            }, 5000);
+
+            // Handle notification click
+            notification.onclick = function() {
+                window.focus();
+                notification.close();
+            };
+        }
+    }
+
+    // Handle notification toggle click
+    if (notificationToggle) {
+        notificationToggle.addEventListener('click', toggleNotifications);
+    }
+
+    // Initialize notifications on page load
+    initNotifications();
+
+    // Make sendNotification available globally
+    window.sendNotification = sendNotification;
+
+    // Helper function to get cookies
+    function getCookie(name) {
+        const value = `; ${document.cookie}`;
+        const parts = value.split(`; ${name}=`);
+        if (parts.length === 2) return parts.pop().split(';').shift();
+        return null;
+    }
+
+    // Make getCookie available globally
+    window.getCookie = getCookie;
 </script>
 {% block scripts %}{% endblock %}
 

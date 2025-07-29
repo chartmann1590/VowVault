@@ -454,6 +454,26 @@
                 } else {
                     this.classList.remove('liked');
                 }
+
+                // Handle notification for photo uploader
+                if (data.notification_data && window.sendNotification) {
+                    const notificationData = data.notification_data;
+                    const currentUser = getCookie('user_identifier');
+                    
+                    // Only send notification if the current user is not the photo uploader
+                    if (notificationData.liker_identifier !== currentUser) {
+                        const photoUploader = notificationData.photo_uploader;
+                        const action = notificationData.action;
+                        
+                        if (action === 'liked') {
+                            window.sendNotification(
+                                '❤️ New Like!',
+                                `${photoUploader} just liked your photo!`,
+                                '/static/icons/icon-192x192.png'
+                            );
+                        }
+                    }
+                }
             }
         } catch (error) {
             console.error('Error toggling like:', error);
@@ -506,6 +526,24 @@
 
                 // Clear comment form
                 document.getElementById('comment_content').value = '';
+
+                // Handle notification for photo uploader
+                if (comment.notification_data && window.sendNotification) {
+                    const notificationData = comment.notification_data;
+                    const currentUser = getCookie('user_identifier');
+                    
+                    // Only send notification if the current user is not the photo uploader
+                    if (notificationData.commenter_name !== notificationData.photo_uploader) {
+                        const photoUploader = notificationData.photo_uploader;
+                        const commenterName = notificationData.commenter_name;
+                        
+                        window.sendNotification(
+                            '💬 New Comment!',
+                            `${commenterName} commented on your photo!`,
+                            '/static/icons/icon-192x192.png'
+                        );
+                    }
+                }
             }
         } catch (error) {
             console.error('Error posting comment:', error);
