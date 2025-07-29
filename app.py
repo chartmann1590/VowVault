@@ -1170,17 +1170,13 @@ def toggle_message_like(message_id):
     if liked and message.author_identifier and message.author_identifier != user_identifier:
         liker_name = request.cookies.get('user_name', 'Anonymous')
         
-        # Create notification in database
-        notification = Notification(
+        # Create notification with push notification
+        create_notification_with_push(
             user_identifier=message.author_identifier,
             title='❤️ New Like!',
             message=f'{liker_name} just liked your message!',
             notification_type='like'
         )
-        db.session.add(notification)
-        db.session.commit()
-        
-        print(f"Notification Debug: Created message like notification for {message.author_identifier} from {liker_name}")
     
     # Prepare notification data for the message author
     notification_data = {
@@ -1224,17 +1220,13 @@ def add_message_comment(message_id):
     # Create database notification for the message author if someone else commented
     user_identifier = request.cookies.get('user_identifier', '')
     if message.author_identifier and message.author_identifier != user_identifier:
-        # Create notification in database
-        notification = Notification(
+        # Create notification with push notification
+        create_notification_with_push(
             user_identifier=message.author_identifier,
             title='💬 New Comment!',
             message=f'{commenter_name} commented on your message!',
             notification_type='comment'
         )
-        db.session.add(notification)
-        db.session.commit()
-        
-        print(f"Notification Debug: Created message comment notification for {message.author_identifier} from {commenter_name}")
     
     # Prepare notification data for the message author
     notification_data = {
@@ -1283,17 +1275,13 @@ def toggle_like(photo_id):
     if liked and photo.uploader_identifier and photo.uploader_identifier != user_identifier:
         liker_name = request.cookies.get('user_name', 'Anonymous')
         
-        # Create notification in database
-        notification = Notification(
+        # Create notification with push notification
+        create_notification_with_push(
             user_identifier=photo.uploader_identifier,
             title='❤️ New Like!',
             message=f'{liker_name} just liked your photo!',
             notification_type='like'
         )
-        db.session.add(notification)
-        db.session.commit()
-        
-        print(f"Notification Debug: Created like notification for {photo.uploader_identifier} from {liker_name}")
     
     # Prepare notification data for the photo uploader
     notification_data = {
@@ -1337,17 +1325,13 @@ def add_comment(photo_id):
     # Create database notification for the photo uploader if someone else commented
     user_identifier = request.cookies.get('user_identifier', '')
     if photo.uploader_identifier and photo.uploader_identifier != user_identifier:
-        # Create notification in database
-        notification = Notification(
+        # Create notification with push notification
+        create_notification_with_push(
             user_identifier=photo.uploader_identifier,
             title='💬 New Comment!',
             message=f'{commenter_name} commented on your photo!',
             notification_type='comment'
         )
-        db.session.add(notification)
-        db.session.commit()
-        
-        print(f"Notification Debug: Created comment notification for {photo.uploader_identifier} from {commenter_name}")
     
     # Prepare notification data for the photo uploader
     notification_data = {
@@ -1942,15 +1926,13 @@ def send_admin_notification():
                 print(f"Notification Debug: User not found for identifier: {user_identifier}")
                 return jsonify({'success': False, 'message': 'User not found'})
             
-            # Store notification in database
-            notification = Notification(
+            # Store notification in database with push notification
+            create_notification_with_push(
                 user_identifier=user_identifier,
                 title=title,
                 message=message,
                 notification_type='admin'
             )
-            db.session.add(notification)
-            db.session.commit()
             
             print(f"Individual notification stored for {user.user_name}: {title} - {message}")
             return jsonify({'success': True, 'message': f'Notification sent to {user.user_name}'})
@@ -1963,17 +1945,14 @@ def send_admin_notification():
             print(f"Notification Debug: Found {len(users)} users with notifications enabled")
             
             for user in users:
-                # Store notification in database
-                notification = Notification(
+                # Store notification in database with push notification
+                create_notification_with_push(
                     user_identifier=user.user_identifier,
                     title=title,
                     message=message,
                     notification_type='admin'
                 )
-                db.session.add(notification)
                 sent_count += 1
-            
-            db.session.commit()
             print(f"Mass notification stored for {sent_count} users: {title} - {message}")
             
             return jsonify({
@@ -2304,9 +2283,11 @@ def check_notifications():
             'title': notification.title,
             'message': notification.message,
             'type': notification.notification_type,
-            'created_at': notification.created_at.strftime('%B %d, %Y at %I:%M %p')
+            'created_at': notification.created_at.strftime('%B %d, %Y at %I:%M %p'),
+            'is_read': notification.is_read
         })
     
+    print(f"Found {len(notification_list)} unread notifications for user {user_identifier}")
     return jsonify({'notifications': notification_list})
 
 @app.route('/api/notifications/mark-read', methods=['POST'])
@@ -2395,6 +2376,106 @@ def delete_notification():
     
     except Exception as e:
         return jsonify({'success': False, 'message': str(e)})
+
+def trigger_push_notification(user_identifier, title, message, notification_type='admin'):
+    """Trigger a push notification for a specific user"""
+    try:
+        # Check if user has notifications enabled
+        user = NotificationUser.query.filter_by(
+            user_identifier=user_identifier,
+            notifications_enabled=True
+        ).first()
+        
+        if user:
+            print(f"Push notification triggered for {user.user_name}: {title} - {message}")
+            # The actual push notification will be handled by the frontend
+            # when it checks for new notifications
+            return True
+        else:
+            print(f"User {user_identifier} not found or notifications disabled")
+            return False
+    except Exception as e:
+        print(f"Error triggering push notification: {e}")
+        return False
+
+def create_notification_with_push(user_identifier, title, message, notification_type='admin'):
+    """Create a notification in database and trigger push notification"""
+    try:
+        # Create notification in database
+        notification = Notification(
+            user_identifier=user_identifier,
+            title=title,
+            message=message,
+            notification_type=notification_type
+        )
+        db.session.add(notification)
+        db.session.commit()
+        
+        print(f"Database notification created for {user_identifier}: {title} - {message}")
+        
+        # Trigger push notification
+        trigger_push_notification(user_identifier, title, message, notification_type)
+        
+        return notification
+    except Exception as e:
+        print(f"Error creating notification: {e}")
+        return None
+
+@app.route('/test-notification')
+def test_notification():
+    """Test route to create a notification for the current user"""
+    user_identifier = request.cookies.get('user_identifier', '')
+    if not user_identifier:
+        return jsonify({'error': 'No user identifier found'})
+    
+    # Create a test notification
+    notification = create_notification_with_push(
+        user_identifier=user_identifier,
+        title='🧪 Test Notification',
+        message='This is a test notification to verify the system is working!',
+        notification_type='admin'
+    )
+    
+    if notification:
+        return jsonify({
+            'success': True,
+            'message': 'Test notification created successfully',
+            'notification_id': notification.id
+        })
+    else:
+        return jsonify({
+            'success': False,
+            'message': 'Failed to create test notification'
+        })
+
+@app.route('/debug/notification-users')
+def debug_notification_users():
+    """Debug route to check notification users"""
+    users = NotificationUser.query.all()
+    user_list = []
+    
+    for user in users:
+        # Count unread notifications for this user
+        unread_count = Notification.query.filter_by(
+            user_identifier=user.user_identifier,
+            is_read=False
+        ).count()
+        
+        user_list.append({
+            'id': user.id,
+            'user_identifier': user.user_identifier,
+            'user_name': user.user_name,
+            'notifications_enabled': user.notifications_enabled,
+            'last_seen': user.last_seen.strftime('%Y-%m-%d %H:%M:%S') if user.last_seen else None,
+            'created_at': user.created_at.strftime('%Y-%m-%d %H:%M:%S'),
+            'device_info': user.device_info,
+            'unread_notifications': unread_count
+        })
+    
+    return jsonify({
+        'total_users': len(user_list),
+        'users': user_list
+    })
 
 if __name__ == '__main__':
     with app.app_context():

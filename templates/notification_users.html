@@ -351,6 +351,12 @@
         console.log('Notification Debug: sending data:', data);
         console.log('Notification Debug: URL:', `/admin/send-notification?key={{ admin_key }}`);
         
+        // Show loading state
+        const sendButton = document.querySelector('.btn');
+        const originalText = sendButton.textContent;
+        sendButton.textContent = 'Sending...';
+        sendButton.disabled = true;
+        
         // Test the URL construction
         const url = `/admin/send-notification?key={{ admin_key }}`;
         console.log('Notification Debug: Constructed URL:', url);
@@ -369,17 +375,86 @@
         })
         .then(data => {
             console.log('Notification Debug: response data:', data);
+            
+            // Reset button state
+            sendButton.textContent = originalText;
+            sendButton.disabled = false;
+            
             if (data.success) {
-                alert('Notification sent successfully!');
+                // Show success message
+                const successMessage = document.createElement('div');
+                successMessage.style.cssText = `
+                    background: #d4edda;
+                    color: #155724;
+                    padding: 1rem;
+                    border-radius: 10px;
+                    margin-top: 1rem;
+                    border: 1px solid #c3e6cb;
+                `;
+                successMessage.textContent = data.message;
+                
+                // Insert after the form
+                const form = document.querySelector('.notification-form');
+                form.appendChild(successMessage);
+                
+                // Clear form
                 document.getElementById('notificationTitle').value = '';
                 document.getElementById('notificationMessage').value = '';
+                
+                // Remove success message after 5 seconds
+                setTimeout(() => {
+                    successMessage.remove();
+                }, 5000);
             } else {
-                alert('Error sending notification: ' + data.message);
+                // Show error message
+                const errorMessage = document.createElement('div');
+                errorMessage.style.cssText = `
+                    background: #f8d7da;
+                    color: #721c24;
+                    padding: 1rem;
+                    border-radius: 10px;
+                    margin-top: 1rem;
+                    border: 1px solid #f5c6cb;
+                `;
+                errorMessage.textContent = 'Error: ' + data.message;
+                
+                // Insert after the form
+                const form = document.querySelector('.notification-form');
+                form.appendChild(errorMessage);
+                
+                // Remove error message after 5 seconds
+                setTimeout(() => {
+                    errorMessage.remove();
+                }, 5000);
             }
         })
         .catch(error => {
             console.error('Notification Debug: fetch error:', error);
-            alert('Error sending notification: ' + error);
+            
+            // Reset button state
+            sendButton.textContent = originalText;
+            sendButton.disabled = false;
+            
+            // Show error message
+            const errorMessage = document.createElement('div');
+            errorMessage.style.cssText = `
+                background: #f8d7da;
+                color: #721c24;
+                padding: 1rem;
+                border-radius: 10px;
+                margin-top: 1rem;
+                border: 1px solid #f5c6cb;
+            `;
+            errorMessage.textContent = 'Error sending notification: ' + error;
+            
+            // Insert after the form
+            const form = document.querySelector('.notification-form');
+            form.appendChild(errorMessage);
+            
+            // Remove error message after 5 seconds
+            setTimeout(() => {
+                errorMessage.remove();
+            }, 5000);
         });
         
         console.log('=== NOTIFICATION DEBUG END ===');
@@ -405,6 +480,12 @@
         
         console.log('Notification Debug: sending individual data:', data);
         
+        // Show loading state
+        const button = event.target;
+        const originalText = button.textContent;
+        button.textContent = 'Sending...';
+        button.disabled = true;
+        
         fetch(`/admin/send-notification?key={{ admin_key }}`, {
             method: 'POST',
             headers: {
@@ -418,15 +499,88 @@
         })
         .then(data => {
             console.log('Notification Debug: individual response data:', data);
+            
+            // Reset button state
+            button.textContent = originalText;
+            button.disabled = false;
+            
             if (data.success) {
-                alert('Individual notification sent successfully!');
+                // Show success message
+                const successMessage = document.createElement('div');
+                successMessage.style.cssText = `
+                    background: #d4edda;
+                    color: #155724;
+                    padding: 1rem;
+                    border-radius: 10px;
+                    margin-top: 1rem;
+                    border: 1px solid #c3e6cb;
+                    position: fixed;
+                    top: 20px;
+                    right: 20px;
+                    z-index: 10000;
+                    max-width: 300px;
+                `;
+                successMessage.textContent = data.message;
+                document.body.appendChild(successMessage);
+                
+                // Remove success message after 5 seconds
+                setTimeout(() => {
+                    successMessage.remove();
+                }, 5000);
             } else {
-                alert('Error sending notification: ' + data.message);
+                // Show error message
+                const errorMessage = document.createElement('div');
+                errorMessage.style.cssText = `
+                    background: #f8d7da;
+                    color: #721c24;
+                    padding: 1rem;
+                    border-radius: 10px;
+                    margin-top: 1rem;
+                    border: 1px solid #f5c6cb;
+                    position: fixed;
+                    top: 20px;
+                    right: 20px;
+                    z-index: 10000;
+                    max-width: 300px;
+                `;
+                errorMessage.textContent = 'Error: ' + data.message;
+                document.body.appendChild(errorMessage);
+                
+                // Remove error message after 5 seconds
+                setTimeout(() => {
+                    errorMessage.remove();
+                }, 5000);
             }
         })
         .catch(error => {
             console.error('Notification Debug: individual fetch error:', error);
-            alert('Error sending notification: ' + error);
+            
+            // Reset button state
+            button.textContent = originalText;
+            button.disabled = false;
+            
+            // Show error message
+            const errorMessage = document.createElement('div');
+            errorMessage.style.cssText = `
+                background: #f8d7da;
+                color: #721c24;
+                padding: 1rem;
+                border-radius: 10px;
+                margin-top: 1rem;
+                border: 1px solid #f5c6cb;
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                z-index: 10000;
+                max-width: 300px;
+            `;
+            errorMessage.textContent = 'Error sending notification: ' + error;
+            document.body.appendChild(errorMessage);
+            
+            // Remove error message after 5 seconds
+            setTimeout(() => {
+                errorMessage.remove();
+            }, 5000);
         });
     }
 </script>

@@ -994,6 +994,9 @@
 
     // Initialize notifications on page load
     initNotifications();
+    
+    // Start notification polling
+    startNotificationPolling();
 
     // Register user for notifications
     function registerNotificationUser() {
@@ -1078,7 +1081,7 @@
                     const unreadCount = data.notifications.filter(n => !n.is_read).length;
                     showNotificationBadge(unreadCount);
                     
-                    // Only show modal and system notifications if there are unread notifications
+                    // Show system notifications for new unread notifications
                     if (unreadCount > 0) {
                         displayNotifications(data.notifications);
                     }
@@ -1090,6 +1093,15 @@
             .catch(error => {
                 console.error('Error checking notifications:', error);
             });
+    }
+
+    // Check for notifications periodically
+    function startNotificationPolling() {
+        // Check immediately
+        checkForNotifications();
+        
+        // Then check every 30 seconds
+        setInterval(checkForNotifications, 30000);
     }
 
     function showNotificationBadge(count) {
@@ -1153,24 +1165,27 @@
             if (notificationEnabled && notificationPermission && 'Notification' in window) {
                 // Only show system notification if it's a new notification (not already read)
                 if (!notification.is_read) {
+                    console.log('Sending push notification:', notification.title, notification.message);
+                    
                     const systemNotification = new Notification(notification.title, {
                         body: notification.message,
                         icon: '/static/icons/icon-192x192.png',
                         badge: '/static/icons/icon-32x32.png',
                         tag: `notification-${notification.id}`,
-                        requireInteraction: false
+                        requireInteraction: false,
+                        silent: false
                     });
 
-                    // Auto close after 5 seconds
+                    // Auto close after 8 seconds
                     setTimeout(() => {
                         systemNotification.close();
-                    }, 5000);
+                    }, 8000);
 
                     // Handle notification click
                     systemNotification.onclick = function() {
                         window.focus();
                         systemNotification.close();
-                        // Optionally redirect to notifications page
+                        // Redirect to notifications page
                         window.location.href = '/notifications';
                     };
                 }
