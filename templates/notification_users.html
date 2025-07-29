@@ -194,25 +194,20 @@
         color: #6b5d54;
     }
 
-    /* Message styles */
     .message {
+        margin-top: 1rem;
         padding: 1rem;
         border-radius: 10px;
-        margin-top: 1rem;
-        display: none;
+        font-weight: 600;
     }
 
-    .message.show {
-        display: block;
-    }
-
-    .success-message {
+    .message.success {
         background: #d4edda;
         color: #155724;
         border: 1px solid #c3e6cb;
     }
 
-    .error-message {
+    .message.error {
         background: #f8d7da;
         color: #721c24;
         border: 1px solid #f5c6cb;
@@ -333,7 +328,7 @@
                         <td>{{ user.last_seen.strftime('%b %d, %Y at %I:%M %p') if user.last_seen else 'Never' }}</td>
                         <td>{{ user.device_info[:50] + '...' if user.device_info and user.device_info|length > 50 else user.device_info or 'Unknown' }}</td>
                         <td>
-                            <button class="btn btn-secondary" onclick="sendIndividualNotification('{{ user.user_identifier }}', '{{ user.user_name }}')">
+                            <button class="btn btn-secondary individual-notification-btn" data-user-id="{{ user.user_identifier }}" data-user-name="{{ user.user_name }}">
                                 Send Notification
                             </button>
                         </td>
@@ -349,6 +344,42 @@
 </div>
 
 <script>
+    // Simple, guaranteed-to-work notification system
+    document.addEventListener('DOMContentLoaded', function() {
+        console.log('DOM loaded, setting up notification system');
+        
+        // Main send button
+        const sendButton = document.getElementById('sendButton');
+        if (sendButton) {
+            console.log('Found send button, adding event listener');
+            sendButton.addEventListener('click', function() {
+                console.log('Send button clicked!');
+                sendNotificationSimple();
+            });
+        } else {
+            console.error('Send button not found!');
+        }
+        
+        // Individual notification buttons
+        const individualButtons = document.querySelectorAll('.individual-notification-btn');
+        individualButtons.forEach(button => {
+            button.addEventListener('click', function() {
+                const userId = this.getAttribute('data-user-id');
+                const userName = this.getAttribute('data-user-name');
+                console.log('Individual button clicked for:', userName);
+                sendIndividualNotificationSimple(userId, userName);
+            });
+        });
+        
+        // Type selector
+        const typeSelector = document.getElementById('notificationType');
+        if (typeSelector) {
+            typeSelector.addEventListener('change', function() {
+                toggleUserSelect();
+            });
+        }
+    });
+
     function toggleUserSelect() {
         const type = document.getElementById('notificationType').value;
         const userGroup = document.getElementById('userSelectGroup');
@@ -360,40 +391,29 @@
         }
     }
 
-    function showMessage(message, isSuccess = true) {
-        const messageContainer = document.getElementById('messageContainer');
-        messageContainer.className = `message ${isSuccess ? 'success-message' : 'error-message'} show`;
-        messageContainer.textContent = message;
-        
-        // Hide message after 5 seconds
-        setTimeout(() => {
-            messageContainer.classList.remove('show');
-        }, 5000);
-    }
-
-    async function sendNotification() {
-        console.log('sendNotification called');
+    function sendNotificationSimple() {
+        console.log('=== SIMPLE NOTIFICATION FUNCTION CALLED ===');
         
         const type = document.getElementById('notificationType').value;
         const title = document.getElementById('notificationTitle').value.trim();
         const message = document.getElementById('notificationMessage').value.trim();
-        const userSelect = document.getElementById('userSelect');
-        const userIdentifier = type === 'individual' ? userSelect.value : null;
+        const userIdentifier = document.getElementById('userSelect').value;
         
-        console.log('Form values:', { type, title, message, userIdentifier });
+        console.log('Type:', type);
+        console.log('Title:', title);
+        console.log('Message:', message);
+        console.log('User ID:', userIdentifier);
         
-        // Validation
         if (!title || !message) {
-            showMessage('Please enter both title and message.', false);
+            showMessage('Please enter both title and message.', 'error');
             return;
         }
         
         if (type === 'individual' && !userIdentifier) {
-            showMessage('Please select a user for individual notification.', false);
+            showMessage('Please select a user for individual notification.', 'error');
             return;
         }
         
-        // Prepare data
         const data = {
             type: type,
             title: title,
@@ -406,50 +426,56 @@
         
         console.log('Sending data:', data);
         
-        // Show loading state
-        const sendButton = document.getElementById('sendButton');
-        const originalText = sendButton.textContent;
-        sendButton.innerHTML = 'Sending<span class="loading"></span>';
-        sendButton.disabled = true;
+        // Show loading
+        const button = document.getElementById('sendButton');
+        const originalText = button.textContent;
+        button.textContent = 'Sending...';
+        button.disabled = true;
         
-        try {
-            const response = await fetch(`/admin/send-notification?key={{ admin_key }}`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify(data)
-            });
-            
+        // Make the request
+        fetch('/admin/send-notification?key={{ admin_key }}', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(data)
+        })
+        .then(response => {
             console.log('Response status:', response.status);
+            return response.json();
+        })
+        .then(data => {
+            console.log('Response data:', data);
             
-            const result = await response.json();
+            // Reset button
+            button.textContent = originalText;
+            button.disabled = false;
             
-            console.log('Response data:', result);
-            
-            if (result.success) {
-                showMessage(result.message, true);
-                
+            if (data.success) {
+                showMessage(data.message, 'success');
                 // Clear form
                 document.getElementById('notificationTitle').value = '';
                 document.getElementById('notificationMessage').value = '';
-                if (type === 'individual') {
-                    userSelect.value = '';
-                }
             } else {
-                showMessage('Error: ' + result.message, false);
+                showMessage('Error: ' + data.message, 'error');
             }
-        } catch (error) {
-            console.error('Error sending notification:', error);
-            showMessage('Error sending notification: ' + error.message, false);
-        } finally {
-            // Reset button state
-            sendButton.textContent = originalText;
-            sendButton.disabled = false;
-        }
+        })
+        .catch(error => {
+            console.error('Fetch error:', error);
+            
+            // Reset button
+            button.textContent = originalText;
+            button.disabled = false;
+            
+            showMessage('Error sending notification: ' + error, 'error');
+        });
     }
 
-    async function sendIndividualNotification(userIdentifier, userName) {
+    function sendIndividualNotificationSimple(userId, userName) {
+        console.log('=== INDIVIDUAL NOTIFICATION FUNCTION CALLED ===');
+        console.log('User ID:', userId);
+        console.log('User Name:', userName);
+        
         const title = prompt(`Enter notification title for ${userName}:`);
         if (!title) return;
         
@@ -460,56 +486,55 @@
             type: 'individual',
             title: title,
             message: message,
-            user_identifier: userIdentifier
+            user_identifier: userId
         };
         
-        // Find the button that was clicked
-        const button = event.target;
-        const originalText = button.textContent;
-        button.innerHTML = 'Sending<span class="loading"></span>';
-        button.disabled = true;
+        console.log('Sending individual data:', data);
         
-        try {
-            const response = await fetch(`/admin/send-notification?key={{ admin_key }}`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify(data)
-            });
+        fetch('/admin/send-notification?key={{ admin_key }}', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(data)
+        })
+        .then(response => {
+            console.log('Individual response status:', response.status);
+            return response.json();
+        })
+        .then(data => {
+            console.log('Individual response data:', data);
             
-            const result = await response.json();
-            
-            if (result.success) {
-                alert(result.message);
+            if (data.success) {
+                alert('Individual notification sent successfully!');
             } else {
-                alert('Error: ' + result.message);
+                alert('Error sending notification: ' + data.message);
             }
-        } catch (error) {
-            console.error('Error sending notification:', error);
-            alert('Error sending notification: ' + error.message);
-        } finally {
-            // Reset button state
-            button.textContent = originalText;
-            button.disabled = false;
-        }
+        })
+        .catch(error => {
+            console.error('Individual fetch error:', error);
+            alert('Error sending notification: ' + error);
+        });
     }
 
-    // Initialize on page load
-    document.addEventListener('DOMContentLoaded', function() {
-        console.log('DOM loaded, attaching event listener');
+    function showMessage(text, type) {
+        const container = document.getElementById('messageContainer');
+        container.innerHTML = `<div class="message ${type}">${text}</div>`;
         
-        // Attach click event to send button
-        const sendButton = document.getElementById('sendButton');
-        if (sendButton) {
-            sendButton.addEventListener('click', sendNotification);
-            console.log('Event listener attached to send button');
-        } else {
-            console.error('Send button not found!');
-        }
-        
-        // Test that the function exists
-        console.log('sendNotification function exists:', typeof sendNotification === 'function');
-    });
+        setTimeout(() => {
+            container.innerHTML = '';
+        }, 5000);
+    }
+
+    // Legacy functions for compatibility
+    function sendNotification() {
+        console.log('Legacy sendNotification called, redirecting to simple version');
+        sendNotificationSimple();
+    }
+
+    function sendIndividualNotification(userId, userName) {
+        console.log('Legacy sendIndividualNotification called, redirecting to simple version');
+        sendIndividualNotificationSimple(userId, userName);
+    }
 </script>
 {% endblock %}
