@@ -370,6 +370,14 @@
                               placeholder="Add a caption... (optional)"
                               rows="3"></textarea>
                 </div>
+                <div class="form-group">
+                    <label for="tags">Tags</label>
+                    <input type="text" 
+                           id="tags" 
+                           name="tags" 
+                           placeholder="ceremony, reception, dance, cake... (optional, comma-separated)">
+                    <small style="color: #666; font-size: 0.9rem;">Add tags to help others find your photo</small>
+                </div>
                 <div class="form-actions">
                     <button type="submit" class="btn" id="uploadSubmitBtn">
                         Upload to Gallery
@@ -483,6 +491,7 @@
         
         const uploaderName = document.getElementById('uploader_name').value;
         const description = document.getElementById('description').value;
+        const tags = document.getElementById('tags').value;
         
         try {
             const response = await fetch('/api/photobooth/save', {
@@ -494,6 +503,7 @@
                     image: photoData,
                     uploader_name: uploaderName,
                     description: description || 'Photo from Virtual Photobooth',
+                    tags: tags,
                     upload_to_gallery: true
                 })
             });

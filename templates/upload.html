@@ -350,6 +350,15 @@
                       placeholder="Share a memory or describe this moment... (optional)"></textarea>
         </div>
 
+        <div class="form-group">
+            <label for="tags">Tags</label>
+            <input type="text" 
+                   id="tags" 
+                   name="tags" 
+                   placeholder="ceremony, reception, dance, cake... (optional, comma-separated)">
+            <small style="color: #666; font-size: 0.9rem;">Add tags to help others find your photo (e.g., "ceremony", "reception", "dance")</small>
+        </div>
+
         <div class="form-actions">
             <button type="submit" class="btn" id="submitBtn">Upload</button>
             <a href="{{ url_for('index') }}" class="btn btn-secondary">Cancel</a>

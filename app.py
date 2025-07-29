@@ -82,6 +82,7 @@ class Photo(db.Model):
     uploader_identifier = db.Column(db.String(100))  # Track who uploaded the photo
     upload_date = db.Column(db.DateTime, default=datetime.utcnow)
     description = db.Column(db.Text)
+    tags = db.Column(db.Text)  # Comma-separated tags
     likes = db.Column(db.Integer, default=0)
     media_type = db.Column(db.String(10), default='image')  # 'image' or 'video'
     thumbnail_filename = db.Column(db.String(255))  # For video thumbnails
@@ -830,14 +831,54 @@ def index():
     
     show_modal = welcome_settings.get('enabled', True) and (not has_seen_welcome or not welcome_settings.get('show_once', True))
     
+    # Get search parameters
+    search_query = request.args.get('search', '').strip()
+    media_filter = request.args.get('media_type', '')
+    tag_filter = request.args.get('tag', '')
+    
     # Get all content with pagination (photos, videos, photobooth, and emailed content)
     page = request.args.get('page', 1, type=int)
     per_page = 10
     
-    # Get all photos and videos, ordered by upload date (newest first)
-    # This includes regular uploads, photobooth photos, and emailed content
-    photos_query = Photo.query.order_by(Photo.upload_date.desc())
+    # Build query with filters
+    photos_query = Photo.query
+    
+    # Apply search filter
+    if search_query:
+        search_term = f'%{search_query}%'
+        photos_query = photos_query.filter(
+            db.or_(
+                Photo.uploader_name.ilike(search_term),
+                Photo.description.ilike(search_term),
+                Photo.tags.ilike(search_term)
+            )
+        )
+    
+    # Apply media type filter
+    if media_filter:
+        if media_filter == 'photos':
+            photos_query = photos_query.filter(Photo.media_type == 'image')
+        elif media_filter == 'videos':
+            photos_query = photos_query.filter(Photo.media_type == 'video')
+        elif media_filter == 'photobooth':
+            photos_query = photos_query.filter(Photo.is_photobooth == True)
+    
+    # Apply tag filter
+    if tag_filter:
+        photos_query = photos_query.filter(Photo.tags.ilike(f'%{tag_filter}%'))
+    
+    # Order by upload date (newest first)
+    photos_query = photos_query.order_by(Photo.upload_date.desc())
     photos = photos_query.paginate(page=page, per_page=per_page, error_out=False)
+    
+    # Get all unique tags for filter dropdown
+    all_tags = set()
+    all_photos = Photo.query.filter(Photo.tags.isnot(None)).all()
+    for photo in all_photos:
+        if photo.tags:
+            tags = [tag.strip() for tag in photo.tags.split(',') if tag.strip()]
+            all_tags.update(tags)
+    all_tags = sorted(list(all_tags))
     
     # Get email settings for the welcome modal
     email_settings = get_email_settings()
@@ -849,7 +890,11 @@ def index():
                                           user_name=user_name,
                                           welcome_settings=welcome_settings,
                                           show_modal=show_modal,
-                                          email_settings=email_settings))
+                                          email_settings=email_settings,
+                                          search_query=search_query,
+                                          media_filter=media_filter,
+                                          tag_filter=tag_filter,
+                                          all_tags=all_tags))
         resp.set_cookie('user_identifier', user_identifier, max_age=365*24*60*60)  # 1 year
         return resp
     
@@ -858,7 +903,11 @@ def index():
                          user_name=user_name,
                          welcome_settings=welcome_settings,
                          show_modal=show_modal,
-                         email_settings=email_settings)
+                         email_settings=email_settings,
+                         search_query=search_query,
+                         media_filter=media_filter,
+                         tag_filter=tag_filter,
+                         all_tags=all_tags)
 
 @app.route('/upload', methods=['GET', 'POST'])
 def upload():
@@ -876,6 +925,7 @@ def upload():
             
             uploader_name = request.form.get('uploader_name', 'Anonymous').strip() or 'Anonymous'
             description = request.form.get('description', '')
+            tags = request.form.get('tags', '').strip()
             
             # Get or create user identifier
             user_identifier = request.cookies.get('user_identifier', '')
@@ -909,6 +959,7 @@ def upload():
                     uploader_name=uploader_name,
                     uploader_identifier=user_identifier,
                     description=description,
+                    tags=tags,
                     media_type='video',
                     thumbnail_filename=thumbnail_filename,
                     duration=duration
@@ -925,6 +976,7 @@ def upload():
                     uploader_name=uploader_name,
                     uploader_identifier=user_identifier,
                     description=description,
+                    tags=tags,
                     media_type='image'
                 )
             
@@ -1009,6 +1061,7 @@ def save_photobooth_photo():
         if data.get('upload_to_gallery', False):
             uploader_name = data.get('uploader_name', 'Anonymous').strip() or 'Anonymous'
             description = data.get('description', 'Photo from Virtual Photobooth')
+            tags = data.get('tags', '').strip()
             
             # Get or create user identifier
             user_identifier = request.cookies.get('user_identifier', '')
@@ -1021,6 +1074,7 @@ def save_photobooth_photo():
                 uploader_name=uploader_name,
                 uploader_identifier=user_identifier,
                 description=description,
+                tags=tags,
                 media_type='image',
                 is_photobooth=True
             )
