@@ -6,6 +6,7 @@ A beautiful, self-hosted wedding photo gallery application that allows wedding g
 ![Flask](https://img.shields.io/badge/flask-3.0-green.svg)
 ![Docker](https://img.shields.io/badge/docker-ready-blue.svg)
 ![License](https://img.shields.io/badge/license-MIT-green.svg)
+![Security](https://img.shields.io/badge/security-enhanced-red.svg)
 
 ## 📋 Table of Contents
 
@@ -14,6 +15,11 @@ A beautiful, self-hosted wedding photo gallery application that allows wedding g
 - [🚀 Installation Guide](docs/installation.md) - Quick start and production deployment
 - [📱 Usage Guide](docs/usage.md) - Step-by-step instructions for guests and admins
 - [📱 Progressive Web App](docs/pwa.md) - PWA installation and troubleshooting
+
+### 🔒 Security & Privacy
+- [🔒 Security Guide](docs/SECURITY.md) - Comprehensive security features and best practices
+- [🛡️ Privacy Protection](docs/SECURITY.md#-privacy-protection) - Data minimization and retention policies
+- [🚨 Security Monitoring](docs/SECURITY.md#-security-monitoring) - Audit logging and incident response
 
 ### 🔧 Technical Documentation
 - [🏗️ Modular Architecture](docs/MODULAR_STRUCTURE.md) - Application structure and organization
@@ -35,7 +41,19 @@ A beautiful, self-hosted wedding photo gallery application that allows wedding g
 
 ## 🔄 Recent Updates
 
-### Lazy Loading Gallery (Latest)
+### 🔒 Enhanced Security & Privacy (Latest)
+Comprehensive security improvements to protect user privacy and data integrity:
+
+- ✅ **File Upload Security**: Advanced file validation with magic byte detection and MIME type verification
+- ✅ **Rate Limiting**: Multi-level rate limiting (application + nginx) to prevent abuse
+- ✅ **Security Headers**: Comprehensive security headers including CSP, XSS protection, and HSTS
+- ✅ **Audit Logging**: Detailed security event logging with configurable retention
+- ✅ **Database Security**: WAL mode, secure pragmas, and file integrity checks
+- ✅ **Input Validation**: Comprehensive input sanitization and validation
+- ✅ **File Permissions**: Secure file permissions and access controls
+- ✅ **Privacy Protection**: Data minimization and proper retention policies
+
+### Lazy Loading Gallery
 Added smooth infinite scroll for large photo galleries to improve performance and user experience:
 
 - ✅ **Infinite Scroll**: Smooth scrolling that loads photos as you browse
@@ -61,6 +79,28 @@ The application has been completely refactored from a monolithic structure to a 
 - **Push Notification System** with dual web interface + browser notifications
 - **Service Worker** for offline functionality and PWA support
 - **Comprehensive Documentation** with detailed setup guides
+
+## 🔒 Security Features
+
+### 🛡️ Comprehensive Protection
+- **File Upload Security**: Advanced validation with magic byte detection, MIME type verification, and dangerous file blocking
+- **Rate Limiting**: Multi-level protection against abuse (5 uploads/5min, 10 API calls/min, 3 login attempts/min)
+- **Security Headers**: Full suite of security headers including Content Security Policy, XSS protection, and HSTS
+- **Audit Logging**: Detailed security event logging with 30-day retention and automatic cleanup
+- **Database Security**: WAL mode, secure pragmas, file integrity checks, and restricted permissions
+- **Input Validation**: Comprehensive sanitization and validation of all user inputs
+
+### 🔐 Privacy Protection
+- **Data Minimization**: Only necessary data is collected and logged
+- **Anonymous Identifiers**: Rate limiting uses anonymous client identifiers
+- **Secure Permissions**: Database and configuration files have restricted access
+- **Audit Trail**: Complete audit trail for security monitoring and compliance
+
+### 🚨 Security Monitoring
+- **Real-time Logging**: All security events are logged with severity levels
+- **Rate Limit Monitoring**: Track and respond to abuse attempts
+- **File Integrity**: SHA-256 hash verification for uploaded files
+- **Suspicious Activity Detection**: Automatic detection of malicious file uploads
 
 ## ✨ Quick Overview
 
@@ -88,6 +128,7 @@ The application has been completely refactored from a monolithic structure to a 
 - 💾 **Batch Download** - Download all content as ZIP file
 - 🏆 **Photo of the Day Management** - Select and manage daily featured photos with automatic candidate system
 - ⚡ **Database Optimization** - Optimized for thousands of photos with caching and maintenance tools
+- 🔒 **Security Monitoring** - Comprehensive security audit logs and monitoring tools
 
 ## 📸 Screenshots
 
