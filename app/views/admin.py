@@ -95,6 +95,14 @@ def admin():
     # Get SSO settings
     sso_settings = get_sso_settings()
     
+    # Get CAPTCHA settings
+    captcha_settings = {
+        'enabled': Settings.get('captcha_enabled', 'false').lower() == 'true',
+        'upload_enabled': Settings.get('captcha_upload_enabled', 'true').lower() == 'true',
+        'guestbook_enabled': Settings.get('captcha_guestbook_enabled', 'true').lower() == 'true',
+        'message_enabled': Settings.get('captcha_message_enabled', 'true').lower() == 'true'
+    }
+    
     # Get current user info if SSO is active
     current_user = None
     if session.get('sso_user_email'):
@@ -127,6 +135,7 @@ def admin():
                          border_settings=border_settings,
                          email_settings=email_settings,
                          email_logs=email_logs,
+                         captcha_settings=captcha_settings,
                          immich_settings=immich_settings,
                          immich_sync_logs=immich_sync_logs,
                          sso_settings=sso_settings,
@@ -620,6 +629,14 @@ def save_settings():
         Settings.set('sso_allowed_domains', ','.join(sso_data.get('allowed_domains', [])))
         Settings.set('sso_allowed_emails', ','.join(sso_data.get('allowed_emails', [])))
         Settings.set('sso_admin_key_fallback', str(sso_data.get('admin_key_fallback', True)).lower())
+    
+    # Save CAPTCHA settings
+    if 'captcha_settings' in data:
+        captcha_data = data['captcha_settings']
+        Settings.set('captcha_enabled', str(captcha_data.get('enabled', False)).lower())
+        Settings.set('captcha_upload_enabled', str(captcha_data.get('upload_enabled', True)).lower())
+        Settings.set('captcha_guestbook_enabled', str(captcha_data.get('guestbook_enabled', True)).lower())
+        Settings.set('captcha_message_enabled', str(captcha_data.get('message_enabled', True)).lower())
     
     return jsonify({'success': True})
 

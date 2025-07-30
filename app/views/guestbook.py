@@ -7,6 +7,7 @@ from app import db
 from app.utils.file_utils import allowed_file
 from app.utils.settings_utils import get_immich_settings
 from app.utils.immich_utils import sync_file_to_immich
+from app.utils.captcha_utils import get_captcha_settings, validate_captcha, generate_captcha
 
 guestbook_bp = Blueprint('guestbook', __name__)
 
@@ -19,6 +20,20 @@ def guestbook():
 @guestbook_bp.route('/sign', methods=['GET', 'POST'])
 def sign_guestbook():
     if request.method == 'POST':
+        # Check CAPTCHA if enabled
+        captcha_settings = get_captcha_settings()
+        if captcha_settings['enabled'] and captcha_settings['guestbook_enabled']:
+            challenge_id = request.form.get('captcha_challenge_id')
+            user_answer = request.form.get('captcha_answer')
+            
+            if not validate_captcha(challenge_id, user_answer):
+                # Generate new CAPTCHA for retry
+                captcha = generate_captcha()
+                return render_template('sign_guestbook.html', 
+                                     user_name=request.cookies.get('user_name', ''),
+                                     captcha=captcha,
+                                     error='Incorrect CAPTCHA answer. Please try again.')
+        
         name = request.form.get('name', '').strip()
         message = request.form.get('message', '').strip()
         location = request.form.get('location', '').strip()
@@ -68,4 +83,11 @@ def sign_guestbook():
                                  error='Name and message are required')
     
     user_name = request.cookies.get('user_name', '')
-    return render_template('sign_guestbook.html', user_name=user_name) 
+    captcha_settings = get_captcha_settings()
+    
+    # Generate CAPTCHA if enabled
+    captcha = None
+    if captcha_settings['enabled'] and captcha_settings['guestbook_enabled']:
+        captcha = generate_captcha()
+    
+    return render_template('sign_guestbook.html', user_name=user_name, captcha=captcha) 

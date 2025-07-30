@@ -8,12 +8,28 @@ from app import db
 from app.utils.file_utils import allowed_file, is_video, is_image, get_video_duration, create_video_thumbnail
 from app.utils.settings_utils import get_email_settings, get_immich_settings
 from app.utils.immich_utils import sync_file_to_immich
+from app.utils.captcha_utils import is_captcha_enabled, validate_captcha, generate_captcha, get_captcha_settings
 
 upload_bp = Blueprint('upload', __name__)
 
 @upload_bp.route('/', methods=['GET', 'POST'])
 def upload():
     if request.method == 'POST':
+        # Check CAPTCHA if enabled
+        captcha_settings = get_captcha_settings()
+        if captcha_settings['enabled'] and captcha_settings['upload_enabled']:
+            challenge_id = request.form.get('captcha_challenge_id')
+            user_answer = request.form.get('captcha_answer')
+            
+            if not validate_captcha(challenge_id, user_answer):
+                # Generate new CAPTCHA for retry
+                captcha = generate_captcha()
+                return render_template('upload.html', 
+                                     user_name=request.cookies.get('user_name', ''),
+                                     email_settings=get_email_settings(),
+                                     captcha=captcha,
+                                     error='Incorrect CAPTCHA answer. Please try again.')
+        
         if 'photo' not in request.files:
             return redirect(request.url)
         
@@ -117,11 +133,23 @@ def upload():
     
     user_name = request.cookies.get('user_name', '')
     email_settings = get_email_settings()
+    captcha_settings = get_captcha_settings()
+    
+    # Generate CAPTCHA if enabled
+    captcha = None
+    if captcha_settings['enabled'] and captcha_settings['upload_enabled']:
+        captcha = generate_captcha()
     
     # Create response with user identifier cookie if needed
     if not request.cookies.get('user_identifier'):
-        resp = make_response(render_template('upload.html', user_name=user_name, email_settings=email_settings))
+        resp = make_response(render_template('upload.html', 
+                                           user_name=user_name, 
+                                           email_settings=email_settings,
+                                           captcha=captcha))
         resp.set_cookie('user_identifier', user_identifier, max_age=365*24*60*60)  # 1 year
         return resp
     
-    return render_template('upload.html', user_name=user_name, email_settings=email_settings) 
+    return render_template('upload.html', 
+                         user_name=user_name, 
+                         email_settings=email_settings,
+                         captcha=captcha) 

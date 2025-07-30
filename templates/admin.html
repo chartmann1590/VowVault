@@ -1302,7 +1302,13 @@
                     </div>
                 </div>
 
-                <div class="qr-preview">
+                <div class="button-group">
+                    <button class="btn" onclick="saveAllSettings()">Save Immich Settings</button>
+                    <button class="btn btn-secondary" onclick="syncImmich()">Test Sync</button>
+                </div>
+            </div>
+
+            <div class="qr-preview">
                     <h4>How It Works</h4>
                     <div class="preview-content" style="text-align: left;">
                         <div style="background: #f9f5f0; padding: 1.5rem; border-radius: 8px; margin-bottom: 1rem;">
@@ -1402,6 +1408,113 @@
                     <p>Sync logs will appear here once you enable Immich sync and files are synced.</p>
                 </div>
                 {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- CAPTCHA Settings Section -->
+    <div class="section-card">
+        <div class="section-header">
+            <h3>CAPTCHA Spam Prevention</h3>
+            <div class="sync-status">
+                <div class="status-indicator {% if captcha_settings.get('enabled', False) %}active{% else %}inactive{% endif %}">
+                    <span class="status-dot"></span>
+                    <span class="status-text">
+                        {% if captcha_settings.get('enabled', False) %}
+                            🛡️ CAPTCHA Active
+                        {% else %}
+                            ⏸️ CAPTCHA Inactive
+                        {% endif %}
+                    </span>
+                </div>
+            </div>
+        </div>
+        <div class="section-content">
+            <div class="qr-settings-grid">
+                <div class="qr-form-section">
+                    <h4 style="color: #8b7355; margin-bottom: 1.5rem;">CAPTCHA Configuration</h4>
+                    
+                    <div class="form-group">
+                        <label style="display: flex; align-items: center; gap: 0.5rem;">
+                            <input type="checkbox" 
+                                   id="captcha_enabled" 
+                                   {% if captcha_settings.get('enabled', False) %}checked{% endif %}>
+                            Enable CAPTCHA Protection
+                        </label>
+                        <small style="color: #666; display: block; margin-top: 0.5rem;">
+                            When enabled, users will need to solve a simple math problem to submit forms
+                        </small>
+                    </div>
+
+                    <h5 style="color: #8b7355; margin: 2rem 0 1rem 0;">Protection Areas</h5>
+                    
+                    <div class="form-group">
+                        <label style="display: flex; align-items: center; gap: 0.5rem;">
+                            <input type="checkbox" 
+                                   id="captcha_upload_enabled" 
+                                   {% if captcha_settings.get('upload_enabled', True) %}checked{% endif %}>
+                            Photo/Video Uploads
+                        </label>
+                        <small style="color: #666; display: block; margin-top: 0.5rem;">
+                            Require CAPTCHA for photo and video uploads
+                        </small>
+                    </div>
+
+                    <div class="form-group">
+                        <label style="display: flex; align-items: center; gap: 0.5rem;">
+                            <input type="checkbox" 
+                                   id="captcha_guestbook_enabled" 
+                                   {% if captcha_settings.get('guestbook_enabled', True) %}checked{% endif %}>
+                            Guestbook Entries
+                        </label>
+                        <small style="color: #666; display: block; margin-top: 0.5rem;">
+                            Require CAPTCHA for guestbook entries
+                        </small>
+                    </div>
+
+                    <div class="form-group">
+                        <label style="display: flex; align-items: center; gap: 0.5rem;">
+                            <input type="checkbox" 
+                                   id="captcha_message_enabled" 
+                                   {% if captcha_settings.get('message_enabled', True) %}checked{% endif %}>
+                            Message Board Posts
+                        </label>
+                        <small style="color: #666; display: block; margin-top: 0.5rem;">
+                            Require CAPTCHA for message board posts
+                        </small>
+                    </div>
+                </div>
+
+                <div class="qr-preview">
+                    <h4>How It Works</h4>
+                    <div class="preview-content" style="text-align: left;">
+                        <div style="background: #f9f5f0; padding: 1.5rem; border-radius: 8px; margin-bottom: 1rem;">
+                            <strong style="color: #8b7355;">CAPTCHA Protection:</strong>
+                            <ul style="margin: 0.5rem 0 0 1rem; padding-left: 1rem; color: #666;">
+                                <li>Simple math problems (addition, subtraction, multiplication)</li>
+                                <li>5-minute expiration for security</li>
+                                <li>One-time use per challenge</li>
+                                <li>Refresh button for new challenges</li>
+                                <li>User-friendly design that matches your theme</li>
+                            </ul>
+                        </div>
+                        
+                        <div style="background: #e8f5e8; padding: 1rem; border-radius: 8px; margin-bottom: 1rem;">
+                            <strong style="color: #28a745;">Benefits:</strong>
+                            <ul style="margin: 0.5rem 0 0 1rem; padding-left: 1rem; color: #666;">
+                                <li>Prevents automated spam submissions</li>
+                                <li>Protects against bot attacks</li>
+                                <li>Maintains user experience</li>
+                                <li>Free and self-hosted solution</li>
+                                <li>No external dependencies</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="button-group">
+                    <button class="btn" onclick="saveAllSettings()">Save CAPTCHA Settings</button>
+                </div>
             </div>
         </div>
     </div>
@@ -2251,6 +2364,12 @@
                 allowed_domains: document.getElementById('sso_allowed_domains').value.split(',').map(d => d.trim()).filter(d => d),
                 allowed_emails: document.getElementById('sso_allowed_emails').value.split(',').map(e => e.trim()).filter(e => e),
                 admin_key_fallback: document.getElementById('sso_admin_key_fallback').checked
+            },
+            captcha_settings: {
+                enabled: document.getElementById('captcha_enabled').checked,
+                upload_enabled: document.getElementById('captcha_upload_enabled').checked,
+                guestbook_enabled: document.getElementById('captcha_guestbook_enabled').checked,
+                message_enabled: document.getElementById('captcha_message_enabled').checked
             }
         };
 

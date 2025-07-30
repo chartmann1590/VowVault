@@ -246,6 +246,28 @@ def migrate_database():
         cursor.execute("PRAGMA optimize")
         print("✅ Database statistics updated!")
 
+        # --- CAPTCHA Settings Migration ---
+        print("🛡️ Adding CAPTCHA settings to database...")
+        
+        # Check if CAPTCHA settings exist, if not add them
+        captcha_settings = [
+            ('captcha_enabled', 'false'),
+            ('captcha_upload_enabled', 'true'),
+            ('captcha_guestbook_enabled', 'true'),
+            ('captcha_message_enabled', 'true')
+        ]
+        
+        for setting_key, default_value in captcha_settings:
+            cursor.execute("SELECT value FROM settings WHERE key = ?", (setting_key,))
+            if not cursor.fetchone():
+                cursor.execute("INSERT INTO settings (key, value) VALUES (?, ?)", (setting_key, default_value))
+                print(f"✅ Added CAPTCHA setting: {setting_key}")
+            else:
+                print(f"✅ CAPTCHA setting already exists: {setting_key}")
+        
+        conn.commit()
+        print("✅ CAPTCHA settings migration completed!")
+
     except Exception as e:
         print(f"❌ Error during migration: {e}")
         conn.rollback()

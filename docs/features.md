@@ -1,305 +1,172 @@
-# ✨ Features
+# Wedding Gallery Features
 
-## For Guests
+## Core Features
 
-### 📸 Easy Photo/Video Upload
-No login required, just upload and share! Supports photos and videos up to 50MB, with videos limited to 15 seconds for optimal performance.
+### Photo & Video Gallery
+- **Upload System**: Guests can upload photos and videos directly through the web interface
+- **Email Upload**: Alternative email-based upload system for convenience
+- **Video Support**: MP4, MOV, AVI, WEBM formats with automatic thumbnails
+- **Photo Support**: PNG, JPG, JPEG, GIF, WEBP formats
+- **File Size Limits**: 50MB maximum file size
+- **Video Duration**: 15-second limit for videos
+- **Tags & Descriptions**: Add metadata to help organize and find photos
+- **Like System**: Guests can like their favorite photos
+- **Comments**: Leave comments on photos
+- **Responsive Design**: Works perfectly on mobile and desktop
 
-**Supported Formats:**
-- **Photos:** PNG, JPG, JPEG, GIF, WEBP
-- **Videos:** MP4, MOV, AVI (max 15 seconds)
+### Guestbook System
+- **Digital Guestbook**: Leave messages and well-wishes
+- **Photo Attachments**: Add photos to guestbook entries
+- **Location Tracking**: Optional location sharing
+- **Admin Management**: Hide/delete inappropriate entries
+- **Real-time Updates**: New entries appear immediately
 
-### 🔍 Search & Tagging
-Find photos quickly with powerful search and tagging features. Organize and discover memories with ease.
+### Message Board
+- **Public Messages**: Share thoughts and memories
+- **Photo Attachments**: Add photos to messages
+- **Like System**: Like messages from other guests
+- **Comments**: Reply to messages
+- **Admin Controls**: Moderate content as needed
 
-**Search Features:**
-- **Text Search:** Search by uploader name, description, or tags
-- **Media Type Filter:** Filter by photos, videos, or photobooth images
-- **Tag Filter:** Filter by specific tags like "ceremony", "reception", "dance"
-- **Real-time Results:** Instant search results as you type
-- **Mobile Optimized:** Responsive search interface for all devices
-- **Lazy Loading:** Smooth infinite scroll for large galleries
+### Virtual Photobooth
+- **Camera Integration**: Take photos directly in the browser
+- **Custom Borders**: Upload your wedding border image
+- **Download & Upload**: Save photos locally or upload to gallery
+- **Mobile Optimized**: Works great on phones and tablets
 
-**Tagging System:**
-- **Custom Tags:** Add tags when uploading (e.g., "ceremony", "reception", "cake")
-- **Tag Display:** Tags shown on photo cards for easy identification
-- **Tag Suggestions:** Common wedding tags available in dropdown
-- **Comma-separated:** Multiple tags per photo (e.g., "ceremony, dance, family")
-- **Search Integration:** Tags included in search results
+### Admin Dashboard
+- **Photo Management**: Delete, hide, and organize photos
+- **Content Moderation**: Manage guestbook and messages
+- **System Settings**: Configure all features
+- **Statistics**: View usage and engagement metrics
+- **Batch Operations**: Download all content at once
 
-**Example Tags:**
-- `ceremony` - Wedding ceremony photos
-- `reception` - Reception and party photos
-- `dance` - Dancing and celebration moments
-- `cake` - Cake cutting and dessert photos
-- `family` - Family group photos
-- `friends` - Friend group photos
-- `decorations` - Wedding decorations and venue
-- `food` - Catering and meal photos
+## Advanced Features
 
-### ⚡ Lazy Loading Gallery
-Experience smooth, fast browsing with intelligent lazy loading for large photo galleries. No more waiting for all photos to load at once.
+### Email Integration
+- **Email Monitor**: Automatically process photos sent via email
+- **SMTP Configuration**: Custom email server setup
+- **IMAP Support**: Monitor email folders for uploads
+- **Auto-processing**: Photos automatically added to gallery
 
-**Performance Features:**
-- **Infinite Scroll:** Smooth scrolling that loads photos as you browse
-- **Smart Loading:** Only loads photos when needed, reducing initial page load time
-- **Loading Indicators:** Beautiful animated spinners while photos load
-- **End-of-Content Detection:** Know when you've reached the end of the gallery
-- **Filter Integration:** All search and filter features work seamlessly with lazy loading
-- **Mobile Optimized:** Perfect performance on all devices
+### Immich Server Sync
+- **Automatic Sync**: Uploads automatically sync to your Immich server
+- **Album Organization**: Photos organized in dedicated albums
+- **Metadata Preservation**: Uploader names and descriptions included
+- **Selective Sync**: Choose what types of content to sync
+- **Error Handling**: Robust error handling and logging
 
-**Technical Benefits:**
-- **Faster Initial Load:** Only loads 12 photos initially instead of all photos
-- **Reduced Server Load:** Efficient API calls that load photos in batches
-- **Better Memory Usage:** Optimized for large galleries with hundreds of photos
-- **Smooth UX:** No page breaks or pagination buttons to interrupt browsing
-- **Real-time Updates:** New photos appear automatically as you scroll
+### SSO Authentication
+- **Multiple Providers**: Google, Azure, Okta, Custom OAuth
+- **Domain Restrictions**: Limit access to specific domains
+- **Email Whitelist**: Allow specific email addresses
+- **Fallback Support**: Admin key still works as backup
+- **Secure Sessions**: Encrypted session management
 
-### 📧 Email Photo Upload
-Send photos directly via email to automatically add them to the gallery. Perfect for guests who prefer email over web uploads.
+### Push Notifications
+- **Real-time Alerts**: Get notified of new uploads
+- **Browser Notifications**: Works on all modern browsers
+- **User Management**: Track notification subscribers
+- **Admin Controls**: Send custom notifications
+- **PWA Support**: Progressive Web App capabilities
 
-**How it works:**
-1. Attach photos to an email
-2. Send to your configured email address
-3. Photos are automatically added to the gallery
-4. You receive a confirmation email with a link
+### QR Code System
+- **Custom QR Codes**: Personalized with your wedding details
+- **PDF Generation**: Download QR codes for printing
+- **Multiple Formats**: Different sizes and styles
+- **Easy Sharing**: Share QR codes with guests
 
-### 🤳 Virtual Photobooth
-Take photos with custom wedding borders using your device camera. Create beautiful memories with personalized overlays.
+### Welcome Modal
+- **Customizable Welcome**: Personalized welcome message
+- **Photo Display**: Show couple photo
+- **Instructions**: Custom instructions for guests
+- **One-time Display**: Show only once per session
 
-**Features:**
-- Real-time camera preview
-- Custom wedding border overlays
-- 3-second countdown timer
-- Download or upload directly to gallery
-- Works on all mobile devices
+### Database Optimization
+- **Performance Indexes**: Optimized for thousands of photos
+- **Caching System**: Intelligent caching for fast loading
+- **Maintenance Tools**: Database cleanup and optimization
+- **Statistics**: Detailed usage analytics
 
-### ❤️ Like Photos/Videos
-Show appreciation for beautiful moments with a simple heart click. Track which photos are most loved by your guests.
+### Photo of the Day
+- **Daily Selection**: Choose a featured photo each day
+- **Voting System**: Guests can vote on candidates
+- **Admin Selection**: Manual override capability
+- **Archive**: Historical photo of the day records
 
-### 💬 Leave Comments
-Share memories and messages on photos and videos. Add your name and leave heartfelt comments for the couple.
+### CAPTCHA Spam Prevention
+- **Math Challenges**: Simple arithmetic problems for verification
+- **Configurable Protection**: Enable/disable for different areas
+- **User-friendly Design**: Matches your wedding theme
+- **Security Features**: 5-minute expiration, one-time use
+- **Admin Controls**: Enable/disable from admin panel
+- **Free & Self-hosted**: No external dependencies or costs
 
-### 🔔 Smart Notifications
-Get notified when someone likes or comments on your photos and messages. Stay connected with your wedding memories.
+## Technical Features
 
-**Notification Features:**
-- **Photo Notifications:** Get alerted when someone likes or comments on your photos
-- **Message Notifications:** Receive notifications for message interactions
-- **Smart Filtering:** Only get notified about others' actions, not your own
-- **Mobile Toggle:** Easy enable/disable in the mobile hamburger menu
-- **Browser Integration:** Uses native browser notifications with app icons
-- **Personalized Messages:** Shows actual user names in notifications
+### Progressive Web App (PWA)
+- **Offline Support**: Works without internet connection
+- **App-like Experience**: Install on mobile devices
+- **Push Notifications**: Real-time updates
+- **Background Sync**: Automatic data synchronization
 
-### 💌 Message Board
-Post messages with optional photos that everyone can see, like, and comment on. A digital guestbook for sharing thoughts and memories.
+### Security Features
+- **File Validation**: Secure file upload handling
+- **XSS Protection**: Cross-site scripting prevention
+- **CSRF Protection**: Cross-site request forgery protection
+- **Input Sanitization**: Clean user input handling
+- **Session Security**: Encrypted session management
 
-**Features:**
-- Text messages with optional photos
-- Like and comment on messages
-- Real-time updates
-- Photo attachments supported
+### Performance Features
+- **Image Optimization**: Automatic thumbnail generation
+- **Lazy Loading**: Images load as needed
+- **Caching**: Intelligent caching for fast performance
+- **CDN Ready**: Works with content delivery networks
+- **Mobile Optimized**: Fast loading on mobile devices
 
-### 📖 Virtual Guestbook
-Sign a digital guestbook with wishes and optional photos. Leave lasting memories for the couple.
+### Developer Features
+- **Docker Support**: Easy deployment with Docker
+- **Environment Configuration**: Flexible configuration system
+- **Logging**: Comprehensive logging for debugging
+- **Error Handling**: Graceful error handling
+- **API Endpoints**: RESTful API for integrations
 
-**Information collected:**
-- Your name (optional)
-- Your location (optional)
-- Your message
-- Optional photo attachment
+## Installation & Setup
 
-### 📱 Mobile Responsive
-Works perfectly on all devices - phones, tablets, and desktops. Optimized for touch interfaces and mobile browsing.
+### Quick Start
+1. **Docker Deployment**: `docker-compose up -d`
+2. **Local Setup**: Python virtual environment
+3. **Configuration**: Environment variables and admin panel
+4. **Customization**: Upload borders, QR codes, welcome messages
 
-### 📱 Progressive Web App (PWA)
-Install as a native app on mobile devices for quick access. Get the full app experience without downloading from app stores.
+### Configuration Options
+- **Email Settings**: SMTP/IMAP configuration
+- **Immich Integration**: Server URL and API keys
+- **SSO Setup**: OAuth provider configuration
+- **CAPTCHA Settings**: Spam prevention configuration
+- **QR Code Customization**: Personalized QR codes
+- **Welcome Modal**: Custom welcome experience
 
-**PWA Features:**
-- Native app experience
+### Maintenance
+- **Database Optimization**: Regular maintenance tools
+- **Content Management**: Admin tools for moderation
+- **Backup System**: Export all content
+- **Monitoring**: Usage statistics and logs
 
-### 🏆 Photo of the Day
-Vote for daily featured photos and see which moments are most loved by your guests. Admins can select photos to be featured each day, and guests can vote once per day. The system now includes automatic candidate selection based on photo popularity.
+## User Experience
 
-**Voting Features:**
-- **Daily Featured Photos:** Admins select photos to be featured each day
-- **One Vote Per Day:** Each guest can vote once per day for the featured photo
-- **Vote Tracking:** See how many votes each photo has received
-- **Recent History:** View photos of the day from the past week
-- **Real-time Updates:** Vote counts update instantly
-- **User-Friendly Interface:** Clean, intuitive voting interface
+### Guest Features
+- **Simple Upload**: Drag-and-drop or click to upload
+- **Mobile Friendly**: Works perfectly on phones
+- **Fast Loading**: Optimized for quick access
+- **Intuitive Interface**: Easy to use for all ages
+- **Real-time Updates**: See new content immediately
 
-**Guest Experience:**
-- Visit the "📸 Photo of the Day" page from the main navigation
-- View today's featured photo with details and uploader information
-- Click "Vote for this Photo!" to cast your vote
-- See the updated vote count and recent photos of the day
-- Change your mind by clicking "Remove Vote" (one vote per day)
+### Admin Features
+- **Comprehensive Dashboard**: All controls in one place
+- **Bulk Operations**: Manage multiple items at once
+- **Content Moderation**: Easy content management
+- **System Monitoring**: Track usage and performance
+- **Customization**: Extensive customization options
 
-**Recent Photos:**
-- View photos of the day from the past 7 days
-- See vote counts and uploader information
-- Browse through recent highlights
-- Offline support
-- Fast loading
-- Custom app icons
-- App shortcuts
-
-**Automatic Candidate System:**
-- **Smart Selection:** Photos with enough likes automatically become candidates
-- **Configurable Threshold:** Admins can adjust the minimum likes required (default: 3)
-- **Popularity-Based:** Most-liked photos are prioritized for selection
-- **Visual Indicators:** Auto-candidates marked with orange "Auto" labels
-- **Manual Override:** Admins can still manually select any photo
-
-### 🎉 Welcome Modal
-Greet guests with a personalized message and instructions. Set the tone for your wedding gallery experience.
-
-## For Admins
-
-### 🔐 Admin Dashboard
-Secure admin area with simple key authentication. Manage your wedding gallery with comprehensive tools.
-
-**Access:** `/admin?key=your-key`
-
-### 📊 Statistics
-View comprehensive statistics including:
-- Total photos and videos
-- Total likes and comments
-- Message board posts
-- Guestbook entries
-- Photobooth usage
-
-### 📧 Email Photo Upload Configuration
-Configure email settings to allow guests to email photos directly to the gallery.
-
-**Settings include:**
-- SMTP server configuration
-- Email monitoring settings
-- Automatic photo processing
-- Confirmation emails
-
-### 🔄 Immich Server Sync
-Automatically sync all uploads to your own Immich server for backup and organization.
-
-**Sync options:**
-- Photos and videos
-- Guestbook photos
-- Message board photos
-- Photobooth photos
-- Custom album organization
-
-### 📱 PWA Debug Tools
-Monitor PWA installation status and troubleshoot issues with comprehensive debugging tools.
-
-**Debug features:**
-- PWA requirements check
-- Installation status monitoring
-- Troubleshooting guides
-- Connection analysis
-
-### 🔔 Notification System
-The notification system enhances user engagement by alerting users when others interact with their content.
-
-**System features:**
-- **Smart Filtering:** Only notifies about others' actions
-- **Mobile Integration:** Easy toggle in hamburger menu
-- **Browser Notifications:** Native notification support
-- **Session Persistence:** Settings saved across sessions
-- **Personalized Messages:** Shows actual user names
-- **App Branding:** Uses VowVault icons and styling
-
-### 🗑️ Content Management
-Delete inappropriate photos, messages, or guestbook entries. Maintain quality control over your gallery.
-
-### 👁️ Hide/Show Messages
-Hide inappropriate messages without deleting them. Perfect for temporary moderation.
-
-### ✏️ Edit Guestbook
-Modify guestbook entries when needed. Correct typos or update information.
-
-### 🖼️ Media Management
-View and manage photos attached to messages and guestbook entries. Organize your media effectively.
-
-### 🎨 Photobooth Border Upload
-Upload custom borders for the virtual photobooth. Personalize the experience with your wedding theme.
-
-**Requirements:**
-- PNG format with transparency
-- Recommended size: 1280x720px
-- 16:9 aspect ratio preferred
-
-### 📄 QR Code Generator
-Create beautiful PDFs with QR codes for easy sharing. Print and distribute at your wedding.
-
-**Customizable content:**
-- Wedding couple names
-- Custom messages
-- Email instructions
-- QR code styling
-
-### ✏️ Customizable Content
-Edit welcome messages, modal settings, and QR code content. Personalize the experience for your guests.
-
-### 💾 Batch Download
-Download all gallery content (photos, videos, data) as a comprehensive ZIP file.
-
-**Includes:**
-- All photos organized by type
-- Video thumbnails
-- Guestbook and message photos
-- Complete database export
-- Photobooth borders
-
-### 🏆 Photo of the Day Management
-Select and manage daily featured photos that guests can vote on. Create engaging content and track guest engagement. The system now includes automatic candidate selection based on photo popularity.
-
-**Management Features:**
-- **Photo Selection:** Choose any uploaded photo to be featured on any date
-- **Automatic Candidate System:** Photos with enough likes automatically become candidates
-- **Likes Threshold Configuration:** Adjust the minimum likes required for auto-candidates (1-50)
-- **Auto-Candidate Management:** View and manage photos eligible for automatic selection
-- **Date Management:** Set photos for past, present, or future dates
-- **Candidate System:** Mark photos as candidates for future selection
-- **Vote Statistics:** View voting statistics and engagement metrics
-- **Easy Interface:** Simple admin interface for managing all Photo of the Day content
-- **Photo Preview:** Preview selected photos before confirming
-- **Bulk Management:** View all photos of the day in one place
-
-**Admin Workflow:**
-1. Access Photo of the Day management at `/admin/photo-of-day?key=wedding2024`
-2. Configure auto-candidates by setting the likes threshold (default: 3)
-3. View photos that meet the likes threshold for automatic selection
-4. Manually trigger adding auto-candidates or add them individually
-5. Select a photo from candidates or all uploaded photos
-6. Choose which date this photo should be featured
-7. Preview your selection before confirming
-8. Click "Set as Photo of the Day" to save
-9. View, edit, or delete existing photos of the day
-
-**Auto-Candidate Features:**
-- **Threshold Control:** Real-time adjustment of likes threshold (1-50)
-- **Eligible Photos Display:** See all photos that meet the current threshold
-- **Manual Trigger:** "Add Auto-Candidates Now" button for immediate processing
-- **Visual Distinction:** Auto-candidates marked with orange "Auto" labels
-- **Duplicate Prevention:** System prevents adding the same photo twice
-- **Popularity Sorting:** Photos sorted by likes count for easy selection
-
-**Statistics Available:**
-- Total Photos of the Day created
-- Number of candidate photos (manual + auto)
-- Number of auto-candidate eligible photos
-- Current likes threshold setting
-- Voting engagement statistics
-- Recent activity overview
-- Vote counts per photo
-- Unique voter tracking
-
-### 🔄 System Reset
-Complete system reset with confirmation to start fresh. Perfect for testing or starting over.
-
-**Safety features:**
-- Confirmation required
-- "RESET EVERYTHING" must be typed
-- Complete data wipe
-- Fresh start capability 
+This wedding gallery system provides a complete solution for sharing and managing wedding photos and memories, with advanced features for security, performance, and user experience. 
