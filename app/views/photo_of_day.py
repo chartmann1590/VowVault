@@ -239,7 +239,14 @@ def add_photo_candidate():
     if admin_key != 'wedding2024':
         return jsonify({'success': False, 'message': 'Unauthorized'}), 403
     
-    data = request.get_json()
+    try:
+        data = request.get_json()
+    except Exception as e:
+        return jsonify({'success': False, 'message': 'Invalid JSON data'}), 400
+    
+    if not data:
+        return jsonify({'success': False, 'message': 'No JSON data provided'}), 400
+    
     photo_id = data.get('photo_id')
     
     if not photo_id:

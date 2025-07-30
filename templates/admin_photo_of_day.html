@@ -375,7 +375,7 @@
             <div class="admin-photo-info">
                 <div class="uploader">by {{ candidate.photo.uploader_name }}</div>
                 <div class="admin-photo-candidate-date">Added: {{ candidate.date_added.strftime('%b %d, %Y') }}</div>
-                <button onclick="addAsCandidate({{ candidate.photo.id }})" class="admin-btn candidate">Select as Photo of Day</button>
+                <button onclick="selectAsPhotoOfDay({{ candidate.photo.id }})" class="admin-btn candidate">Select as Photo of Day</button>
             </div>
         </div>
         {% endfor %}
@@ -394,17 +394,40 @@
 // Define functions immediately to ensure they're available
 window.addAsCandidate = function(photoId) {
     console.log('addAsCandidate called with photoId:', photoId);
+    console.log('photoId type:', typeof photoId);
+    console.log('photoId value:', photoId);
+    
+    // Validate photoId
+    if (!photoId || photoId === 'undefined' || photoId === 'null') {
+        console.error('Invalid photoId:', photoId);
+        showNotification('Invalid photo ID', 'error');
+        return;
+    }
+    
+    // Ensure photoId is a number
+    const numericPhotoId = parseInt(photoId);
+    if (isNaN(numericPhotoId)) {
+        console.error('PhotoId is not a valid number:', photoId);
+        showNotification('Invalid photo ID format', 'error');
+        return;
+    }
+    
     fetch('/admin/photo-of-day/add-candidate?key=wedding2024', {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-            photo_id: photoId
+            photo_id: numericPhotoId
         })
     })
-    .then(response => response.json())
+    .then(response => {
+        console.log('Response status:', response.status);
+        console.log('Response headers:', response.headers);
+        return response.json();
+    })
     .then(data => {
+        console.log('Response data:', data);
         if (data.success) {
             showNotification(data.message, 'success');
             setTimeout(() => location.reload(), 1500);
@@ -444,6 +467,56 @@ window.deletePhotoOfDay = function(photoOfDayId) {
     });
 };
 
+window.selectAsPhotoOfDay = function(photoId) {
+    console.log('selectAsPhotoOfDay called with photoId:', photoId);
+    
+    // Validate photoId
+    if (!photoId || photoId === 'undefined' || photoId === 'null') {
+        console.error('Invalid photoId:', photoId);
+        showNotification('Invalid photo ID', 'error');
+        return;
+    }
+    
+    // Ensure photoId is a number
+    const numericPhotoId = parseInt(photoId);
+    if (isNaN(numericPhotoId)) {
+        console.error('PhotoId is not a valid number:', photoId);
+        showNotification('Invalid photo ID format', 'error');
+        return;
+    }
+    
+    // Get today's date
+    const today = new Date().toISOString().split('T')[0];
+    
+    fetch('/admin/photo-of-day/select?key=wedding2024', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+            photo_id: numericPhotoId,
+            date: today
+        })
+    })
+    .then(response => {
+        console.log('Response status:', response.status);
+        return response.json();
+    })
+    .then(data => {
+        console.log('Response data:', data);
+        if (data.success) {
+            showNotification(data.message, 'success');
+            setTimeout(() => location.reload(), 1500);
+        } else {
+            showNotification(data.message, 'error');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showNotification('An error occurred while selecting the photo', 'error');
+    });
+};
+
 window.showNotification = function(message, type) {
     const notification = document.createElement('div');
     notification.className = `fixed top-4 right-4 p-4 rounded-lg shadow-lg z-50 ${
@@ -460,6 +533,7 @@ window.showNotification = function(message, type) {
 window.addEventListener('load', function() {
     console.log('Window loaded. Functions available:', {
         addAsCandidate: typeof window.addAsCandidate,
+        selectAsPhotoOfDay: typeof window.selectAsPhotoOfDay,
         deletePhotoOfDay: typeof window.deletePhotoOfDay,
         showNotification: typeof window.showNotification
     });
@@ -594,6 +668,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
 // Debug: Check if functions are available
 console.log('Script loaded. addAsCandidate available:', typeof window.addAsCandidate);
+console.log('Script loaded. selectAsPhotoOfDay available:', typeof window.selectAsPhotoOfDay);
 console.log('Script loaded. deletePhotoOfDay available:', typeof deletePhotoOfDay);
 console.log('Script loaded. showNotification available:', typeof showNotification);
 </script>
