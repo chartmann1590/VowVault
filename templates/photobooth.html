@@ -494,7 +494,7 @@
         const tags = document.getElementById('tags').value;
         
         try {
-            const response = await fetch('/api/photobooth/save', {
+            const response = await fetch('/photobooth/api/save', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'

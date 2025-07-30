@@ -1178,7 +1178,7 @@
         if (userIdentifier && notificationEnabled && notificationPermission) {
             console.log('Notification Debug: Registering user for notifications');
             
-            fetch('/admin/register-notification-user', {
+            fetch('/api/notifications/register-user', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'

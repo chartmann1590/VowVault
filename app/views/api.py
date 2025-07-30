@@ -341,4 +341,42 @@ def toggle_notifications_enabled():
         user.notifications_enabled = enabled
     
     db.session.commit()
-    return jsonify({'success': True, 'enabled': enabled}) 
+    return jsonify({'success': True, 'enabled': enabled})
+
+@api_bp.route('/notifications/register-user', methods=['POST'])
+def register_notification_user():
+    try:
+        data = request.get_json()
+        user_identifier = data.get('user_identifier', '')
+        user_name = data.get('user_name', 'Anonymous')
+        device_info = data.get('device_info', '')
+        notifications_enabled = data.get('notifications_enabled', True)
+        
+        if not user_identifier:
+            return jsonify({'success': False, 'message': 'User identifier required'})
+        
+        # Find or create user
+        user = NotificationUser.query.filter_by(user_identifier=user_identifier).first()
+        if user:
+            # Update existing user
+            user.user_name = user_name
+            user.device_info = device_info
+            user.notifications_enabled = notifications_enabled
+            user.last_seen = datetime.utcnow()
+        else:
+            # Create new user
+            user = NotificationUser(
+                user_identifier=user_identifier,
+                user_name=user_name,
+                device_info=device_info,
+                notifications_enabled=notifications_enabled
+            )
+            db.session.add(user)
+        
+        db.session.commit()
+        return jsonify({'success': True, 'message': 'User registered successfully'})
+    
+    except Exception as e:
+        print(f"Error registering notification user: {e}")
+        db.session.rollback()
+        return jsonify({'success': False, 'message': str(e)}) 
