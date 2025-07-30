@@ -24,6 +24,7 @@ from app.utils.settings_utils import verify_admin_access, get_email_settings, ge
 from app.utils.email_utils import start_email_monitor
 from app.utils.immich_utils import sync_all_to_immich
 from app.utils.notification_utils import create_notification_with_push
+from app.utils.db_optimization import db_optimizer, get_photo_stats, maintenance_task
 
 admin_bp = Blueprint('admin', __name__)
 
@@ -103,6 +104,11 @@ def admin():
             'domain': session.get('sso_user_domain')
         }
     
+    # Get database optimization stats
+    db_stats = get_photo_stats()
+    cache_stats = db_optimizer.get_cache_stats()
+    db_analysis = db_optimizer.analyze_database()
+    
     return render_template('admin.html', 
                          photos=photos, 
                          total_photos=len(photos),
@@ -124,7 +130,10 @@ def admin():
                          immich_settings=immich_settings,
                          immich_sync_logs=immich_sync_logs,
                          sso_settings=sso_settings,
-                         current_user=current_user)
+                         current_user=current_user,
+                         db_stats=db_stats,
+                         cache_stats=cache_stats,
+                         db_analysis=db_analysis)
 
 @admin_bp.route('/batch-download')
 def batch_download():
@@ -1015,3 +1024,87 @@ def register_notification_user():
         print(f"Error registering notification user: {e}")
         db.session.rollback()
         return jsonify({'success': False, 'message': str(e)}) 
+
+@admin_bp.route('/database-maintenance', methods=['POST'])
+def database_maintenance():
+    """Run database maintenance tasks"""
+    # Check for SSO session first
+    sso_user_email = session.get('sso_user_email')
+    sso_user_domain = session.get('sso_user_domain')
+    admin_key = request.args.get('key', '')
+    
+    # Verify admin access
+    if not verify_admin_access(admin_key, sso_user_email, sso_user_domain):
+        return "Unauthorized", 401
+    
+    try:
+        # Run maintenance task
+        success = maintenance_task()
+        
+        if success:
+            return jsonify({
+                'success': True,
+                'message': 'Database maintenance completed successfully'
+            })
+        else:
+            return jsonify({
+                'success': False,
+                'error': 'Database maintenance failed'
+            }), 500
+            
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+@admin_bp.route('/database-optimize', methods=['POST'])
+def database_optimize():
+    """Optimize database queries and indexes"""
+    # Check for SSO session first
+    sso_user_email = session.get('sso_user_email')
+    sso_user_domain = session.get('sso_user_domain')
+    admin_key = request.args.get('key', '')
+    
+    # Verify admin access
+    if not verify_admin_access(admin_key, sso_user_email, sso_user_domain):
+        return "Unauthorized", 401
+    
+    try:
+        # Run database optimization
+        success = db_optimizer.optimize_queries()
+        
+        if success:
+            return jsonify({
+                'success': True,
+                'message': 'Database optimization completed successfully'
+            })
+        else:
+            return jsonify({
+                'success': False,
+                'error': 'Database optimization failed'
+            }), 500
+            
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+@admin_bp.route('/clear-cache', methods=['POST'])
+def clear_cache():
+    """Clear query cache"""
+    # Check for SSO session first
+    sso_user_email = session.get('sso_user_email')
+    sso_user_domain = session.get('sso_user_domain')
+    admin_key = request.args.get('key', '')
+    
+    # Verify admin access
+    if not verify_admin_access(admin_key, sso_user_email, sso_user_domain):
+        return "Unauthorized", 401
+    
+    try:
+        # Clear cache
+        db_optimizer.clear_cache()
+        
+        return jsonify({
+            'success': True,
+            'message': 'Cache cleared successfully'
+        })
+        
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)}), 500 

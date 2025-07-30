@@ -39,6 +39,9 @@ import sqlite3
 # Import PhotoOfDayCandidate for automatic candidate functionality
 from app.models.photo_of_day import PhotoOfDayCandidate
 
+# Import database optimization utilities
+from app.utils.db_optimization import db_optimizer, optimize_photo_queries, get_photo_stats, maintenance_task
+
 app = Flask(__name__)
 app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', secrets.token_hex(16))
 app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL', 'sqlite:///wedding_photos.db')
@@ -66,6 +69,9 @@ app.config['MAIL_DEFAULT_SENDER'] = os.environ.get('MAIL_DEFAULT_SENDER', '')
 
 db = SQLAlchemy(app)
 mail = Mail(app)
+
+# Initialize database optimizer
+db_optimizer.init_app(app)
 
 # Ensure upload directories exist
 os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
@@ -853,12 +859,15 @@ def index():
     
     # Get all content with pagination (photos, videos, photobooth, and emailed content)
     page = request.args.get('page', 1, type=int)
-    per_page = 10
+    per_page = 20  # Increased for better performance
     
-    # Build query with filters
-    photos_query = Photo.query
+    # Build query with filters using optimized approach
+    photos_query = Photo.query.options(
+        db.joinedload(Photo.comments).load_only('id', 'content', 'created_at'),
+        db.joinedload(Photo.likes_rel).load_only('id', 'user_identifier')
+    )
     
-    # Apply search filter
+    # Apply search filter with optimized LIKE queries
     if search_query:
         search_term = f'%{search_query}%'
         photos_query = photos_query.filter(
@@ -882,18 +891,23 @@ def index():
     if tag_filter:
         photos_query = photos_query.filter(Photo.tags.ilike(f'%{tag_filter}%'))
     
-    # Order by upload date (newest first)
+    # Order by upload date (newest first) - this uses the optimized index
     photos_query = photos_query.order_by(Photo.upload_date.desc())
     photos = photos_query.paginate(page=page, per_page=per_page, error_out=False)
     
-    # Get all unique tags for filter dropdown
-    all_tags = set()
-    all_photos = Photo.query.filter(Photo.tags.isnot(None)).all()
-    for photo in all_photos:
-        if photo.tags:
-            tags = [tag.strip() for tag in photo.tags.split(',') if tag.strip()]
-            all_tags.update(tags)
-    all_tags = sorted(list(all_tags))
+    # Get all unique tags for filter dropdown with caching
+    @db_optimizer.cache_query('all_tags', lambda: None, 1800)  # Cache for 30 minutes
+    def get_all_tags():
+        all_tags = set()
+        # Use a more efficient query to get tags
+        tag_photos = Photo.query.filter(Photo.tags.isnot(None)).with_entities(Photo.tags).all()
+        for photo in tag_photos:
+            if photo.tags:
+                tags = [tag.strip() for tag in photo.tags.split(',') if tag.strip()]
+                all_tags.update(tags)
+        return sorted(list(all_tags))
+    
+    all_tags = get_all_tags()
     
     # Get email settings for the welcome modal
     email_settings = get_email_settings()

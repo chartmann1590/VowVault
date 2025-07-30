@@ -86,6 +86,7 @@ The application has been completely refactored from a monolithic structure to a 
 - 📱 **PWA Debug Tools** - Monitor and troubleshoot PWA issues
 - 💾 **Batch Download** - Download all content as ZIP file
 - 🏆 **Photo of the Day Management** - Select and manage daily featured photos with automatic candidate system
+- ⚡ **Database Optimization** - Optimized for thousands of photos with caching and maintenance tools
 
 ## 📸 Screenshots
 
