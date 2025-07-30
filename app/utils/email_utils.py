@@ -8,7 +8,7 @@ from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 from werkzeug.utils import secure_filename
 from flask import current_app
-from app import db, app
+from app import db
 from app.models.settings import Settings
 from app.models.photo import Photo
 from app.models.email import EmailLog
@@ -162,7 +162,7 @@ def process_email_photos():
                                 timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
                                 safe_filename = secure_filename(filename)
                                 unique_filename = f"{timestamp}_{safe_filename}"
-                                file_path = os.path.join(app.config['UPLOAD_FOLDER'], unique_filename)
+                                file_path = os.path.join(current_app.config['UPLOAD_FOLDER'], unique_filename)
                                 
                                 with open(file_path, 'wb') as f:
                                     f.write(file_data)
@@ -254,7 +254,8 @@ def process_email_photos():
 def start_email_monitor():
     """Start the email monitoring thread"""
     def monitor_emails():
-        from app import app
+        from app import create_app
+        app = create_app()
         with app.app_context():
             print("Email monitoring thread started")
             while True:
