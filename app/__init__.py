@@ -10,7 +10,10 @@ mail = Mail()
 
 def create_app(config_name='default'):
     """Application factory pattern"""
-    app = Flask(__name__)
+    # Create Flask app with correct template and static folder paths
+    app = Flask(__name__, 
+                template_folder='../templates',
+                static_folder='../static')
     
     # Configuration
     app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', secrets.token_hex(16))

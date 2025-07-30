@@ -4,6 +4,7 @@ import secrets
 from app.models.photo import Photo
 from app.models.settings import Settings
 from app.utils.settings_utils import get_email_settings
+from app import db
 
 main_bp = Blueprint('main', __name__)
 
