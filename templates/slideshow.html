@@ -3,7 +3,7 @@
 {% block title %}Live Event Slideshow{% endblock %}
 
 {% block content %}
-<div class="slideshow-container">
+<div class="slideshow-container" id="slideshowContainer">
     <div class="slideshow-header">
         <h1>Live Event Activity</h1>
         <p class="slideshow-subtitle">Real-time updates from today's celebration</p>
@@ -13,6 +13,7 @@
                 <span class="pause-icon" style="display: none;">⏸</span>
             </button>
             <button id="fullscreenBtn" class="control-btn">⛶</button>
+            <button id="fullscreenSlideshowBtn" class="control-btn">🎬</button>
             <div class="refresh-indicator">
                 <span id="lastUpdate">Updating...</span>
             </div>
@@ -57,6 +58,27 @@
     flex-direction: column;
     position: relative;
     overflow: hidden;
+    transition: all 0.3s ease;
+}
+
+.slideshow-container.fullscreen {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    z-index: 9999;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+.slideshow-container.fullscreen .slideshow-header {
+    background: rgba(255, 255, 255, 0.98);
+    backdrop-filter: blur(20px);
+}
+
+.slideshow-container.fullscreen .slideshow-display {
+    height: 85vh;
+    max-width: 95vw;
 }
 
 .slideshow-header {
@@ -66,6 +88,7 @@
     text-align: center;
     box-shadow: 0 4px 20px rgba(0,0,0,0.1);
     z-index: 10;
+    transition: all 0.3s ease;
 }
 
 .slideshow-header h1 {
@@ -73,6 +96,10 @@
     color: #2c3e50;
     margin-bottom: 0.5rem;
     font-weight: 700;
+    background: linear-gradient(45deg, #667eea, #764ba2);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
 }
 
 .slideshow-subtitle {
@@ -89,7 +116,7 @@
 }
 
 .control-btn {
-    background: #3498db;
+    background: linear-gradient(45deg, #3498db, #2980b9);
     color: white;
     border: none;
     padding: 0.75rem 1.5rem;
@@ -98,10 +125,27 @@
     cursor: pointer;
     transition: all 0.3s ease;
     box-shadow: 0 4px 15px rgba(52, 152, 219, 0.3);
+    position: relative;
+    overflow: hidden;
+}
+
+.control-btn::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+    transition: left 0.5s;
+}
+
+.control-btn:hover::before {
+    left: 100%;
 }
 
 .control-btn:hover {
-    background: #2980b9;
+    background: linear-gradient(45deg, #2980b9, #1f5f8b);
     transform: translateY(-2px);
     box-shadow: 0 6px 20px rgba(52, 152, 219, 0.4);
 }
@@ -112,6 +156,12 @@
     border-radius: 20px;
     font-size: 0.9rem;
     color: #27ae60;
+    animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.7; }
 }
 
 .slideshow-content {
@@ -135,6 +185,7 @@
     display: flex;
     align-items: center;
     justify-content: center;
+    transition: all 0.3s ease;
 }
 
 .slide {
@@ -147,18 +198,62 @@
     align-items: center;
     justify-content: center;
     opacity: 0;
-    transition: opacity 1s ease-in-out;
+    transform: scale(0.9) translateY(20px);
+    transition: all 0.8s cubic-bezier(0.4, 0, 0.2, 1);
     padding: 2rem;
     box-sizing: border-box;
 }
 
 .slide.active {
     opacity: 1;
+    transform: scale(1) translateY(0);
+}
+
+.slide.slide-in {
+    animation: slideIn 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.slide.slide-out {
+    animation: slideOut 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+@keyframes slideIn {
+    from {
+        opacity: 0;
+        transform: scale(0.9) translateY(20px) rotateY(10deg);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1) translateY(0) rotateY(0deg);
+    }
+}
+
+@keyframes slideOut {
+    from {
+        opacity: 1;
+        transform: scale(1) translateY(0) rotateY(0deg);
+    }
+    to {
+        opacity: 0;
+        transform: scale(0.9) translateY(-20px) rotateY(-10deg);
+    }
 }
 
 .slide-content {
     text-align: center;
     max-width: 90%;
+    animation: fadeInUp 0.6s ease-out 0.2s both;
+}
+
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
 }
 
 .slide-photo {
@@ -167,6 +262,24 @@
     border-radius: 15px;
     box-shadow: 0 10px 30px rgba(0,0,0,0.3);
     margin-bottom: 1rem;
+    transition: all 0.3s ease;
+    animation: zoomIn 0.6s ease-out 0.4s both;
+}
+
+.slide-photo:hover {
+    transform: scale(1.02);
+    box-shadow: 0 15px 40px rgba(0,0,0,0.4);
+}
+
+@keyframes zoomIn {
+    from {
+        opacity: 0;
+        transform: scale(0.8);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
 }
 
 .slide-video {
@@ -175,6 +288,13 @@
     border-radius: 15px;
     box-shadow: 0 10px 30px rgba(0,0,0,0.3);
     margin-bottom: 1rem;
+    transition: all 0.3s ease;
+    animation: zoomIn 0.6s ease-out 0.4s both;
+}
+
+.slide-video:hover {
+    transform: scale(1.02);
+    box-shadow: 0 15px 40px rgba(0,0,0,0.4);
 }
 
 .slide-info {
@@ -183,6 +303,8 @@
     border-radius: 15px;
     margin-top: 1rem;
     backdrop-filter: blur(10px);
+    animation: fadeInUp 0.6s ease-out 0.6s both;
+    border: 1px solid rgba(255, 255, 255, 0.2);
 }
 
 .slide-title {
@@ -190,6 +312,10 @@
     font-weight: 600;
     color: #2c3e50;
     margin-bottom: 0.5rem;
+    background: linear-gradient(45deg, #667eea, #764ba2);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
 }
 
 .slide-description {
@@ -211,12 +337,44 @@
     text-align: center;
     max-width: 600px;
     margin: 0 auto;
+    box-shadow: 0 10px 30px rgba(102, 126, 234, 0.3);
+    animation: slideInFromRight 0.8s ease-out 0.3s both;
+    position: relative;
+    overflow: hidden;
+}
+
+.slide-guestbook::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent);
+    animation: shimmer 3s infinite;
+}
+
+@keyframes shimmer {
+    0% { left: -100%; }
+    100% { left: 100%; }
+}
+
+@keyframes slideInFromRight {
+    from {
+        opacity: 0;
+        transform: translateX(50px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
 }
 
 .slide-guestbook .guestbook-name {
     font-size: 1.8rem;
     font-weight: 700;
     margin-bottom: 1rem;
+    text-shadow: 0 2px 4px rgba(0,0,0,0.3);
 }
 
 .slide-guestbook .guestbook-message {
@@ -238,12 +396,39 @@
     text-align: center;
     max-width: 600px;
     margin: 0 auto;
+    box-shadow: 0 10px 30px rgba(240, 147, 251, 0.3);
+    animation: slideInFromLeft 0.8s ease-out 0.3s both;
+    position: relative;
+    overflow: hidden;
+}
+
+.slide-message::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent);
+    animation: shimmer 3s infinite;
+}
+
+@keyframes slideInFromLeft {
+    from {
+        opacity: 0;
+        transform: translateX(-50px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
 }
 
 .slide-message .message-author {
     font-size: 1.5rem;
     font-weight: 700;
     margin-bottom: 1rem;
+    text-shadow: 0 2px 4px rgba(0,0,0,0.3);
 }
 
 .slide-message .message-content {
@@ -254,6 +439,12 @@
 .loading-message {
     text-align: center;
     color: #7f8c8d;
+    animation: fadeIn 0.5s ease-out;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
 }
 
 .spinner {
@@ -276,6 +467,7 @@
     backdrop-filter: blur(10px);
     padding: 2rem;
     box-shadow: 0 -4px 20px rgba(0,0,0,0.1);
+    transition: all 0.3s ease;
 }
 
 .info-panel h3 {
@@ -283,6 +475,10 @@
     color: #2c3e50;
     margin-bottom: 1.5rem;
     font-size: 1.5rem;
+    background: linear-gradient(45deg, #667eea, #764ba2);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
 }
 
 .stats {
@@ -294,6 +490,11 @@
 
 .stat-item {
     text-align: center;
+    transition: all 0.3s ease;
+}
+
+.stat-item:hover {
+    transform: translateY(-5px);
 }
 
 .stat-number {
@@ -301,6 +502,18 @@
     font-size: 2.5rem;
     font-weight: 700;
     color: #3498db;
+    animation: countUp 1s ease-out;
+}
+
+@keyframes countUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
 }
 
 .stat-label {
@@ -308,6 +521,46 @@
     color: #7f8c8d;
     text-transform: uppercase;
     letter-spacing: 1px;
+}
+
+/* Fullscreen slideshow specific styles */
+.slideshow-container.fullscreen .slideshow-header {
+    padding: 1rem;
+}
+
+.slideshow-container.fullscreen .slideshow-header h1 {
+    font-size: 2.5rem;
+}
+
+.slideshow-container.fullscreen .slideshow-info {
+    padding: 1rem;
+}
+
+.slideshow-container.fullscreen .stats {
+    max-width: 800px;
+}
+
+.slideshow-container.fullscreen .stat-number {
+    font-size: 3rem;
+}
+
+/* Progress bar for slide transitions */
+.slide-progress {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: 4px;
+    background: rgba(255, 255, 255, 0.3);
+    z-index: 100;
+}
+
+.slide-progress-bar {
+    height: 100%;
+    background: linear-gradient(90deg, #3498db, #2ecc71);
+    width: 0%;
+    transition: width linear;
+    border-radius: 0 2px 2px 0;
 }
 
 @media (max-width: 768px) {
@@ -328,6 +581,10 @@
     .slide-message {
         padding: 1.5rem;
     }
+    
+    .slideshow-container.fullscreen .slideshow-header h1 {
+        font-size: 1.8rem;
+    }
 }
 </style>
 
@@ -338,12 +595,14 @@ class Slideshow {
         this.slides = [];
         this.isPlaying = true;
         this.interval = null;
+        this.progressInterval = null;
         this.settings = {
             slideshow_interval: 5000,
             transition_effect: 'fade',
             auto_refresh: true,
             refresh_interval: 900000
         };
+        this.isFullscreen = false;
         
         this.init();
     }
@@ -368,9 +627,16 @@ class Slideshow {
     setupEventListeners() {
         const playPauseBtn = document.getElementById('playPauseBtn');
         const fullscreenBtn = document.getElementById('fullscreenBtn');
+        const fullscreenSlideshowBtn = document.getElementById('fullscreenSlideshowBtn');
         
         playPauseBtn.addEventListener('click', () => this.togglePlayPause());
         fullscreenBtn.addEventListener('click', () => this.toggleFullscreen());
+        fullscreenSlideshowBtn.addEventListener('click', () => this.toggleSlideshowFullscreen());
+        
+        // Handle fullscreen change events
+        document.addEventListener('fullscreenchange', () => {
+            this.handleFullscreenChange();
+        });
     }
     
     togglePlayPause() {
@@ -397,17 +663,60 @@ class Slideshow {
         }
     }
     
+    toggleSlideshowFullscreen() {
+        const container = document.getElementById('slideshowContainer');
+        if (!this.isFullscreen) {
+            container.classList.add('fullscreen');
+            this.isFullscreen = true;
+        } else {
+            container.classList.remove('fullscreen');
+            this.isFullscreen = false;
+        }
+    }
+    
+    handleFullscreenChange() {
+        if (!document.fullscreenElement) {
+            const container = document.getElementById('slideshowContainer');
+            container.classList.remove('fullscreen');
+            this.isFullscreen = false;
+        }
+    }
+    
     startSlideshow() {
         if (this.interval) clearInterval(this.interval);
         this.interval = setInterval(() => {
             this.nextSlide();
         }, parseInt(this.settings.slideshow_interval));
+        
+        this.startProgressBar();
     }
     
     stopSlideshow() {
         if (this.interval) {
             clearInterval(this.interval);
             this.interval = null;
+        }
+        this.stopProgressBar();
+    }
+    
+    startProgressBar() {
+        this.stopProgressBar();
+        const progressBar = document.querySelector('.slide-progress-bar');
+        if (progressBar) {
+            const duration = parseInt(this.settings.slideshow_interval);
+            progressBar.style.transition = `width ${duration}ms linear`;
+            progressBar.style.width = '0%';
+            
+            setTimeout(() => {
+                progressBar.style.width = '100%';
+            }, 100);
+        }
+    }
+    
+    stopProgressBar() {
+        if (this.progressInterval) {
+            clearInterval(this.progressInterval);
+            this.progressInterval = null;
         }
     }
     
@@ -444,8 +753,15 @@ class Slideshow {
         const slideshow = document.getElementById('slideshow');
         slideshow.innerHTML = '';
         
+        // Add progress bar
+        slideshow.innerHTML = `
+            <div class="slide-progress">
+                <div class="slide-progress-bar"></div>
+            </div>
+        `;
+        
         if (this.slides.length === 0) {
-            slideshow.innerHTML = `
+            slideshow.innerHTML += `
                 <div class="slide active">
                     <div class="slide-content">
                         <h2>No recent activity</h2>
@@ -539,11 +855,24 @@ class Slideshow {
     
     showSlide(index) {
         const slides = document.querySelectorAll('.slide');
-        slides.forEach(slide => slide.classList.remove('active'));
+        const currentActive = document.querySelector('.slide.active');
+        
+        if (currentActive) {
+            currentActive.classList.add('slide-out');
+            setTimeout(() => {
+                currentActive.classList.remove('active', 'slide-out');
+            }, 800);
+        }
         
         if (slides[index]) {
-            slides[index].classList.add('active');
+            slides[index].classList.add('slide-in');
+            setTimeout(() => {
+                slides[index].classList.add('active');
+                slides[index].classList.remove('slide-in');
+            }, 100);
         }
+        
+        this.startProgressBar();
     }
     
     nextSlide() {
