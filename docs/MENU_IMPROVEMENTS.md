@@ -36,6 +36,7 @@ The wedding gallery navigation has been significantly improved to provide a bett
 - 300px width mobile menu
 - Some content cut off on smaller screens
 - Basic spacing and styling
+- Dropdown text was invisible when expanded
 
 ### After
 - **320px width** for better content display
@@ -43,12 +44,17 @@ The wedding gallery navigation has been significantly improved to provide a bett
 - **Improved spacing**: Better padding and touch targets
 - **Dropdown support**: Mobile-friendly collapsible sections
 - **Enhanced readability**: Better font sizes and contrast
+- **Fixed dropdown visibility**: Explicit color styles ensure text is visible
+- **Slide-to-close functionality**: Users can swipe right to close the menu
 
 ### Mobile Menu Features
 - **Touch-friendly buttons**: Larger touch targets for better usability
 - **Smooth animations**: Smooth dropdown transitions
 - **Better organization**: Related features grouped together
 - **Responsive design**: Adapts to different screen sizes
+- **Visible dropdown text**: Fixed color inheritance issues
+- **Gesture support**: Swipe right to close menu
+- **Improved accessibility**: Better contrast and touch targets
 
 ## Technical Implementation
 
@@ -63,6 +69,8 @@ The wedding gallery navigation has been significantly improved to provide a bett
 - **Event delegation**: Efficient event handling
 - **Smooth animations**: CSS transitions for better UX
 - **Accessibility**: Proper ARIA labels and keyboard support
+- **Touch gesture support**: Swipe right to close mobile menu
+- **Touch event handling**: Proper touch start/end event management
 
 ### Responsive Breakpoints
 - **Desktop**: >768px - Full dropdown menu functionality
@@ -121,11 +129,31 @@ The wedding gallery navigation has been significantly improved to provide a bett
 - **Touch interactions**: Test on various mobile devices
 - **Screen sizes**: Verify behavior on different phone sizes
 - **Orientation changes**: Test landscape and portrait modes
+- **Dropdown visibility**: Verify dropdown text is visible when expanded
+- **Gesture functionality**: Test swipe-to-close functionality
 
 ### Cross-browser Testing
 - **Chrome/Safari/Firefox**: Verify consistent behavior
 - **Mobile browsers**: Test on iOS Safari and Android Chrome
 - **Accessibility tools**: Test with screen readers and keyboard navigation
+
+## Mobile Menu Fixes (Latest Update)
+
+### Issues Resolved
+- **Invisible dropdown text**: Fixed color inheritance issues that made dropdown text invisible
+- **Missing gesture support**: Added swipe-right-to-close functionality for better mobile UX
+
+### Technical Changes
+- **CSS fixes**: Added explicit color styles (`color: #6b5d54 !important`) to mobile dropdown links
+- **Hover states**: Added proper hover styles for better visual feedback
+- **Touch events**: Implemented touchstart/touchend event handlers for swipe detection
+- **Swipe threshold**: 50px minimum distance for swipe-to-close functionality
+
+### User Experience Improvements
+- **Better visibility**: Dropdown text is now clearly visible when expanded
+- **Intuitive gestures**: Users can swipe right anywhere on the mobile menu to close it
+- **Consistent behavior**: Touch interactions work reliably across different mobile devices
+- **Enhanced accessibility**: Better contrast and touch targets for improved usability
 
 ## Deployment Notes
 

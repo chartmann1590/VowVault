@@ -321,6 +321,13 @@
             padding: 1rem 3rem;
             font-size: 1rem;
             border-bottom: 1px solid #e0e0e0;
+            color: #6b5d54 !important;
+            text-decoration: none;
+        }
+
+        #mobileNav .dropdown-content a:hover {
+            background-color: #e8ddd3;
+            color: #8b7355 !important;
         }
 
         #mobileNav .dropdown-btn {
@@ -1142,6 +1149,29 @@
             body.style.overflow = '';
         }
     });
+
+    // Mobile menu slide-to-close functionality
+    let touchStartX = 0;
+    let touchEndX = 0;
+
+    mobileNav.addEventListener('touchstart', (e) => {
+        touchStartX = e.changedTouches[0].screenX;
+    });
+
+    mobileNav.addEventListener('touchend', (e) => {
+        touchEndX = e.changedTouches[0].screenX;
+        handleSwipe();
+    });
+
+    function handleSwipe() {
+        const swipeThreshold = 50; // Minimum distance for swipe
+        const swipeDistance = touchEndX - touchStartX;
+        
+        // If swiped right (positive distance) and menu is open, close it
+        if (swipeDistance > swipeThreshold && mobileNav.classList.contains('active')) {
+            toggleMobileMenu();
+        }
+    }
 
     // PWA Functionality
     let deferredPrompt;
