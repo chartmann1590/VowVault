@@ -2,6 +2,14 @@
 
 ## Core Features
 
+### Navigation System
+- **Responsive Design**: Optimized for both desktop and mobile devices
+- **Dropdown Menus**: Desktop navigation uses organized dropdown menus to reduce clutter
+- **Mobile Optimization**: Full-width mobile menu with improved spacing and readability
+- **Touch-Friendly**: Large touch targets for mobile devices
+- **Smooth Animations**: Smooth transitions and hover effects
+- **Accessibility**: Proper ARIA labels and keyboard navigation support
+
 ### Photo & Video Gallery
 - **Upload System**: Guests can upload photos and videos directly through the web interface
 - **Email Upload**: Alternative email-based upload system for convenience

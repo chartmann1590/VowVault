@@ -70,7 +70,8 @@
     nav.desktop-nav ul {
         list-style: none;
         display: flex;
-        gap: 2rem;
+        gap: 1.5rem;
+        align-items: center;
     }
 
     nav.desktop-nav a {
@@ -79,25 +80,104 @@
         font-weight: 500;
         transition: color 0.3s ease;
         position: relative;
+        padding: 0.5rem 1rem;
+        border-radius: 20px;
+        white-space: nowrap;
     }
 
     nav.desktop-nav a:hover {
         color: #8b7355;
+        background-color: rgba(139, 115, 85, 0.1);
     }
 
     nav.desktop-nav a::after {
         content: '';
         position: absolute;
-        bottom: -5px;
-        left: 0;
+        bottom: -2px;
+        left: 50%;
         width: 0;
         height: 2px;
         background-color: #8b7355;
-        transition: width 0.3s ease;
+        transition: all 0.3s ease;
+        transform: translateX(-50%);
     }
 
     nav.desktop-nav a:hover::after {
-        width: 100%;
+        width: 80%;
+    }
+
+    /* Dropdown Menu Styles */
+    .dropdown {
+        position: relative;
+        display: inline-block;
+    }
+
+    .dropdown-content {
+        display: none;
+        position: absolute;
+        background-color: white;
+        min-width: 200px;
+        box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+        border-radius: 12px;
+        padding: 0.5rem 0;
+        z-index: 1000;
+        top: 100%;
+        right: 0;
+        margin-top: 0.5rem;
+    }
+
+    .dropdown:hover .dropdown-content {
+        display: block;
+    }
+
+    .dropdown-content a {
+        color: #6b5d54;
+        padding: 0.75rem 1.5rem;
+        text-decoration: none;
+        display: block;
+        transition: all 0.3s ease;
+        border-radius: 0;
+        white-space: nowrap;
+    }
+
+    .dropdown-content a:hover {
+        background-color: #f9f5f0;
+        color: #8b7355;
+        transform: translateX(5px);
+    }
+
+    .dropdown-content a::after {
+        display: none;
+    }
+
+    .dropdown-btn {
+        background: none;
+        border: none;
+        color: #6b5d54;
+        font-weight: 500;
+        cursor: pointer;
+        padding: 0.5rem 1rem;
+        border-radius: 20px;
+        transition: all 0.3s ease;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        font-size: 1rem;
+    }
+
+    .dropdown-btn:hover {
+        color: #8b7355;
+        background-color: rgba(139, 115, 85, 0.1);
+    }
+
+    .dropdown-btn::after {
+        content: '▼';
+        font-size: 0.8rem;
+        transition: transform 0.3s ease;
+    }
+
+    .dropdown:hover .dropdown-btn::after {
+        transform: rotate(180deg);
     }
 
     /* Hamburger Menu Button (desktop hidden) */
@@ -153,7 +233,7 @@
         display: none;
     }
 
-    /* Mobile Navigation */
+    /* Mobile Navigation Improvements */
     @media (max-width: 768px) {
         header {
             padding: 1rem 0;
@@ -176,8 +256,8 @@
             display: block;
             position: fixed;
             top: 0;
-            right: -300px;
-            width: 300px;
+            right: -320px;
+            width: 320px;
             height: 100vh;
             background: white;
             box-shadow: -5px 0 20px rgba(0,0,0,0.1);
@@ -195,7 +275,7 @@
             display: flex;
             flex-direction: column;
             gap: 0;
-            padding: 80px 0 20px 0;
+            padding: 100px 0 30px 0;
         }
 
         #mobileNav li {
@@ -204,16 +284,83 @@
 
         #mobileNav a {
             display: block;
-            padding: 1rem 2rem;
+            padding: 1.2rem 2rem;
             font-size: 1.1rem;
             color: #6b5d54;
             text-decoration: none;
             transition: background-color 0.3s ease, color 0.3s ease;
+            position: relative;
         }
 
         #mobileNav a:hover {
             background-color: #f9f5f0;
             color: #8b7355;
+        }
+
+        /* Mobile dropdown styles */
+        #mobileNav .dropdown-content {
+            position: static;
+            display: none;
+            box-shadow: none;
+            background-color: #f9f5f0;
+            margin: 0;
+            padding: 0;
+        }
+
+        #mobileNav .dropdown.active .dropdown-content {
+            display: block;
+        }
+
+        #mobileNav .dropdown-content a {
+            padding: 1rem 3rem;
+            font-size: 1rem;
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+        #mobileNav .dropdown-btn {
+            width: 100%;
+            text-align: left;
+            padding: 1.2rem 2rem;
+            font-size: 1.1rem;
+            background: none;
+            border: none;
+            color: #6b5d54;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        #mobileNav .dropdown-btn::after {
+            content: '▼';
+            font-size: 0.8rem;
+            transition: transform 0.3s ease;
+        }
+
+        #mobileNav .dropdown.active .dropdown-btn::after {
+            transform: rotate(180deg);
+        }
+    }
+
+    /* Extra small screens */
+    @media (max-width: 480px) {
+        #mobileNav {
+            width: 100%;
+            right: -100%;
+        }
+
+        #mobileNav ul {
+            padding: 80px 0 20px 0;
+        }
+
+        #mobileNav a,
+        #mobileNav .dropdown-btn {
+            padding: 1rem 1.5rem;
+            font-size: 1rem;
+        }
+
+        #mobileNav .dropdown-content a {
+            padding: 0.8rem 2.5rem;
         }
     }
 
@@ -785,12 +932,22 @@
                 <nav class="desktop-nav">
                     <ul>
                         <li><a href="{{ url_for('main.index') }}">Gallery</a></li>
-                        <li><a href="{{ url_for('photo_of_day.photo_of_day') }}">📸 Photo of the Day</a></li>
-                        <li><a href="{{ url_for('slideshow.slideshow') }}">🎬 Live Slideshow</a></li>
-                        <li><a href="{{ url_for('upload.upload') }}">Upload Photo</a></li>
-                        <li><a href="{{ url_for('photobooth.photobooth') }}">Virtual Photobooth</a></li>
-                        <li><a href="{{ url_for('messages.message_board') }}">Message Board</a></li>
-                        <li><a href="{{ url_for('guestbook.guestbook') }}">Guestbook</a></li>
+                        <li class="dropdown">
+                            <button class="dropdown-btn">Photos & Media</button>
+                            <div class="dropdown-content">
+                                <a href="{{ url_for('photo_of_day.photo_of_day') }}">📸 Photo of the Day</a>
+                                <a href="{{ url_for('slideshow.slideshow') }}">🎬 Live Slideshow</a>
+                                <a href="{{ url_for('upload.upload') }}">Upload Photo</a>
+                                <a href="{{ url_for('photobooth.photobooth') }}">Virtual Photobooth</a>
+                            </div>
+                        </li>
+                        <li class="dropdown">
+                            <button class="dropdown-btn">Community</button>
+                            <div class="dropdown-content">
+                                <a href="{{ url_for('messages.message_board') }}">Message Board</a>
+                                <a href="{{ url_for('guestbook.guestbook') }}">Guestbook</a>
+                            </div>
+                        </li>
                     </ul>
                 </nav>
             </div>
@@ -800,12 +957,22 @@
 <nav id="mobileNav">
     <ul>
         <li><a href="{{ url_for('main.index') }}">Gallery</a></li>
-        <li><a href="{{ url_for('photo_of_day.photo_of_day') }}">📸 Photo of the Day</a></li>
-        <li><a href="{{ url_for('slideshow.slideshow') }}">🎬 Live Slideshow</a></li>
-        <li><a href="{{ url_for('upload.upload') }}">Upload Photo</a></li>
-        <li><a href="{{ url_for('photobooth.photobooth') }}">Virtual Photobooth</a></li>
-        <li><a href="{{ url_for('messages.message_board') }}">Message Board</a></li>
-        <li><a href="{{ url_for('guestbook.guestbook') }}">Guestbook</a></li>
+        <li class="dropdown">
+            <button class="dropdown-btn">Photos & Media</button>
+            <div class="dropdown-content">
+                <a href="{{ url_for('photo_of_day.photo_of_day') }}">📸 Photo of the Day</a>
+                <a href="{{ url_for('slideshow.slideshow') }}">🎬 Live Slideshow</a>
+                <a href="{{ url_for('upload.upload') }}">Upload Photo</a>
+                <a href="{{ url_for('photobooth.photobooth') }}">Virtual Photobooth</a>
+            </div>
+        </li>
+        <li class="dropdown">
+            <button class="dropdown-btn">Community</button>
+            <div class="dropdown-content">
+                <a href="{{ url_for('messages.message_board') }}">Message Board</a>
+                <a href="{{ url_for('guestbook.guestbook') }}">Guestbook</a>
+            </div>
+        </li>
         <li><a href="{{ url_for('main.notifications_page') }}" style="position: relative;">
             🔔 Notifications
             <span id="mobileNotificationBadge" style="
@@ -907,6 +1074,25 @@
     mobileNav.querySelectorAll('a').forEach(link => {
         link.addEventListener('click', () => {
             if (window.innerWidth <= 768) toggleMobileMenu();
+        });
+    });
+
+    // Mobile dropdown functionality
+    mobileNav.querySelectorAll('.dropdown-btn').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            e.preventDefault();
+            const dropdown = btn.parentElement;
+            const isActive = dropdown.classList.contains('active');
+            
+            // Close all other dropdowns
+            mobileNav.querySelectorAll('.dropdown').forEach(d => {
+                d.classList.remove('active');
+            });
+            
+            // Toggle current dropdown
+            if (!isActive) {
+                dropdown.classList.add('active');
+            }
         });
     });
 
