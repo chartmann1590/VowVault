@@ -49,7 +49,7 @@ def index():
     # For lazy loading, we'll only load initial photos on the server
     # The rest will be loaded via JavaScript API calls
     page = request.args.get('page', 1, type=int)
-    per_page = 12  # Initial load of 12 photos
+    per_page = 10  # Initial load of 10 photos
     
     # Build query with filters
     photos_query = Photo.query
@@ -124,7 +124,7 @@ def index():
 def api_photos():
     """API endpoint for lazy loading photos"""
     page = request.args.get('page', 1, type=int)
-    per_page = request.args.get('per_page', 12, type=int)  # Load more photos per request for better UX
+    per_page = request.args.get('per_page', 10, type=int)  # Load 10 photos per request
     
     # Get search parameters
     search_query = request.args.get('search', '').strip()

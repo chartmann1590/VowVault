@@ -950,6 +950,40 @@
     <div id="end-of-content" class="end-of-content" style="display: none;">
         <p>You've reached the end of the gallery!</p>
     </div>
+    
+    <!-- Pagination Controls -->
+    {% if photos.pages > 1 %}
+    <div class="pagination-container">
+        <div class="pagination-info">
+            Showing {{ photos.items|length }} of {{ photos.total }} items
+        </div>
+        <div class="pagination-controls">
+            {% if photos.has_prev %}
+                <a href="{{ url_for('main.index', page=photos.prev_num) }}" class="pagination-btn">Previous</a>
+            {% else %}
+                <button class="pagination-btn" disabled>Previous</button>
+            {% endif %}
+            
+            {% for page_num in photos.iter_pages(left_edge=2, left_current=2, right_current=3, right_edge=2) %}
+                {% if page_num %}
+                    {% if page_num != photos.page %}
+                        <a href="{{ url_for('main.index', page=page_num) }}" class="pagination-btn">{{ page_num }}</a>
+                    {% else %}
+                        <button class="pagination-btn current" disabled>{{ page_num }}</button>
+                    {% endif %}
+                {% else %}
+                    <span class="pagination-ellipsis">...</span>
+                {% endif %}
+            {% endfor %}
+            
+            {% if photos.has_next %}
+                <a href="{{ url_for('main.index', page=photos.next_num) }}" class="pagination-btn">Next</a>
+            {% else %}
+                <button class="pagination-btn" disabled>Next</button>
+            {% endif %}
+        </div>
+    </div>
+    {% endif %}
 {% else %}
     <div class="empty-state">
         <h3>No photos or videos yet!</h3>
@@ -1075,7 +1109,7 @@
         try {
             const params = new URLSearchParams({
                 page: currentPage,
-                per_page: 12,
+                per_page: 10,
                 ...currentFilters
             });
 
