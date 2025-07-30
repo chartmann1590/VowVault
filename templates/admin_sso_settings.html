@@ -1,0 +1,682 @@
+{% extends "base.html" %}
+
+{% block title %}SSO Settings - Admin{% endblock %}
+
+{% block extra_styles %}
+<style>
+    .admin-header {
+        background: linear-gradient(135deg, #2c2c2c 0%, #4a4a4a 100%);
+        color: white;
+        padding: 2rem 0;
+        margin: -3rem -20px 2rem -20px;
+        text-align: center;
+    }
+
+    .admin-header h2 {
+        font-family: 'Playfair Display', serif;
+        font-size: 2rem;
+        margin-bottom: 0.5rem;
+    }
+
+    .back-link {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        color: white;
+        text-decoration: none;
+        margin-bottom: 1rem;
+        opacity: 0.8;
+        transition: opacity 0.3s ease;
+    }
+
+    .back-link:hover {
+        opacity: 1;
+        color: white;
+        text-decoration: none;
+    }
+
+    .section-card {
+        background: white;
+        border-radius: 15px;
+        overflow: hidden;
+        box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+        margin-bottom: 2rem;
+    }
+
+    .section-header {
+        background: #f9f5f0;
+        padding: 1.5rem 2rem;
+        border-bottom: 1px solid #e8ddd3;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .section-header h3 {
+        color: #8b7355;
+        font-family: 'Playfair Display', serif;
+        font-size: 1.5rem;
+        margin: 0;
+    }
+
+    .section-content {
+        padding: 2rem;
+    }
+
+    .settings-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 2rem;
+        margin-bottom: 2rem;
+    }
+
+    .settings-form {
+        background: #f9f5f0;
+        padding: 1.5rem;
+        border-radius: 10px;
+    }
+
+    .sso-info {
+        background: #faf9f7;
+        padding: 1.5rem;
+        border-radius: 10px;
+        border: 2px dashed #e8ddd3;
+    }
+
+    .form-group {
+        margin-bottom: 1.5rem;
+    }
+
+    .form-group label {
+        display: block;
+        margin-bottom: 0.5rem;
+        font-weight: 600;
+        color: #6b5d54;
+    }
+
+    .form-control {
+        width: 100%;
+        padding: 0.75rem;
+        border: 2px solid #e8ddd3;
+        border-radius: 8px;
+        font-size: 1rem;
+        transition: border-color 0.3s ease;
+    }
+
+    .form-control:focus {
+        outline: none;
+        border-color: #8b7355;
+    }
+
+    .btn {
+        padding: 0.75rem 1.5rem;
+        border: none;
+        border-radius: 25px;
+        cursor: pointer;
+        font-size: 1rem;
+        transition: all 0.3s ease;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .btn-primary {
+        background: #8b7355;
+        color: white;
+    }
+
+    .btn-primary:hover {
+        background: #6b5d54;
+        transform: translateY(-2px);
+    }
+
+    .btn-secondary {
+        background: #6c757d;
+        color: white;
+    }
+
+    .btn-secondary:hover {
+        background: #5a6268;
+        transform: translateY(-2px);
+    }
+
+    .btn-success {
+        background: #28a745;
+        color: white;
+    }
+
+    .btn-success:hover {
+        background: #218838;
+        transform: translateY(-2px);
+    }
+
+    .btn-danger {
+        background: #dc3545;
+        color: white;
+    }
+
+    .btn-danger:hover {
+        background: #c82333;
+        transform: translateY(-2px);
+    }
+
+    .success-message {
+        background: #d4edda;
+        color: #155724;
+        padding: 1rem;
+        border-radius: 10px;
+        margin-bottom: 1rem;
+        display: none;
+    }
+
+    .error-message {
+        background: #f8d7da;
+        color: #721c24;
+        padding: 1rem;
+        border-radius: 10px;
+        margin-bottom: 1rem;
+        display: none;
+    }
+
+    .sso-provider {
+        background: white;
+        padding: 1.5rem;
+        border-radius: 10px;
+        margin-bottom: 1rem;
+        border: 2px solid #e8ddd3;
+        transition: all 0.3s ease;
+    }
+
+    .sso-provider:hover {
+        border-color: #8b7355;
+        box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+    }
+
+    .sso-provider-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1rem;
+    }
+
+    .sso-provider-title {
+        font-weight: 600;
+        color: #8b7355;
+        font-size: 1.1rem;
+    }
+
+    .sso-status {
+        padding: 0.25rem 0.75rem;
+        border-radius: 15px;
+        font-size: 0.8rem;
+        font-weight: 600;
+    }
+
+    .status-enabled {
+        background: #d4edda;
+        color: #155724;
+    }
+
+    .status-disabled {
+        background: #f8d7da;
+        color: #721c24;
+    }
+
+    .status-testing {
+        background: #fff3cd;
+        color: #856404;
+    }
+
+    .switch-wrapper {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 1rem;
+        background: white;
+        border-radius: 8px;
+        border: 2px solid #e8ddd3;
+    }
+
+    .switch {
+        position: relative;
+        display: inline-block;
+        width: 60px;
+        height: 34px;
+    }
+
+    .switch input {
+        opacity: 0;
+        width: 0;
+        height: 0;
+    }
+
+    .slider {
+        position: absolute;
+        cursor: pointer;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background-color: #ccc;
+        transition: .4s;
+        border-radius: 34px;
+    }
+
+    .slider:before {
+        position: absolute;
+        content: "";
+        height: 26px;
+        width: 26px;
+        left: 4px;
+        bottom: 4px;
+        background-color: white;
+        transition: .4s;
+        border-radius: 50%;
+    }
+
+    input:checked + .slider {
+        background-color: #8b7355;
+    }
+
+    input:checked + .slider:before {
+        transform: translateX(26px);
+    }
+
+    .provider-icon {
+        width: 24px;
+        height: 24px;
+        margin-right: 0.5rem;
+    }
+
+    .test-result {
+        margin-top: 1rem;
+        padding: 1rem;
+        border-radius: 8px;
+        font-size: 0.9rem;
+    }
+
+    .test-success {
+        background: #d4edda;
+        color: #155724;
+        border: 1px solid #c3e6cb;
+    }
+
+    .test-error {
+        background: #f8d7da;
+        color: #721c24;
+        border: 1px solid #f5c6cb;
+    }
+
+    .test-info {
+        background: #d1ecf1;
+        color: #0c5460;
+        border: 1px solid #bee5eb;
+    }
+
+    @media (max-width: 768px) {
+        .admin-header {
+            margin: -3rem -1.5rem 2rem -1.5rem;
+        }
+
+        .settings-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="admin-header">
+    <a href="/admin?key=wedding2024" class="back-link">
+        <svg viewBox="0 0 24 24" width="20" height="20">
+            <path d="M20,11V13H8L13.5,18.5L12.08,19.92L4.16,12L12.08,4.08L13.5,5.5L8,11H20Z" fill="currentColor"/>
+        </svg>
+        Back to Dashboard
+    </a>
+    <h2>SSO Settings</h2>
+    <p>Configure Single Sign-On authentication for admin access</p>
+</div>
+
+<div class="container">
+    <!-- SSO Configuration -->
+    <div class="section-card">
+        <div class="section-header">
+            <h3>SSO Configuration</h3>
+        </div>
+        <div class="section-content">
+            <div class="success-message" id="successMessage">
+                SSO settings saved successfully!
+            </div>
+
+            <div class="error-message" id="errorMessage">
+                Error saving SSO settings!
+            </div>
+
+            <div class="sso-info">
+                <strong>🔐 Single Sign-On Feature:</strong> Configure SSO authentication to allow secure admin access using your existing identity provider (Google, Azure, Okta, or custom OAuth).
+            </div>
+
+            <div class="settings-grid">
+                <div class="settings-form">
+                    <h4 style="color: #8b7355; margin-bottom: 1.5rem;">General SSO Settings</h4>
+                    
+                    <form id="ssoSettingsForm">
+                        <div class="form-group">
+                            <div class="switch-wrapper">
+                                <label for="ssoEnabled">Enable SSO Authentication</label>
+                                <label class="switch">
+                                    <input type="checkbox" id="ssoEnabled" {% if sso_settings.get('enabled', False) %}checked{% endif %}>
+                                    <span class="slider"></span>
+                                </label>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="ssoProvider">SSO Provider</label>
+                            <select id="ssoProvider" class="form-control">
+                                <option value="google" {% if sso_settings.get('provider') == 'google' %}selected{% endif %}>Google OAuth</option>
+                                <option value="azure" {% if sso_settings.get('provider') == 'azure' %}selected{% endif %}>Microsoft Azure AD</option>
+                                <option value="okta" {% if sso_settings.get('provider') == 'okta' %}selected{% endif %}>Okta</option>
+                                <option value="custom" {% if sso_settings.get('provider') == 'custom' %}selected{% endif %}>Custom OAuth</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="ssoClientId">Client ID</label>
+                            <input type="text" 
+                                   id="ssoClientId" 
+                                   class="form-control" 
+                                   placeholder="Enter your OAuth Client ID"
+                                   value="{{ sso_settings.get('client_id', '') }}">
+                        </div>
+
+                        <div class="form-group">
+                            <label for="ssoClientSecret">Client Secret</label>
+                            <input type="password" 
+                                   id="ssoClientSecret" 
+                                   class="form-control" 
+                                   placeholder="Enter your OAuth Client Secret"
+                                   value="{{ sso_settings.get('client_secret', '') }}">
+                        </div>
+
+                        <div class="form-group">
+                            <label for="ssoRedirectUri">Redirect URI</label>
+                            <input type="text" 
+                                   id="ssoRedirectUri" 
+                                   class="form-control" 
+                                   placeholder="https://yourdomain.com/admin/sso/callback"
+                                   value="{{ sso_settings.get('redirect_uri', '') }}">
+                            <small style="color: #666;">This URL must be configured in your OAuth provider</small>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="ssoAuthorizedEmails">Authorized Email Addresses</label>
+                            <textarea id="ssoAuthorizedEmails" 
+                                      rows="4" 
+                                      class="form-control" 
+                                      placeholder="Enter email addresses (one per line) that are allowed to access admin">{{ sso_settings.get('authorized_emails', '') }}</textarea>
+                            <small style="color: #666;">Only these email addresses will be granted admin access</small>
+                        </div>
+
+                        <button type="submit" class="btn btn-primary">
+                            <svg viewBox="0 0 24 24" width="20" height="20">
+                                <path d="M15,9H5V5H15M12,19A3,3 0 0,1 9,16A3,3 0 0,1 12,13A3,3 0 0,1 15,16A3,3 0 0,1 12,19M17,3H5C3.89,3 3,3.89 3,5V19A2,2 0 0,0 5,21H19A2,2 0 0,0 21,19V7L17,3Z" fill="currentColor"/>
+                            </svg>
+                            Save Settings
+                        </button>
+                    </form>
+                </div>
+                
+                <div class="sso-info">
+                    <h4 style="color: #8b7355; margin-bottom: 1.5rem;">SSO Provider Status</h4>
+                    
+                    <div class="sso-provider">
+                        <div class="sso-provider-header">
+                            <div class="sso-provider-title">
+                                <svg class="provider-icon" viewBox="0 0 24 24">
+                                    <path d="M12,2A10,10 0 0,0 2,12A10,10 0 0,0 12,22A10,10 0 0,0 22,12A10,10 0 0,0 12,2M12,4A8,8 0 0,1 20,12A8,8 0 0,1 12,20A8,8 0 0,1 4,12A8,8 0 0,1 12,4M12,6A6,6 0 0,0 6,12A6,6 0 0,0 12,18A6,6 0 0,0 18,12A6,6 0 0,0 12,6M12,8A4,4 0 0,1 16,12A4,4 0 0,1 12,16A4,4 0 0,1 8,12A4,4 0 0,1 12,8Z" fill="#4285f4"/>
+                                </svg>
+                                Google OAuth
+                            </div>
+                            <span class="sso-status status-{{ 'enabled' if sso_settings.get('provider') == 'google' and sso_settings.get('enabled') else 'disabled' }}">
+                                {{ 'Enabled' if sso_settings.get('provider') == 'google' and sso_settings.get('enabled') else 'Disabled' }}
+                            </span>
+                        </div>
+                        <p style="color: #666; margin-bottom: 1rem;">Configure Google OAuth for admin authentication</p>
+                        <button class="btn btn-secondary" onclick="testSSO('google')">Test Connection</button>
+                    </div>
+
+                    <div class="sso-provider">
+                        <div class="sso-provider-header">
+                            <div class="sso-provider-title">
+                                <svg class="provider-icon" viewBox="0 0 24 24">
+                                    <path d="M12,2A10,10 0 0,0 2,12A10,10 0 0,0 12,22A10,10 0 0,0 22,12A10,10 0 0,0 12,2M12,4A8,8 0 0,1 20,12A8,8 0 0,1 12,20A8,8 0 0,1 4,12A8,8 0 0,1 12,4M12,6A6,6 0 0,0 6,12A6,6 0 0,0 12,18A6,6 0 0,0 18,12A6,6 0 0,0 12,6M12,8A4,4 0 0,1 16,12A4,4 0 0,1 12,16A4,4 0 0,1 8,12A4,4 0 0,1 12,8Z" fill="#0078d4"/>
+                                </svg>
+                                Microsoft Azure AD
+                            </div>
+                            <span class="sso-status status-{{ 'enabled' if sso_settings.get('provider') == 'azure' and sso_settings.get('enabled') else 'disabled' }}">
+                                {{ 'Enabled' if sso_settings.get('provider') == 'azure' and sso_settings.get('enabled') else 'Disabled' }}
+                            </span>
+                        </div>
+                        <p style="color: #666; margin-bottom: 1rem;">Configure Microsoft Azure AD for admin authentication</p>
+                        <button class="btn btn-secondary" onclick="testSSO('azure')">Test Connection</button>
+                    </div>
+
+                    <div class="sso-provider">
+                        <div class="sso-provider-header">
+                            <div class="sso-provider-title">
+                                <svg class="provider-icon" viewBox="0 0 24 24">
+                                    <path d="M12,2A10,10 0 0,0 2,12A10,10 0 0,0 12,22A10,10 0 0,0 22,12A10,10 0 0,0 12,2M12,4A8,8 0 0,1 20,12A8,8 0 0,1 12,20A8,8 0 0,1 4,12A8,8 0 0,1 12,4M12,6A6,6 0 0,0 6,12A6,6 0 0,0 12,18A6,6 0 0,0 18,12A6,6 0 0,0 12,6M12,8A4,4 0 0,1 16,12A4,4 0 0,1 12,16A4,4 0 0,1 8,12A4,4 0 0,1 12,8Z" fill="#0066cc"/>
+                                </svg>
+                                Okta
+                            </div>
+                            <span class="sso-status status-{{ 'enabled' if sso_settings.get('provider') == 'okta' and sso_settings.get('enabled') else 'disabled' }}">
+                                {{ 'Enabled' if sso_settings.get('provider') == 'okta' and sso_settings.get('enabled') else 'Disabled' }}
+                            </span>
+                        </div>
+                        <p style="color: #666; margin-bottom: 1rem;">Configure Okta for admin authentication</p>
+                        <button class="btn btn-secondary" onclick="testSSO('okta')">Test Connection</button>
+                    </div>
+
+                    <div class="sso-provider">
+                        <div class="sso-provider-header">
+                            <div class="sso-provider-title">
+                                <svg class="provider-icon" viewBox="0 0 24 24">
+                                    <path d="M12,2A10,10 0 0,0 2,12A10,10 0 0,0 12,22A10,10 0 0,0 22,12A10,10 0 0,0 12,2M12,4A8,8 0 0,1 20,12A8,8 0 0,1 12,20A8,8 0 0,1 4,12A8,8 0 0,1 12,4M12,6A6,6 0 0,0 6,12A6,6 0 0,0 12,18A6,6 0 0,0 18,12A6,6 0 0,0 12,6M12,8A4,4 0 0,1 16,12A4,4 0 0,1 12,16A4,4 0 0,1 8,12A4,4 0 0,1 12,8Z" fill="#6c757d"/>
+                                </svg>
+                                Custom OAuth
+                            </div>
+                            <span class="sso-status status-{{ 'enabled' if sso_settings.get('provider') == 'custom' and sso_settings.get('enabled') else 'disabled' }}">
+                                {{ 'Enabled' if sso_settings.get('provider') == 'custom' and sso_settings.get('enabled') else 'Disabled' }}
+                            </span>
+                        </div>
+                        <p style="color: #666; margin-bottom: 1rem;">Configure custom OAuth provider for admin authentication</p>
+                        <button class="btn btn-secondary" onclick="testSSO('custom')">Test Connection</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- SSO Setup Instructions -->
+    <div class="section-card">
+        <div class="section-header">
+            <h3>SSO Setup Instructions</h3>
+        </div>
+        <div class="section-content">
+            <div class="settings-grid">
+                <div class="settings-form">
+                    <h4 style="color: #8b7355; margin-bottom: 1.5rem;">Google OAuth Setup</h4>
+                    <div style="text-align: left;">
+                        <div style="background: #f9f5f0; padding: 1.5rem; border-radius: 8px; margin-bottom: 1rem;">
+                            <strong style="color: #8b7355;">Step 1: Create Google OAuth App</strong>
+                            <ol style="margin: 0.5rem 0 0 1rem; padding-left: 1rem; color: #666;">
+                                <li>Go to <a href="https://console.developers.google.com" target="_blank">Google Cloud Console</a></li>
+                                <li>Create a new project or select existing one</li>
+                                <li>Enable Google+ API</li>
+                                <li>Go to Credentials → Create Credentials → OAuth 2.0 Client ID</li>
+                                <li>Set Application Type to "Web application"</li>
+                                <li>Add your redirect URI: <code>https://yourdomain.com/admin/sso/callback</code></li>
+                            </ol>
+                        </div>
+                        
+                        <div style="background: #e8f5e8; padding: 1rem; border-radius: 8px; margin-bottom: 1rem;">
+                            <strong style="color: #28a745;">Step 2: Configure Settings</strong>
+                            <ul style="margin: 0.5rem 0 0 1rem; padding-left: 1rem; color: #666;">
+                                <li>Copy the Client ID and Client Secret</li>
+                                <li>Enter them in the form above</li>
+                                <li>Add authorized email addresses</li>
+                                <li>Save settings and test connection</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="sso-info">
+                    <h4 style="color: #8b7355; margin-bottom: 1.5rem;">Security Benefits</h4>
+                    <div style="text-align: left;">
+                        <div style="background: #f9f5f0; padding: 1.5rem; border-radius: 8px; margin-bottom: 1rem;">
+                            <strong style="color: #8b7355;">Enhanced Security:</strong>
+                            <ul style="margin: 0.5rem 0 0 1rem; padding-left: 1rem; color: #666;">
+                                <li>No need to remember admin passwords</li>
+                                <li>Two-factor authentication support</li>
+                                <li>Centralized user management</li>
+                                <li>Automatic session management</li>
+                            </ul>
+                        </div>
+                        
+                        <div style="background: #e8f5e8; padding: 1rem; border-radius: 8px; margin-bottom: 1rem;">
+                            <strong style="color: #28a745;">Easy Access:</strong>
+                            <ul style="margin: 0.5rem 0 0 1rem; padding-left: 1rem; color: #666;">
+                                <li>Single click admin login</li>
+                                <li>Works with existing accounts</li>
+                                <li>No additional passwords to manage</li>
+                                <li>Automatic logout on provider logout</li>
+                            </ul>
+                        </div>
+                        
+                        <div style="background: #fff3cd; padding: 1rem; border-radius: 8px;">
+                            <strong style="color: #856404;">Important Notes:</strong>
+                            <ul style="margin: 0.5rem 0 0 1rem; padding-left: 1rem; color: #666;">
+                                <li>Only authorized emails can access admin</li>
+                                <li>Keep Client Secret secure</li>
+                                <li>Test connection before going live</li>
+                                <li>Backup admin key as fallback</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // Handle form submission
+    document.getElementById('ssoSettingsForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        const urlParams = new URLSearchParams(window.location.search);
+        const key = urlParams.get('key');
+        
+        const formData = {
+            enabled: document.getElementById('ssoEnabled').checked,
+            provider: document.getElementById('ssoProvider').value,
+            client_id: document.getElementById('ssoClientId').value,
+            client_secret: document.getElementById('ssoClientSecret').value,
+            redirect_uri: document.getElementById('ssoRedirectUri').value,
+            authorized_emails: document.getElementById('ssoAuthorizedEmails').value
+        };
+        
+        fetch(`/admin/save-sso-settings?key=${key}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(formData)
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                const successMessage = document.getElementById('successMessage');
+                successMessage.style.display = 'block';
+                setTimeout(() => {
+                    successMessage.style.display = 'none';
+                }, 3000);
+                
+                // Update provider status
+                updateProviderStatus();
+            } else {
+                const errorMessage = document.getElementById('errorMessage');
+                errorMessage.textContent = 'Error saving settings: ' + (data.error || 'Unknown error');
+                errorMessage.style.display = 'block';
+                setTimeout(() => {
+                    errorMessage.style.display = 'none';
+                }, 5000);
+            }
+        })
+        .catch(error => {
+            const errorMessage = document.getElementById('errorMessage');
+            errorMessage.textContent = 'Error saving settings: ' + error.message;
+            errorMessage.style.display = 'block';
+            setTimeout(() => {
+                errorMessage.style.display = 'none';
+            }, 5000);
+        });
+    });
+
+    function updateProviderStatus() {
+        const enabled = document.getElementById('ssoEnabled').checked;
+        const provider = document.getElementById('ssoProvider').value;
+        
+        // Update all provider status indicators
+        document.querySelectorAll('.sso-provider').forEach(providerDiv => {
+            const statusSpan = providerDiv.querySelector('.sso-status');
+            const providerName = providerDiv.querySelector('.sso-provider-title').textContent.trim();
+            
+            if (providerName.includes(provider) && enabled) {
+                statusSpan.textContent = 'Enabled';
+                statusSpan.className = 'sso-status status-enabled';
+            } else {
+                statusSpan.textContent = 'Disabled';
+                statusSpan.className = 'sso-status status-disabled';
+            }
+        });
+    }
+
+    function testSSO(provider) {
+        const urlParams = new URLSearchParams(window.location.search);
+        const key = urlParams.get('key');
+        
+        // Show testing status
+        const testButton = event.target;
+        const originalText = testButton.textContent;
+        testButton.textContent = 'Testing...';
+        testButton.disabled = true;
+        
+        fetch(`/admin/test-sso/${provider}?key=${key}`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert('SSO connection test successful!');
+            } else {
+                alert('SSO connection test failed: ' + (data.error || 'Unknown error'));
+            }
+        })
+        .catch(error => {
+            alert('SSO connection test failed: ' + error.message);
+        })
+        .finally(() => {
+            testButton.textContent = originalText;
+            testButton.disabled = false;
+        });
+    }
+
+    // Update provider status when settings change
+    document.getElementById('ssoEnabled').addEventListener('change', updateProviderStatus);
+    document.getElementById('ssoProvider').addEventListener('change', updateProviderStatus);
+</script>
+{% endblock %} 

@@ -168,6 +168,206 @@ def admin_immich_settings():
                          immich_settings=immich_settings,
                          immich_sync_logs=immich_sync_logs)
 
+@admin_bp.route('/guestbook')
+def admin_guestbook():
+    # Check for SSO session first
+    sso_user_email = session.get('sso_user_email')
+    sso_user_domain = session.get('sso_user_domain')
+    admin_key = request.args.get('key', '')
+    
+    # Verify admin access
+    if not verify_admin_access(admin_key, sso_user_email, sso_user_domain):
+        return "Unauthorized", 401
+    
+    # Get guestbook entries
+    guestbook_entries = GuestbookEntry.query.order_by(GuestbookEntry.created_at.desc()).all()
+    
+    # Calculate statistics
+    total_entries = len(guestbook_entries)
+    entries_with_photos = len([e for e in guestbook_entries if e.photo_filename])
+    entries_with_location = len([e for e in guestbook_entries if e.location])
+    
+    # Count recent entries (last 7 days)
+    from datetime import datetime, timedelta
+    week_ago = datetime.now() - timedelta(days=7)
+    recent_entries = len([e for e in guestbook_entries if e.created_at >= week_ago])
+    
+    return render_template('admin_guestbook.html',
+                         guestbook_entries=guestbook_entries,
+                         total_entries=total_entries,
+                         entries_with_photos=entries_with_photos,
+                         entries_with_location=entries_with_location,
+                         recent_entries=recent_entries)
+
+@admin_bp.route('/messages')
+def admin_messages():
+    # Check for SSO session first
+    sso_user_email = session.get('sso_user_email')
+    sso_user_domain = session.get('sso_user_domain')
+    admin_key = request.args.get('key', '')
+    
+    # Verify admin access
+    if not verify_admin_access(admin_key, sso_user_email, sso_user_domain):
+        return "Unauthorized", 401
+    
+    # Get messages
+    all_messages = Message.query.order_by(Message.created_at.desc()).all()
+    visible_messages = [m for m in all_messages if not m.is_hidden]
+    hidden_messages = [m for m in all_messages if m.is_hidden]
+    
+    # Calculate statistics
+    total_messages = len(all_messages)
+    total_comments = MessageComment.query.count()
+    messages_with_photos = len([m for m in all_messages if m.photo_filename])
+    
+    return render_template('admin_messages.html',
+                         visible_messages=visible_messages,
+                         hidden_messages=hidden_messages,
+                         total_messages=total_messages,
+                         total_comments=total_comments,
+                         messages_with_photos=messages_with_photos)
+
+@admin_bp.route('/photobooth')
+def admin_photobooth():
+    # Check for SSO session first
+    sso_user_email = session.get('sso_user_email')
+    sso_user_domain = session.get('sso_user_domain')
+    admin_key = request.args.get('key', '')
+    
+    # Verify admin access
+    if not verify_admin_access(admin_key, sso_user_email, sso_user_domain):
+        return "Unauthorized", 401
+    
+    # Get photobooth settings
+    border_settings = {
+        'border_url': Settings.get('photobooth_border_url', '')
+    }
+    
+    # Get photobooth statistics
+    photobooth_count = Photo.query.filter_by(is_photobooth=True).count()
+    
+    # Count recent photobooth photos (last 7 days)
+    from datetime import datetime, timedelta
+    week_ago = datetime.now() - timedelta(days=7)
+    recent_photobooth = Photo.query.filter(
+        Photo.is_photobooth == True,
+        Photo.upload_date >= week_ago
+    ).count()
+    
+    return render_template('admin_photobooth.html',
+                         border_settings=border_settings,
+                         photobooth_count=photobooth_count,
+                         recent_photobooth=recent_photobooth)
+
+@admin_bp.route('/qr-settings')
+def admin_qr_settings():
+    # Check for SSO session first
+    sso_user_email = session.get('sso_user_email')
+    sso_user_domain = session.get('sso_user_domain')
+    admin_key = request.args.get('key', '')
+    
+    # Verify admin access
+    if not verify_admin_access(admin_key, sso_user_email, sso_user_domain):
+        return "Unauthorized", 401
+    
+    # Get QR settings
+    qr_settings = {
+        'enabled': Settings.get('qr_enabled', 'true').lower() == 'true',
+        'size': Settings.get('qr_size', 'medium'),
+        'color': Settings.get('qr_color', 'black'),
+        'custom_text': Settings.get('qr_custom_text', '')
+    }
+    
+    # Generate QR code URL
+    qr_code_url = url_for('admin.qr_preview', key=admin_key, color=qr_settings['color'])
+    
+    return render_template('admin_qr_settings.html',
+                         qr_settings=qr_settings,
+                         qr_code_url=qr_code_url)
+
+@admin_bp.route('/welcome-modal')
+def admin_welcome_modal():
+    # Check for SSO session first
+    sso_user_email = session.get('sso_user_email')
+    sso_user_domain = session.get('sso_user_domain')
+    admin_key = request.args.get('key', '')
+    
+    # Verify admin access
+    if not verify_admin_access(admin_key, sso_user_email, sso_user_domain):
+        return "Unauthorized", 401
+    
+    # Get welcome modal settings
+    welcome_settings = {
+        'enabled': Settings.get('welcome_modal_enabled', 'true').lower() == 'true',
+        'title': Settings.get('welcome_modal_title', 'Welcome to Our Wedding Gallery!'),
+        'message': Settings.get('welcome_modal_message', ''),
+        'button_text': Settings.get('welcome_modal_button_text', 'Get Started'),
+        'background_color': Settings.get('welcome_modal_bg_color', '#8b7355'),
+        'text_color': Settings.get('welcome_modal_text_color', '#ffffff'),
+        'show_on_every_visit': Settings.get('welcome_modal_show_every_visit', 'false').lower() == 'true'
+    }
+    
+    return render_template('admin_welcome_modal.html',
+                         welcome_settings=welcome_settings)
+
+@admin_bp.route('/sso-settings')
+def admin_sso_settings():
+    # Check for SSO session first
+    sso_user_email = session.get('sso_user_email')
+    sso_user_domain = session.get('sso_user_domain')
+    admin_key = request.args.get('key', '')
+    
+    # Verify admin access
+    if not verify_admin_access(admin_key, sso_user_email, sso_user_domain):
+        return "Unauthorized", 401
+    
+    # Get SSO settings
+    sso_settings = get_sso_settings()
+    
+    return render_template('admin_sso_settings.html',
+                         sso_settings=sso_settings)
+
+@admin_bp.route('/captcha-settings')
+def admin_captcha_settings():
+    # Check for SSO session first
+    sso_user_email = session.get('sso_user_email')
+    sso_user_domain = session.get('sso_user_domain')
+    admin_key = request.args.get('key', '')
+    
+    # Verify admin access
+    if not verify_admin_access(admin_key, sso_user_email, sso_user_domain):
+        return "Unauthorized", 401
+    
+    # Get CAPTCHA settings
+    captcha_settings = {
+        'enabled': Settings.get('captcha_enabled', 'true').lower() == 'true',
+        'difficulty': Settings.get('captcha_difficulty', 'medium'),
+        'timeout': int(Settings.get('captcha_timeout', '10')),
+        'max_attempts': int(Settings.get('captcha_max_attempts', '3')),
+        'block_duration': int(Settings.get('captcha_block_duration', '15')),
+        'guestbook_enabled': Settings.get('captcha_guestbook_enabled', 'true').lower() == 'true',
+        'messages_enabled': Settings.get('captcha_messages_enabled', 'true').lower() == 'true',
+        'uploads_enabled': Settings.get('captcha_uploads_enabled', 'false').lower() == 'true'
+    }
+    
+    # Get CAPTCHA statistics (you'll need to implement this based on your logging)
+    captcha_stats = {
+        'total_attempts': 0,
+        'successful_attempts': 0,
+        'failed_attempts': 0,
+        'blocked_ips': 0,
+        'success_rate': 0.0,
+        'recent_attempts': 0
+    }
+    
+    # Get CAPTCHA logs (you'll need to implement this based on your logging)
+    captcha_logs = []
+    
+    return render_template('admin_captcha_settings.html',
+                         captcha_settings=captcha_settings,
+                         captcha_stats=captcha_stats,
+                         captcha_logs=captcha_logs)
+
 @admin_bp.route('/batch-download')
 def batch_download():
     # Check for SSO session first

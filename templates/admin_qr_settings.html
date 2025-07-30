@@ -1,0 +1,528 @@
+{% extends "base.html" %}
+
+{% block title %}QR Code Settings - Admin{% endblock %}
+
+{% block extra_styles %}
+<style>
+    .admin-header {
+        background: linear-gradient(135deg, #2c2c2c 0%, #4a4a4a 100%);
+        color: white;
+        padding: 2rem 0;
+        margin: -3rem -20px 2rem -20px;
+        text-align: center;
+    }
+
+    .admin-header h2 {
+        font-family: 'Playfair Display', serif;
+        font-size: 2rem;
+        margin-bottom: 0.5rem;
+    }
+
+    .back-link {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        color: white;
+        text-decoration: none;
+        margin-bottom: 1rem;
+        opacity: 0.8;
+        transition: opacity 0.3s ease;
+    }
+
+    .back-link:hover {
+        opacity: 1;
+        color: white;
+        text-decoration: none;
+    }
+
+    .section-card {
+        background: white;
+        border-radius: 15px;
+        overflow: hidden;
+        box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+        margin-bottom: 2rem;
+    }
+
+    .section-header {
+        background: #f9f5f0;
+        padding: 1.5rem 2rem;
+        border-bottom: 1px solid #e8ddd3;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .section-header h3 {
+        color: #8b7355;
+        font-family: 'Playfair Display', serif;
+        font-size: 1.5rem;
+        margin: 0;
+    }
+
+    .section-content {
+        padding: 2rem;
+    }
+
+    .settings-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 2rem;
+        margin-bottom: 2rem;
+    }
+
+    .settings-form {
+        background: #f9f5f0;
+        padding: 1.5rem;
+        border-radius: 10px;
+    }
+
+    .qr-preview {
+        background: #faf9f7;
+        padding: 2rem;
+        border-radius: 15px;
+        text-align: center;
+        border: 2px dashed #e8ddd3;
+    }
+
+    .form-group {
+        margin-bottom: 1.5rem;
+    }
+
+    .form-group label {
+        display: block;
+        margin-bottom: 0.5rem;
+        font-weight: 600;
+        color: #6b5d54;
+    }
+
+    .form-control {
+        width: 100%;
+        padding: 0.75rem;
+        border: 2px solid #e8ddd3;
+        border-radius: 8px;
+        font-size: 1rem;
+        transition: border-color 0.3s ease;
+    }
+
+    .form-control:focus {
+        outline: none;
+        border-color: #8b7355;
+    }
+
+    .btn {
+        padding: 0.75rem 1.5rem;
+        border: none;
+        border-radius: 25px;
+        cursor: pointer;
+        font-size: 1rem;
+        transition: all 0.3s ease;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .btn-primary {
+        background: #8b7355;
+        color: white;
+    }
+
+    .btn-primary:hover {
+        background: #6b5d54;
+        transform: translateY(-2px);
+    }
+
+    .btn-secondary {
+        background: #6c757d;
+        color: white;
+    }
+
+    .btn-secondary:hover {
+        background: #5a6268;
+        transform: translateY(-2px);
+    }
+
+    .success-message {
+        background: #d4edda;
+        color: #155724;
+        padding: 1rem;
+        border-radius: 10px;
+        margin-bottom: 1rem;
+        display: none;
+    }
+
+    .qr-code {
+        background: white;
+        padding: 1rem;
+        border-radius: 10px;
+        box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+        margin-bottom: 1rem;
+    }
+
+    .qr-code img {
+        max-width: 200px;
+        height: auto;
+    }
+
+    .qr-info {
+        background: #e8f4fd;
+        border: 1px solid #bee5eb;
+        color: #0c5460;
+        padding: 1rem;
+        border-radius: 10px;
+        margin-bottom: 1.5rem;
+    }
+
+    .download-section {
+        margin-top: 1.5rem;
+        padding-top: 1.5rem;
+        border-top: 1px solid #e8ddd3;
+    }
+
+    .download-buttons {
+        display: flex;
+        gap: 1rem;
+        flex-wrap: wrap;
+        justify-content: center;
+    }
+
+    .color-options {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+        gap: 1rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .color-option {
+        text-align: center;
+        padding: 1rem;
+        border-radius: 10px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        border: 2px solid transparent;
+    }
+
+    .color-option:hover {
+        transform: translateY(-2px);
+    }
+
+    .color-option.selected {
+        border-color: #8b7355;
+        background: #f9f5f0;
+    }
+
+    .color-preview {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        margin: 0 auto 0.5rem;
+        border: 2px solid #fff;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+
+    @media (max-width: 768px) {
+        .admin-header {
+            margin: -3rem -1.5rem 2rem -1.5rem;
+        }
+
+        .settings-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .download-buttons {
+            flex-direction: column;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="admin-header">
+    <a href="/admin?key=wedding2024" class="back-link">
+        <svg viewBox="0 0 24 24" width="20" height="20">
+            <path d="M20,11V13H8L13.5,18.5L12.08,19.92L4.16,12L12.08,4.08L13.5,5.5L8,11H20Z" fill="currentColor"/>
+        </svg>
+        Back to Dashboard
+    </a>
+    <h2>QR Code Settings</h2>
+    <p>Configure QR code for sharing your wedding gallery</p>
+</div>
+
+<div class="container">
+    <!-- QR Code Configuration -->
+    <div class="section-card">
+        <div class="section-header">
+            <h3>QR Code Configuration</h3>
+        </div>
+        <div class="section-content">
+            <div class="success-message" id="successMessage">
+                QR code settings saved successfully!
+            </div>
+
+            <div class="qr-info">
+                <strong>📱 QR Code Feature:</strong> Generate a QR code that guests can scan to easily access your wedding gallery. Perfect for sharing at your wedding venue or on invitations.
+            </div>
+
+            <div class="settings-grid">
+                <div class="settings-form">
+                    <h4 style="color: #8b7355; margin-bottom: 1.5rem;">QR Code Settings</h4>
+                    
+                    <form id="qrSettingsForm">
+                        <div class="form-group">
+                            <label for="qrEnabled">Enable QR Code</label>
+                            <select id="qrEnabled" class="form-control">
+                                <option value="true" {% if qr_settings.get('enabled', True) %}selected{% endif %}>Enabled</option>
+                                <option value="false" {% if not qr_settings.get('enabled', True) %}selected{% endif %}>Disabled</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="qrSize">QR Code Size</label>
+                            <select id="qrSize" class="form-control">
+                                <option value="small" {% if qr_settings.get('size', 'medium') == 'small' %}selected{% endif %}>Small (200px)</option>
+                                <option value="medium" {% if qr_settings.get('size', 'medium') == 'medium' %}selected{% endif %}>Medium (300px)</option>
+                                <option value="large" {% if qr_settings.get('size', 'medium') == 'large' %}selected{% endif %}>Large (400px)</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="qrColor">QR Code Color</label>
+                            <div class="color-options">
+                                <div class="color-option" data-color="black" onclick="selectColor('black')">
+                                    <div class="color-preview" style="background: #000;"></div>
+                                    <small>Black</small>
+                                </div>
+                                <div class="color-option" data-color="darkblue" onclick="selectColor('darkblue')">
+                                    <div class="color-preview" style="background: #1e3a8a;"></div>
+                                    <small>Dark Blue</small>
+                                </div>
+                                <div class="color-option" data-color="darkgreen" onclick="selectColor('darkgreen')">
+                                    <div class="color-preview" style="background: #166534;"></div>
+                                    <small>Dark Green</small>
+                                </div>
+                                <div class="color-option" data-color="darkred" onclick="selectColor('darkred')">
+                                    <div class="color-preview" style="background: #991b1b;"></div>
+                                    <small>Dark Red</small>
+                                </div>
+                                <div class="color-option" data-color="purple" onclick="selectColor('purple')">
+                                    <div class="color-preview" style="background: #7c3aed;"></div>
+                                    <small>Purple</small>
+                                </div>
+                                <div class="color-option" data-color="brown" onclick="selectColor('brown')">
+                                    <div class="color-preview" style="background: #92400e;"></div>
+                                    <small>Brown</small>
+                                </div>
+                            </div>
+                            <input type="hidden" id="qrColor" value="{{ qr_settings.get('color', 'black') }}">
+                        </div>
+
+                        <div class="form-group">
+                            <label for="qrText">Custom Text (Optional)</label>
+                            <input type="text" 
+                                   id="qrText" 
+                                   class="form-control" 
+                                   placeholder="e.g., 'Scan to view our wedding photos!'"
+                                   value="{{ qr_settings.get('custom_text', '') }}">
+                            <small style="color: #666;">Text will appear below the QR code</small>
+                        </div>
+
+                        <button type="submit" class="btn btn-primary">
+                            <svg viewBox="0 0 24 24" width="20" height="20">
+                                <path d="M15,9H5V5H15M12,19A3,3 0 0,1 9,16A3,3 0 0,1 12,13A3,3 0 0,1 15,16A3,3 0 0,1 12,19M17,3H5C3.89,3 3,3.89 3,5V19A2,2 0 0,0 5,21H19A2,2 0 0,0 21,19V7L17,3Z" fill="currentColor"/>
+                            </svg>
+                            Save Settings
+                        </button>
+                    </form>
+                </div>
+                
+                <div class="qr-preview">
+                    <h4 style="color: #8b7355; margin-bottom: 1.5rem;">QR Code Preview</h4>
+                    
+                    {% if qr_settings.get('enabled', True) %}
+                        <div class="qr-code">
+                            <img src="{{ qr_code_url }}" alt="QR Code" id="qrPreview">
+                            {% if qr_settings.get('custom_text') %}
+                                <p style="margin-top: 1rem; color: #666; font-size: 0.9rem;">
+                                    {{ qr_settings.get('custom_text') }}
+                                </p>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="download-section">
+                            <h5 style="color: #8b7355; margin-bottom: 1rem;">Download Options</h5>
+                            <div class="download-buttons">
+                                <button class="btn btn-secondary" onclick="downloadQR('png')">
+                                    <svg viewBox="0 0 24 24" width="20" height="20">
+                                        <path d="M14,2H6A2,2 0 0,0 4,4V20A2,2 0 0,0 6,22H18A2,2 0 0,0 20,20V8L14,2M18,20H6V4H13V9H18V20Z" fill="currentColor"/>
+                                    </svg>
+                                    Download PNG
+                                </button>
+                                <button class="btn btn-secondary" onclick="downloadQR('svg')">
+                                    <svg viewBox="0 0 24 24" width="20" height="20">
+                                        <path d="M14,2H6A2,2 0 0,0 4,4V20A2,2 0 0,0 6,22H18A2,2 0 0,0 20,20V8L14,2M18,20H6V4H13V9H18V20Z" fill="currentColor"/>
+                                    </svg>
+                                    Download SVG
+                                </button>
+                            </div>
+                        </div>
+                    {% else %}
+                        <div style="padding: 3rem; color: #999; font-style: italic;">
+                            QR code is currently disabled
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- QR Code Usage -->
+    <div class="section-card">
+        <div class="section-header">
+            <h3>QR Code Usage</h3>
+        </div>
+        <div class="section-content">
+            <div class="settings-grid">
+                <div class="settings-form">
+                    <h4 style="color: #8b7355; margin-bottom: 1.5rem;">How to Use</h4>
+                    <div style="text-align: left;">
+                        <div style="background: #f9f5f0; padding: 1.5rem; border-radius: 8px; margin-bottom: 1rem;">
+                            <strong style="color: #8b7355;">Printing Options:</strong>
+                            <ul style="margin: 0.5rem 0 0 1rem; padding-left: 1rem; color: #666;">
+                                <li>Print on wedding invitations</li>
+                                <li>Create table cards with QR codes</li>
+                                <li>Display at the wedding venue</li>
+                                <li>Add to wedding programs</li>
+                                <li>Include in thank you cards</li>
+                            </ul>
+                        </div>
+                        
+                        <div style="background: #e8f5e8; padding: 1rem; border-radius: 8px; margin-bottom: 1rem;">
+                            <strong style="color: #28a745;">Digital Sharing:</strong>
+                            <ul style="margin: 0.5rem 0 0 1rem; padding-left: 1rem; color: #666;">
+                                <li>Share on social media</li>
+                                <li>Send via email or text</li>
+                                <li>Add to wedding website</li>
+                                <li>Include in digital invitations</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="info-panel">
+                    <h4>QR Code Benefits</h4>
+                    <div style="text-align: left;">
+                        <div style="background: #f9f5f0; padding: 1.5rem; border-radius: 8px; margin-bottom: 1rem;">
+                            <strong style="color: #8b7355;">Easy Access:</strong>
+                            <p style="color: #666; margin: 0.5rem 0 0 0;">
+                                Guests can quickly access your wedding gallery by simply scanning the QR code with their phone camera.
+                            </p>
+                        </div>
+                        
+                        <div style="background: #e8f5e8; padding: 1rem; border-radius: 8px; margin-bottom: 1rem;">
+                            <strong style="color: #28a745;">No Typing Required:</strong>
+                            <p style="color: #666; margin: 0.5rem 0 0 0;">
+                                Eliminates the need for guests to type in long URLs or remember website addresses.
+                            </p>
+                        </div>
+                        
+                        <div style="background: #fff3cd; padding: 1rem; border-radius: 8px;">
+                            <strong style="color: #856404;">Professional Touch:</strong>
+                            <p style="color: #666; margin: 0.5rem 0 0 0;">
+                                Adds a modern, tech-savvy element to your wedding that guests will appreciate.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // Initialize color selection
+    document.addEventListener('DOMContentLoaded', function() {
+        const currentColor = document.getElementById('qrColor').value;
+        selectColor(currentColor);
+    });
+
+    function selectColor(color) {
+        // Remove selected class from all options
+        document.querySelectorAll('.color-option').forEach(option => {
+            option.classList.remove('selected');
+        });
+        
+        // Add selected class to clicked option
+        document.querySelector(`[data-color="${color}"]`).classList.add('selected');
+        
+        // Update hidden input
+        document.getElementById('qrColor').value = color;
+        
+        // Update QR preview
+        updateQRPreview();
+    }
+
+    function updateQRPreview() {
+        const urlParams = new URLSearchParams(window.location.search);
+        const key = urlParams.get('key');
+        const color = document.getElementById('qrColor').value;
+        
+        // Update QR code preview
+        const qrPreview = document.getElementById('qrPreview');
+        if (qrPreview) {
+            qrPreview.src = `/admin/qr-preview?key=${key}&color=${color}`;
+        }
+    }
+
+    // Handle form submission
+    document.getElementById('qrSettingsForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        const urlParams = new URLSearchParams(window.location.search);
+        const key = urlParams.get('key');
+        
+        const formData = {
+            enabled: document.getElementById('qrEnabled').value === 'true',
+            size: document.getElementById('qrSize').value,
+            color: document.getElementById('qrColor').value,
+            custom_text: document.getElementById('qrText').value
+        };
+        
+        fetch(`/admin/save-qr-settings?key=${key}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(formData)
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                const successMessage = document.getElementById('successMessage');
+                successMessage.style.display = 'block';
+                setTimeout(() => {
+                    successMessage.style.display = 'none';
+                }, 3000);
+                
+                // Update QR preview
+                updateQRPreview();
+            } else {
+                alert('Error saving settings: ' + (data.error || 'Unknown error'));
+            }
+        })
+        .catch(error => {
+            alert('Error saving settings: ' + error.message);
+        });
+    });
+
+    function downloadQR(format) {
+        const urlParams = new URLSearchParams(window.location.search);
+        const key = urlParams.get('key');
+        const color = document.getElementById('qrColor').value;
+        
+        const downloadUrl = `/admin/download-qr?key=${key}&format=${format}&color=${color}`;
+        window.open(downloadUrl, '_blank');
+    }
+</script>
+{% endblock %} 

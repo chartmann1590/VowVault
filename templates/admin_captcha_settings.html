@@ -1,0 +1,755 @@
+{% extends "base.html" %}
+
+{% block title %}CAPTCHA Settings - Admin{% endblock %}
+
+{% block extra_styles %}
+<style>
+    .admin-header {
+        background: linear-gradient(135deg, #2c2c2c 0%, #4a4a4a 100%);
+        color: white;
+        padding: 2rem 0;
+        margin: -3rem -20px 2rem -20px;
+        text-align: center;
+    }
+
+    .admin-header h2 {
+        font-family: 'Playfair Display', serif;
+        font-size: 2rem;
+        margin-bottom: 0.5rem;
+    }
+
+    .back-link {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        color: white;
+        text-decoration: none;
+        margin-bottom: 1rem;
+        opacity: 0.8;
+        transition: opacity 0.3s ease;
+    }
+
+    .back-link:hover {
+        opacity: 1;
+        color: white;
+        text-decoration: none;
+    }
+
+    .section-card {
+        background: white;
+        border-radius: 15px;
+        overflow: hidden;
+        box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+        margin-bottom: 2rem;
+    }
+
+    .section-header {
+        background: #f9f5f0;
+        padding: 1.5rem 2rem;
+        border-bottom: 1px solid #e8ddd3;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .section-header h3 {
+        color: #8b7355;
+        font-family: 'Playfair Display', serif;
+        font-size: 1.5rem;
+        margin: 0;
+    }
+
+    .section-content {
+        padding: 2rem;
+    }
+
+    .settings-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 2rem;
+        margin-bottom: 2rem;
+    }
+
+    .settings-form {
+        background: #f9f5f0;
+        padding: 1.5rem;
+        border-radius: 10px;
+    }
+
+    .captcha-preview {
+        background: #faf9f7;
+        padding: 2rem;
+        border-radius: 15px;
+        text-align: center;
+        border: 2px dashed #e8ddd3;
+    }
+
+    .form-group {
+        margin-bottom: 1.5rem;
+    }
+
+    .form-group label {
+        display: block;
+        margin-bottom: 0.5rem;
+        font-weight: 600;
+        color: #6b5d54;
+    }
+
+    .form-control {
+        width: 100%;
+        padding: 0.75rem;
+        border: 2px solid #e8ddd3;
+        border-radius: 8px;
+        font-size: 1rem;
+        transition: border-color 0.3s ease;
+    }
+
+    .form-control:focus {
+        outline: none;
+        border-color: #8b7355;
+    }
+
+    .btn {
+        padding: 0.75rem 1.5rem;
+        border: none;
+        border-radius: 25px;
+        cursor: pointer;
+        font-size: 1rem;
+        transition: all 0.3s ease;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .btn-primary {
+        background: #8b7355;
+        color: white;
+    }
+
+    .btn-primary:hover {
+        background: #6b5d54;
+        transform: translateY(-2px);
+    }
+
+    .btn-secondary {
+        background: #6c757d;
+        color: white;
+    }
+
+    .btn-secondary:hover {
+        background: #5a6268;
+        transform: translateY(-2px);
+    }
+
+    .success-message {
+        background: #d4edda;
+        color: #155724;
+        padding: 1rem;
+        border-radius: 10px;
+        margin-bottom: 1rem;
+        display: none;
+    }
+
+    .captcha-info {
+        background: #e8f4fd;
+        border: 1px solid #bee5eb;
+        color: #0c5460;
+        padding: 1rem;
+        border-radius: 10px;
+        margin-bottom: 1.5rem;
+    }
+
+    .switch-wrapper {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 1rem;
+        background: white;
+        border-radius: 8px;
+        border: 2px solid #e8ddd3;
+    }
+
+    .switch {
+        position: relative;
+        display: inline-block;
+        width: 60px;
+        height: 34px;
+    }
+
+    .switch input {
+        opacity: 0;
+        width: 0;
+        height: 0;
+    }
+
+    .slider {
+        position: absolute;
+        cursor: pointer;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background-color: #ccc;
+        transition: .4s;
+        border-radius: 34px;
+    }
+
+    .slider:before {
+        position: absolute;
+        content: "";
+        height: 26px;
+        width: 26px;
+        left: 4px;
+        bottom: 4px;
+        background-color: white;
+        transition: .4s;
+        border-radius: 50%;
+    }
+
+    input:checked + .slider {
+        background-color: #8b7355;
+    }
+
+    input:checked + .slider:before {
+        transform: translateX(26px);
+    }
+
+    .captcha-example {
+        background: white;
+        padding: 2rem;
+        border-radius: 15px;
+        box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+        margin-bottom: 1rem;
+    }
+
+    .captcha-question {
+        background: #f9f5f0;
+        padding: 1.5rem;
+        border-radius: 10px;
+        margin-bottom: 1rem;
+        text-align: center;
+        font-size: 1.2rem;
+        font-weight: 600;
+        color: #8b7355;
+    }
+
+    .captcha-answer {
+        display: flex;
+        gap: 1rem;
+        justify-content: center;
+        flex-wrap: wrap;
+    }
+
+    .answer-option {
+        background: white;
+        border: 2px solid #e8ddd3;
+        border-radius: 8px;
+        padding: 0.75rem 1.5rem;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        font-weight: 600;
+    }
+
+    .answer-option:hover {
+        border-color: #8b7355;
+        background: #f9f5f0;
+    }
+
+    .answer-option.correct {
+        background: #d4edda;
+        border-color: #28a745;
+        color: #155724;
+    }
+
+    .answer-option.incorrect {
+        background: #f8d7da;
+        border-color: #dc3545;
+        color: #721c24;
+    }
+
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+        gap: 1rem;
+        margin-bottom: 2rem;
+    }
+
+    .stat-card {
+        background: #f9f5f0;
+        padding: 1rem;
+        border-radius: 10px;
+        text-align: center;
+    }
+
+    .stat-value {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: #8b7355;
+        margin-bottom: 0.25rem;
+    }
+
+    .stat-label {
+        color: #6b5d54;
+        font-size: 0.9rem;
+    }
+
+    .captcha-logs {
+        background: #f9f5f0;
+        padding: 1.5rem;
+        border-radius: 10px;
+        max-height: 300px;
+        overflow-y: auto;
+    }
+
+    .log-entry {
+        background: white;
+        padding: 1rem;
+        border-radius: 8px;
+        margin-bottom: 0.5rem;
+        border-left: 4px solid #8b7355;
+    }
+
+    .log-time {
+        color: #666;
+        font-size: 0.8rem;
+        margin-bottom: 0.25rem;
+    }
+
+    .log-message {
+        color: #333;
+        font-weight: 500;
+    }
+
+    .log-success {
+        border-left-color: #28a745;
+    }
+
+    .log-failure {
+        border-left-color: #dc3545;
+    }
+
+    @media (max-width: 768px) {
+        .admin-header {
+            margin: -3rem -1.5rem 2rem -1.5rem;
+        }
+
+        .settings-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .captcha-answer {
+            flex-direction: column;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="admin-header">
+    <a href="/admin?key=wedding2024" class="back-link">
+        <svg viewBox="0 0 24 24" width="20" height="20">
+            <path d="M20,11V13H8L13.5,18.5L12.08,19.92L4.16,12L12.08,4.08L13.5,5.5L8,11H20Z" fill="currentColor"/>
+        </svg>
+        Back to Dashboard
+    </a>
+    <h2>CAPTCHA Settings</h2>
+    <p>Configure spam protection for your wedding gallery</p>
+</div>
+
+<div class="container">
+    <!-- CAPTCHA Configuration -->
+    <div class="section-card">
+        <div class="section-header">
+            <h3>CAPTCHA Configuration</h3>
+        </div>
+        <div class="section-content">
+            <div class="success-message" id="successMessage">
+                CAPTCHA settings saved successfully!
+            </div>
+
+            <div class="captcha-info">
+                <strong>🛡️ CAPTCHA Protection:</strong> Protect your wedding gallery from spam by requiring users to solve simple math problems before submitting content.
+            </div>
+
+            <div class="settings-grid">
+                <div class="settings-form">
+                    <h4 style="color: #8b7355; margin-bottom: 1.5rem;">CAPTCHA Settings</h4>
+                    
+                    <form id="captchaSettingsForm">
+                        <div class="form-group">
+                            <div class="switch-wrapper">
+                                <label for="captchaEnabled">Enable CAPTCHA Protection</label>
+                                <label class="switch">
+                                    <input type="checkbox" id="captchaEnabled" {% if captcha_settings.get('enabled', True) %}checked{% endif %}>
+                                    <span class="slider"></span>
+                                </label>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="captchaDifficulty">Difficulty Level</label>
+                            <select id="captchaDifficulty" class="form-control">
+                                <option value="easy" {% if captcha_settings.get('difficulty', 'medium') == 'easy' %}selected{% endif %}>Easy (Addition/Subtraction)</option>
+                                <option value="medium" {% if captcha_settings.get('difficulty', 'medium') == 'medium' %}selected{% endif %}>Medium (Multiplication)</option>
+                                <option value="hard" {% if captcha_settings.get('difficulty', 'medium') == 'hard' %}selected{% endif %}>Hard (Division/Complex)</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="captchaTimeout">Session Timeout (minutes)</label>
+                            <input type="number" 
+                                   id="captchaTimeout" 
+                                   class="form-control" 
+                                   min="1" 
+                                   max="60"
+                                   value="{{ captcha_settings.get('timeout', 10) }}">
+                            <small style="color: #666;">How long before CAPTCHA expires</small>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="captchaMaxAttempts">Max Failed Attempts</label>
+                            <input type="number" 
+                                   id="captchaMaxAttempts" 
+                                   class="form-control" 
+                                   min="1" 
+                                   max="10"
+                                   value="{{ captcha_settings.get('max_attempts', 3) }}">
+                            <small style="color: #666;">Number of failed attempts before temporary block</small>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="captchaBlockDuration">Block Duration (minutes)</label>
+                            <input type="number" 
+                                   id="captchaBlockDuration" 
+                                   class="form-control" 
+                                   min="5" 
+                                   max="1440"
+                                   value="{{ captcha_settings.get('block_duration', 15) }}">
+                            <small style="color: #666;">How long to block after max failed attempts</small>
+                        </div>
+
+                        <div class="form-group">
+                            <div class="switch-wrapper">
+                                <label for="captchaGuestbook">Enable for Guestbook</label>
+                                <label class="switch">
+                                    <input type="checkbox" id="captchaGuestbook" {% if captcha_settings.get('guestbook_enabled', True) %}checked{% endif %}>
+                                    <span class="slider"></span>
+                                </label>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <div class="switch-wrapper">
+                                <label for="captchaMessages">Enable for Message Board</label>
+                                <label class="switch">
+                                    <input type="checkbox" id="captchaMessages" {% if captcha_settings.get('messages_enabled', True) %}checked{% endif %}>
+                                    <span class="slider"></span>
+                                </label>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <div class="switch-wrapper">
+                                <label for="captchaUploads">Enable for Photo Uploads</label>
+                                <label class="switch">
+                                    <input type="checkbox" id="captchaUploads" {% if captcha_settings.get('uploads_enabled', False) %}checked{% endif %}>
+                                    <span class="slider"></span>
+                                </label>
+                            </div>
+                        </div>
+
+                        <button type="submit" class="btn btn-primary">
+                            <svg viewBox="0 0 24 24" width="20" height="20">
+                                <path d="M15,9H5V5H15M12,19A3,3 0 0,1 9,16A3,3 0 0,1 12,13A3,3 0 0,1 15,16A3,3 0 0,1 12,19M17,3H5C3.89,3 3,3.89 3,5V19A2,2 0 0,0 5,21H19A2,2 0 0,0 21,19V7L17,3Z" fill="currentColor"/>
+                            </svg>
+                            Save Settings
+                        </button>
+                    </form>
+                </div>
+                
+                <div class="captcha-preview">
+                    <h4 style="color: #8b7355; margin-bottom: 1.5rem;">CAPTCHA Preview</h4>
+                    
+                    {% if captcha_settings.get('enabled', True) %}
+                        <div class="captcha-example">
+                            <div class="captcha-question" id="captchaQuestion">
+                                What is 7 + 3?
+                            </div>
+                            <div class="captcha-answer">
+                                <div class="answer-option" onclick="selectAnswer(this, 8)">8</div>
+                                <div class="answer-option" onclick="selectAnswer(this, 9)">9</div>
+                                <div class="answer-option" onclick="selectAnswer(this, 10)">10</div>
+                                <div class="answer-option" onclick="selectAnswer(this, 11)">11</div>
+                            </div>
+                        </div>
+                        
+                        <div style="margin-top: 1.5rem;">
+                            <button class="btn btn-secondary" onclick="generateNewCaptcha()">
+                                <svg viewBox="0 0 24 24" width="20" height="20">
+                                    <path d="M17.65,6.35C16.2,4.9 14.21,4 12,4A8,8 0 0,0 4,12A8,8 0 0,0 12,20C15.73,20 18.84,17.45 19.73,14H17.65C16.83,16.33 14.61,18 12,18A6,6 0 0,1 6,12A6,6 0 0,1 12,6C13.66,6 15.14,6.69 16.22,7.78L19,5H22V8L17.65,6.35Z" fill="currentColor"/>
+                                </svg>
+                                Generate New Question
+                            </button>
+                        </div>
+                    {% else %}
+                        <div style="padding: 3rem; color: #999; font-style: italic;">
+                            CAPTCHA protection is currently disabled
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- CAPTCHA Statistics -->
+    <div class="section-card">
+        <div class="section-header">
+            <h3>CAPTCHA Statistics</h3>
+        </div>
+        <div class="section-content">
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-value">{{ captcha_stats.get('total_attempts', 0) }}</div>
+                    <div class="stat-label">Total Attempts</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">{{ captcha_stats.get('successful_attempts', 0) }}</div>
+                    <div class="stat-label">Successful</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">{{ captcha_stats.get('failed_attempts', 0) }}</div>
+                    <div class="stat-label">Failed</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">{{ captcha_stats.get('blocked_ips', 0) }}</div>
+                    <div class="stat-label">Blocked IPs</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">{{ "%.1f"|format(captcha_stats.get('success_rate', 0)) }}%</div>
+                    <div class="stat-label">Success Rate</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">{{ captcha_stats.get('recent_attempts', 0) }}</div>
+                    <div class="stat-label">Last 24 Hours</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- CAPTCHA Logs -->
+    <div class="section-card">
+        <div class="section-header">
+            <h3>Recent CAPTCHA Activity</h3>
+        </div>
+        <div class="section-content">
+            <div class="captcha-logs">
+                {% if captcha_logs %}
+                    {% for log in captcha_logs %}
+                    <div class="log-entry {{ 'log-success' if log.success else 'log-failure' }}">
+                        <div class="log-time">{{ log.timestamp.strftime('%Y-%m-%d %H:%M:%S') }}</div>
+                        <div class="log-message">
+                            {% if log.success %}
+                                ✅ Successful CAPTCHA verification from {{ log.ip_address }}
+                            {% else %}
+                                ❌ Failed CAPTCHA attempt from {{ log.ip_address }} (Answer: {{ log.user_answer }}, Expected: {{ log.correct_answer }})
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% endfor %}
+                {% else %}
+                    <div style="text-align: center; color: #666; padding: 2rem;">
+                        No CAPTCHA activity yet
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- CAPTCHA Information -->
+    <div class="section-card">
+        <div class="section-header">
+            <h3>CAPTCHA Information</h3>
+        </div>
+        <div class="section-content">
+            <div class="settings-grid">
+                <div class="settings-form">
+                    <h4 style="color: #8b7355; margin-bottom: 1.5rem;">How It Works</h4>
+                    <div style="text-align: left;">
+                        <div style="background: #f9f5f0; padding: 1.5rem; border-radius: 8px; margin-bottom: 1rem;">
+                            <strong style="color: #8b7355;">Simple Math Problems:</strong>
+                            <ul style="margin: 0.5rem 0 0 1rem; padding-left: 1rem; color: #666;">
+                                <li>Easy: Addition and subtraction (e.g., 5 + 3)</li>
+                                <li>Medium: Multiplication (e.g., 4 × 6)</li>
+                                <li>Hard: Division and complex operations</li>
+                                <li>Multiple choice answers for user convenience</li>
+                            </ul>
+                        </div>
+                        
+                        <div style="background: #e8f5e8; padding: 1rem; border-radius: 8px; margin-bottom: 1rem;">
+                            <strong style="color: #28a745;">Protection Features:</strong>
+                            <ul style="margin: 0.5rem 0 0 1rem; padding-left: 1rem; color: #666;">
+                                <li>Session-based timeout protection</li>
+                                <li>IP-based blocking after failed attempts</li>
+                                <li>Configurable for different content types</li>
+                                <li>Detailed logging and statistics</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="captcha-info">
+                    <h4 style="color: #8b7355; margin-bottom: 1.5rem;">Benefits</h4>
+                    <div style="text-align: left;">
+                        <div style="background: #f9f5f0; padding: 1.5rem; border-radius: 8px; margin-bottom: 1rem;">
+                            <strong style="color: #8b7355;">Spam Protection:</strong>
+                            <p style="color: #666; margin: 0.5rem 0 0 0;">
+                                Prevents automated bots from flooding your guestbook and message board with spam content.
+                            </p>
+                        </div>
+                        
+                        <div style="background: #e8f5e8; padding: 1rem; border-radius: 8px; margin-bottom: 1rem;">
+                            <strong style="color: #28a745;">User Friendly:</strong>
+                            <p style="color: #666; margin: 0.5rem 0 0 0;">
+                                Simple math problems that are easy for humans to solve but difficult for bots to process.
+                            </p>
+                        </div>
+                        
+                        <div style="background: #fff3cd; padding: 1rem; border-radius: 8px;">
+                            <strong style="color: #856404;">Flexible Configuration:</strong>
+                            <p style="color: #666; margin: 0.5rem 0 0 0;">
+                                Enable/disable for different content types and adjust difficulty levels based on your needs.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    let currentAnswer = 10; // Default answer for the example
+
+    function selectAnswer(element, answer) {
+        // Remove previous selections
+        document.querySelectorAll('.answer-option').forEach(option => {
+            option.classList.remove('correct', 'incorrect');
+        });
+        
+        // Add selection class
+        if (answer === currentAnswer) {
+            element.classList.add('correct');
+            setTimeout(() => {
+                element.classList.remove('correct');
+            }, 2000);
+        } else {
+            element.classList.add('incorrect');
+            setTimeout(() => {
+                element.classList.remove('incorrect');
+            }, 2000);
+        }
+    }
+
+    function generateNewCaptcha() {
+        const difficulties = {
+            easy: [
+                { question: 'What is 5 + 3?', answer: 8 },
+                { question: 'What is 10 - 4?', answer: 6 },
+                { question: 'What is 7 + 2?', answer: 9 },
+                { question: 'What is 12 - 5?', answer: 7 }
+            ],
+            medium: [
+                { question: 'What is 4 × 6?', answer: 24 },
+                { question: 'What is 3 × 8?', answer: 24 },
+                { question: 'What is 5 × 7?', answer: 35 },
+                { question: 'What is 6 × 4?', answer: 24 }
+            ],
+            hard: [
+                { question: 'What is 24 ÷ 3?', answer: 8 },
+                { question: 'What is 35 ÷ 5?', answer: 7 },
+                { question: 'What is 18 ÷ 2?', answer: 9 },
+                { question: 'What is 28 ÷ 4?', answer: 7 }
+            ]
+        };
+        
+        const difficulty = document.getElementById('captchaDifficulty').value;
+        const questions = difficulties[difficulty];
+        const randomQuestion = questions[Math.floor(Math.random() * questions.length)];
+        
+        document.getElementById('captchaQuestion').textContent = randomQuestion.question;
+        currentAnswer = randomQuestion.answer;
+        
+        // Generate answer options
+        const answerOptions = [randomQuestion.answer];
+        while (answerOptions.length < 4) {
+            const randomAnswer = randomQuestion.answer + Math.floor(Math.random() * 6) - 3;
+            if (randomAnswer !== randomQuestion.answer && !answerOptions.includes(randomAnswer)) {
+                answerOptions.push(randomAnswer);
+            }
+        }
+        
+        // Shuffle answers
+        answerOptions.sort(() => Math.random() - 0.5);
+        
+        // Update answer options
+        const answerElements = document.querySelectorAll('.answer-option');
+        answerElements.forEach((element, index) => {
+            element.textContent = answerOptions[index];
+            element.onclick = () => selectAnswer(element, answerOptions[index]);
+        });
+    }
+
+    // Handle form submission
+    document.getElementById('captchaSettingsForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        const urlParams = new URLSearchParams(window.location.search);
+        const key = urlParams.get('key');
+        
+        const formData = {
+            enabled: document.getElementById('captchaEnabled').checked,
+            difficulty: document.getElementById('captchaDifficulty').value,
+            timeout: parseInt(document.getElementById('captchaTimeout').value),
+            max_attempts: parseInt(document.getElementById('captchaMaxAttempts').value),
+            block_duration: parseInt(document.getElementById('captchaBlockDuration').value),
+            guestbook_enabled: document.getElementById('captchaGuestbook').checked,
+            messages_enabled: document.getElementById('captchaMessages').checked,
+            uploads_enabled: document.getElementById('captchaUploads').checked
+        };
+        
+        fetch(`/admin/save-captcha-settings?key=${key}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(formData)
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                const successMessage = document.getElementById('successMessage');
+                successMessage.style.display = 'block';
+                setTimeout(() => {
+                    successMessage.style.display = 'none';
+                }, 3000);
+            } else {
+                alert('Error saving settings: ' + (data.error || 'Unknown error'));
+            }
+        })
+        .catch(error => {
+            alert('Error saving settings: ' + error.message);
+        });
+    });
+
+    // Generate new CAPTCHA when difficulty changes
+    document.getElementById('captchaDifficulty').addEventListener('change', generateNewCaptcha);
+    
+    // Initialize CAPTCHA on page load
+    document.addEventListener('DOMContentLoaded', function() {
+        generateNewCaptcha();
+    });
+</script>
+{% endblock %} 

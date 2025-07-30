@@ -1,0 +1,628 @@
+{% extends "base.html" %}
+
+{% block title %}Guestbook Management - Admin{% endblock %}
+
+{% block extra_styles %}
+<style>
+    .admin-header {
+        background: linear-gradient(135deg, #2c2c2c 0%, #4a4a4a 100%);
+        color: white;
+        padding: 2rem 0;
+        margin: -3rem -20px 2rem -20px;
+        text-align: center;
+    }
+
+    .admin-header h2 {
+        font-family: 'Playfair Display', serif;
+        font-size: 2rem;
+        margin-bottom: 0.5rem;
+    }
+
+    .back-link {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        color: white;
+        text-decoration: none;
+        margin-bottom: 1rem;
+        opacity: 0.8;
+        transition: opacity 0.3s ease;
+    }
+
+    .back-link:hover {
+        opacity: 1;
+        color: white;
+        text-decoration: none;
+    }
+
+    .section-card {
+        background: white;
+        border-radius: 15px;
+        overflow: hidden;
+        box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+        margin-bottom: 2rem;
+    }
+
+    .section-header {
+        background: #f9f5f0;
+        padding: 1.5rem 2rem;
+        border-bottom: 1px solid #e8ddd3;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .section-header h3 {
+        color: #8b7355;
+        font-family: 'Playfair Display', serif;
+        font-size: 1.5rem;
+        margin: 0;
+    }
+
+    .section-content {
+        padding: 2rem;
+    }
+
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+        gap: 1rem;
+        margin-bottom: 2rem;
+    }
+
+    .stat-card {
+        background: #f9f5f0;
+        padding: 1rem;
+        border-radius: 10px;
+        text-align: center;
+    }
+
+    .stat-value {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: #8b7355;
+        margin-bottom: 0.25rem;
+    }
+
+    .stat-label {
+        color: #6b5d54;
+        font-size: 0.9rem;
+    }
+
+    .guestbook-table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 1rem;
+    }
+
+    .guestbook-table th {
+        background: #f9f5f0;
+        padding: 1rem;
+        text-align: left;
+        color: #6b5d54;
+        font-weight: 600;
+        border-bottom: 2px solid #e8ddd3;
+    }
+
+    .guestbook-table td {
+        padding: 1rem;
+        border-bottom: 1px solid #f0f0f0;
+        vertical-align: middle;
+    }
+
+    .guestbook-table tr:hover {
+        background: #faf9f7;
+    }
+
+    .photo-thumbnail {
+        width: 60px;
+        height: 60px;
+        object-fit: cover;
+        border-radius: 10px;
+        cursor: pointer;
+        transition: transform 0.3s ease;
+    }
+
+    .photo-thumbnail:hover {
+        transform: scale(1.1);
+    }
+
+    .edit-btn {
+        background: #8b7355;
+        color: white;
+        border: none;
+        padding: 0.5rem 1rem;
+        border-radius: 20px;
+        cursor: pointer;
+        font-size: 0.9rem;
+        transition: all 0.3s ease;
+        margin-right: 0.5rem;
+    }
+
+    .edit-btn:hover {
+        background: #6b5d54;
+        transform: translateY(-2px);
+    }
+
+    .delete-btn {
+        background: #dc3545;
+        color: white;
+        border: none;
+        padding: 0.5rem 1rem;
+        border-radius: 20px;
+        cursor: pointer;
+        font-size: 0.9rem;
+        transition: all 0.3s ease;
+    }
+
+    .delete-btn:hover {
+        background: #c82333;
+        transform: translateY(-2px);
+    }
+
+    .filters {
+        display: flex;
+        gap: 1rem;
+        margin-bottom: 2rem;
+        flex-wrap: wrap;
+    }
+
+    .search-box {
+        flex: 1;
+        min-width: 200px;
+        padding: 0.5rem 1rem;
+        border: 2px solid #e8ddd3;
+        border-radius: 20px;
+        font-size: 0.9rem;
+    }
+
+    .search-box:focus {
+        outline: none;
+        border-color: #8b7355;
+    }
+
+    .guestbook-message {
+        max-width: 300px;
+        line-height: 1.5;
+        color: #666;
+    }
+
+    .guestbook-location {
+        color: #999;
+        font-style: italic;
+        font-size: 0.9rem;
+    }
+
+    .empty-state {
+        text-align: center;
+        padding: 3rem;
+        color: #666;
+    }
+
+    .empty-state svg {
+        width: 64px;
+        height: 64px;
+        fill: #ccc;
+        margin-bottom: 1rem;
+    }
+
+    /* Modal Styles */
+    .modal-overlay {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0, 0, 0, 0.7);
+        z-index: 1000;
+        padding: 20px;
+        overflow-y: auto;
+    }
+
+    .modal-content {
+        background: white;
+        max-width: 500px;
+        margin: 50px auto;
+        border-radius: 20px;
+        padding: 2rem;
+        box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+    }
+
+    .modal-header {
+        margin-bottom: 1.5rem;
+    }
+
+    .modal-header h3 {
+        color: #8b7355;
+        font-family: 'Playfair Display', serif;
+        font-size: 1.8rem;
+        margin: 0;
+    }
+
+    .form-group {
+        margin-bottom: 1.5rem;
+    }
+
+    .form-group label {
+        display: block;
+        margin-bottom: 0.5rem;
+        font-weight: 600;
+        color: #6b5d54;
+    }
+
+    .form-control {
+        width: 100%;
+        padding: 0.75rem;
+        border: 2px solid #e8ddd3;
+        border-radius: 8px;
+        font-size: 1rem;
+        transition: border-color 0.3s ease;
+    }
+
+    .form-control:focus {
+        outline: none;
+        border-color: #8b7355;
+    }
+
+    .btn {
+        padding: 0.75rem 1.5rem;
+        border: none;
+        border-radius: 25px;
+        cursor: pointer;
+        font-size: 1rem;
+        transition: all 0.3s ease;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .btn-primary {
+        background: #8b7355;
+        color: white;
+    }
+
+    .btn-primary:hover {
+        background: #6b5d54;
+        transform: translateY(-2px);
+    }
+
+    .btn-secondary {
+        background: #6c757d;
+        color: white;
+    }
+
+    .btn-secondary:hover {
+        background: #5a6268;
+        transform: translateY(-2px);
+    }
+
+    .modal-buttons {
+        display: flex;
+        gap: 1rem;
+        margin-top: 1.5rem;
+    }
+
+    @media (max-width: 768px) {
+        .admin-header {
+            margin: -3rem -1.5rem 2rem -1.5rem;
+        }
+
+        .guestbook-table {
+            font-size: 0.9rem;
+        }
+
+        .guestbook-table th,
+        .guestbook-table td {
+            padding: 0.75rem 0.5rem;
+        }
+
+        .photo-thumbnail {
+            width: 40px;
+            height: 40px;
+        }
+
+        .filters {
+            flex-direction: column;
+        }
+
+        .search-box {
+            min-width: auto;
+        }
+
+        .guestbook-message {
+            max-width: 200px;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="admin-header">
+    <a href="/admin?key=wedding2024" class="back-link">
+        <svg viewBox="0 0 24 24" width="20" height="20">
+            <path d="M20,11V13H8L13.5,18.5L12.08,19.92L4.16,12L12.08,4.08L13.5,5.5L8,11H20Z" fill="currentColor"/>
+        </svg>
+        Back to Dashboard
+    </a>
+    <h2>Guestbook Management</h2>
+    <p>Manage guestbook entries and messages</p>
+</div>
+
+<div class="container">
+    <!-- Statistics -->
+    <div class="section-card">
+        <div class="section-header">
+            <h3>Statistics</h3>
+        </div>
+        <div class="section-content">
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-value">{{ total_entries }}</div>
+                    <div class="stat-label">Total Entries</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">{{ entries_with_photos }}</div>
+                    <div class="stat-label">With Photos</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">{{ entries_with_location }}</div>
+                    <div class="stat-label">With Location</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">{{ recent_entries }}</div>
+                    <div class="stat-label">Last 7 Days</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Guestbook Table -->
+    <div class="section-card">
+        <div class="section-header">
+            <h3>All Guestbook Entries</h3>
+        </div>
+        <div class="section-content">
+            <!-- Filters -->
+            <div class="filters">
+                <input type="text" 
+                       class="search-box" 
+                       placeholder="Search by name or message..."
+                       onkeyup="filterEntries(this.value)">
+            </div>
+
+            <div class="table-responsive">
+                <table class="guestbook-table">
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Message</th>
+                            <th>Location</th>
+                            <th>Photo</th>
+                            <th>Date</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="guestbookTableBody">
+                        {% for entry in guestbook_entries %}
+                        <tr class="entry-row">
+                            <td>{{ entry.name }}</td>
+                            <td class="guestbook-message">{{ entry.message[:100] }}{% if entry.message|length > 100 %}...{% endif %}</td>
+                            <td>
+                                {% if entry.location %}
+                                    <span class="guestbook-location">{{ entry.location }}</span>
+                                {% else %}
+                                    -
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if entry.photo_filename %}
+                                <img src="{{ url_for('static', filename='uploads/guestbook/' + entry.photo_filename) }}" 
+                                     alt="Photo" 
+                                     class="photo-thumbnail"
+                                     onclick="viewPhoto('{{ entry.photo_filename }}')">
+                                {% else %}
+                                -
+                                {% endif %}
+                            </td>
+                            <td>{{ entry.created_at.strftime('%b %d, %Y') }}</td>
+                            <td>
+                                <button class="edit-btn" 
+                                        onclick="editEntry({{ entry.id }}, '{{ entry.name|e }}', {{ entry.message|tojson }}, '{{ entry.location or '' }}')">
+                                    Edit
+                                </button>
+                                <button class="delete-btn" 
+                                        onclick="confirmDelete({{ entry.id }}, '{{ entry.name }}')">
+                                    Delete
+                                </button>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+                {% if not guestbook_entries %}
+                <div class="empty-state">
+                    <svg viewBox="0 0 24 24">
+                        <path d="M19,3H5C3.89,3 3,3.89 3,5V19A2,2 0 0,0 5,21H19A2,2 0 0,0 21,19V5C21,3.89 20.1,3 19,3M19,5V19H5V5H19Z"/>
+                    </svg>
+                    <h3>No guestbook entries yet</h3>
+                    <p>Guestbook entries will appear here once they are submitted by guests.</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Edit Entry Modal -->
+<div class="modal-overlay" id="editModal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3>Edit Guestbook Entry</h3>
+        </div>
+        <form id="editForm">
+            <input type="hidden" id="editEntryId">
+            <div class="form-group">
+                <label for="editName">Name</label>
+                <input type="text" id="editName" required class="form-control">
+            </div>
+            <div class="form-group">
+                <label for="editLocation">Location</label>
+                <input type="text" id="editLocation" class="form-control">
+            </div>
+            <div class="form-group">
+                <label for="editMessage">Message</label>
+                <textarea id="editMessage" rows="6" required class="form-control"></textarea>
+            </div>
+            <div class="modal-buttons">
+                <button type="submit" class="btn btn-primary">Save Changes</button>
+                <button type="button" class="btn btn-secondary" onclick="closeEditModal()">Cancel</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Delete Confirmation Modal -->
+<div class="modal-overlay" id="deleteModal" style="display: none;">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3>Confirm Delete</h3>
+        </div>
+        <p>Are you sure you want to delete this guestbook entry by <strong id="deleteEntryName"></strong>?</p>
+        <p>This action cannot be undone.</p>
+        <div class="modal-buttons">
+            <button class="btn delete-btn" onclick="deleteEntry()">Delete</button>
+            <button class="btn btn-secondary" onclick="closeDeleteModal()">Cancel</button>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    let entryToDelete = null;
+
+    function filterEntries(searchTerm) {
+        const rows = document.querySelectorAll('.entry-row');
+        const searchLower = searchTerm.toLowerCase();
+        
+        rows.forEach(row => {
+            const name = row.querySelector('td:nth-child(1)').textContent.toLowerCase();
+            const message = row.querySelector('td:nth-child(2)').textContent.toLowerCase();
+            
+            if (name.includes(searchLower) || message.includes(searchLower)) {
+                row.style.display = '';
+            } else {
+                row.style.display = 'none';
+            }
+        });
+    }
+
+    function viewPhoto(filename) {
+        window.open(`/static/uploads/guestbook/${filename}`, '_blank');
+    }
+
+    function editEntry(entryId, name, message, location) {
+        document.getElementById('editEntryId').value = entryId;
+        document.getElementById('editName').value = name;
+        document.getElementById('editMessage').value = message;
+        document.getElementById('editLocation').value = location;
+        document.getElementById('editModal').style.display = 'block';
+    }
+
+    function closeEditModal() {
+        document.getElementById('editModal').style.display = 'none';
+    }
+
+    function confirmDelete(entryId, entryName) {
+        entryToDelete = entryId;
+        document.getElementById('deleteEntryName').textContent = entryName;
+        document.getElementById('deleteModal').style.display = 'block';
+    }
+
+    function closeDeleteModal() {
+        document.getElementById('deleteModal').style.display = 'none';
+        entryToDelete = null;
+    }
+
+    function deleteEntry() {
+        if (!entryToDelete) return;
+        
+        const urlParams = new URLSearchParams(window.location.search);
+        const key = urlParams.get('key');
+        
+        fetch(`/admin/delete-guestbook/${entryToDelete}?key=${key}`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                // Remove the row from the table
+                const row = document.querySelector(`tr[data-entry-id="${entryToDelete}"]`);
+                if (row) {
+                    row.remove();
+                }
+                closeDeleteModal();
+                alert('Entry deleted successfully!');
+                // Reload the page to update statistics
+                window.location.reload();
+            } else {
+                alert('Error deleting entry: ' + (data.error || 'Unknown error'));
+            }
+        })
+        .catch(error => {
+            alert('Error deleting entry: ' + error.message);
+        });
+    }
+
+    // Handle edit form submission
+    document.getElementById('editForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        const entryId = document.getElementById('editEntryId').value;
+        const name = document.getElementById('editName').value;
+        const message = document.getElementById('editMessage').value;
+        const location = document.getElementById('editLocation').value;
+        
+        const urlParams = new URLSearchParams(window.location.search);
+        const key = urlParams.get('key');
+        
+        fetch(`/admin/edit-guestbook/${entryId}?key=${key}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                name: name,
+                message: message,
+                location: location
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                closeEditModal();
+                alert('Entry updated successfully!');
+                window.location.reload();
+            } else {
+                alert('Error updating entry: ' + (data.error || 'Unknown error'));
+            }
+        })
+        .catch(error => {
+            alert('Error updating entry: ' + error.message);
+        });
+    });
+
+    // Close modals when clicking outside
+    document.getElementById('editModal').addEventListener('click', function(e) {
+        if (e.target === this) {
+            closeEditModal();
+        }
+    });
+
+    document.getElementById('deleteModal').addEventListener('click', function(e) {
+        if (e.target === this) {
+            closeDeleteModal();
+        }
+    });
+</script>
+{% endblock %} 

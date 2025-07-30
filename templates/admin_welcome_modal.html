@@ -1,0 +1,624 @@
+{% extends "base.html" %}
+
+{% block title %}Welcome Modal Settings - Admin{% endblock %}
+
+{% block extra_styles %}
+<style>
+    .admin-header {
+        background: linear-gradient(135deg, #2c2c2c 0%, #4a4a4a 100%);
+        color: white;
+        padding: 2rem 0;
+        margin: -3rem -20px 2rem -20px;
+        text-align: center;
+    }
+
+    .admin-header h2 {
+        font-family: 'Playfair Display', serif;
+        font-size: 2rem;
+        margin-bottom: 0.5rem;
+    }
+
+    .back-link {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        color: white;
+        text-decoration: none;
+        margin-bottom: 1rem;
+        opacity: 0.8;
+        transition: opacity 0.3s ease;
+    }
+
+    .back-link:hover {
+        opacity: 1;
+        color: white;
+        text-decoration: none;
+    }
+
+    .section-card {
+        background: white;
+        border-radius: 15px;
+        overflow: hidden;
+        box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+        margin-bottom: 2rem;
+    }
+
+    .section-header {
+        background: #f9f5f0;
+        padding: 1.5rem 2rem;
+        border-bottom: 1px solid #e8ddd3;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .section-header h3 {
+        color: #8b7355;
+        font-family: 'Playfair Display', serif;
+        font-size: 1.5rem;
+        margin: 0;
+    }
+
+    .section-content {
+        padding: 2rem;
+    }
+
+    .settings-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 2rem;
+        margin-bottom: 2rem;
+    }
+
+    .settings-form {
+        background: #f9f5f0;
+        padding: 1.5rem;
+        border-radius: 10px;
+    }
+
+    .modal-preview {
+        background: #faf9f7;
+        padding: 2rem;
+        border-radius: 15px;
+        text-align: center;
+        border: 2px dashed #e8ddd3;
+    }
+
+    .form-group {
+        margin-bottom: 1.5rem;
+    }
+
+    .form-group label {
+        display: block;
+        margin-bottom: 0.5rem;
+        font-weight: 600;
+        color: #6b5d54;
+    }
+
+    .form-control {
+        width: 100%;
+        padding: 0.75rem;
+        border: 2px solid #e8ddd3;
+        border-radius: 8px;
+        font-size: 1rem;
+        transition: border-color 0.3s ease;
+    }
+
+    .form-control:focus {
+        outline: none;
+        border-color: #8b7355;
+    }
+
+    .form-control[type="color"] {
+        height: 50px;
+        padding: 0.5rem;
+    }
+
+    .btn {
+        padding: 0.75rem 1.5rem;
+        border: none;
+        border-radius: 25px;
+        cursor: pointer;
+        font-size: 1rem;
+        transition: all 0.3s ease;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .btn-primary {
+        background: #8b7355;
+        color: white;
+    }
+
+    .btn-primary:hover {
+        background: #6b5d54;
+        transform: translateY(-2px);
+    }
+
+    .btn-secondary {
+        background: #6c757d;
+        color: white;
+    }
+
+    .btn-secondary:hover {
+        background: #5a6268;
+        transform: translateY(-2px);
+    }
+
+    .success-message {
+        background: #d4edda;
+        color: #155724;
+        padding: 1rem;
+        border-radius: 10px;
+        margin-bottom: 1rem;
+        display: none;
+    }
+
+    .welcome-info {
+        background: #e8f4fd;
+        border: 1px solid #bee5eb;
+        color: #0c5460;
+        padding: 1rem;
+        border-radius: 10px;
+        margin-bottom: 1.5rem;
+    }
+
+    .preview-modal {
+        background: white;
+        border-radius: 15px;
+        box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+        max-width: 500px;
+        margin: 0 auto;
+        overflow: hidden;
+    }
+
+    .preview-modal-header {
+        background: #8b7355;
+        color: white;
+        padding: 1.5rem;
+        text-align: center;
+    }
+
+    .preview-modal-body {
+        padding: 2rem;
+        text-align: center;
+    }
+
+    .preview-modal-footer {
+        padding: 1rem 2rem 2rem;
+        text-align: center;
+    }
+
+    .preview-btn {
+        background: #8b7355;
+        color: white;
+        border: none;
+        padding: 0.75rem 1.5rem;
+        border-radius: 25px;
+        cursor: pointer;
+        font-size: 1rem;
+        transition: all 0.3s ease;
+    }
+
+    .preview-btn:hover {
+        background: #6b5d54;
+        transform: translateY(-2px);
+    }
+
+    .color-picker-group {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 1rem;
+    }
+
+    .switch-wrapper {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 1rem;
+        background: white;
+        border-radius: 8px;
+        border: 2px solid #e8ddd3;
+    }
+
+    .switch {
+        position: relative;
+        display: inline-block;
+        width: 60px;
+        height: 34px;
+    }
+
+    .switch input {
+        opacity: 0;
+        width: 0;
+        height: 0;
+    }
+
+    .slider {
+        position: absolute;
+        cursor: pointer;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background-color: #ccc;
+        transition: .4s;
+        border-radius: 34px;
+    }
+
+    .slider:before {
+        position: absolute;
+        content: "";
+        height: 26px;
+        width: 26px;
+        left: 4px;
+        bottom: 4px;
+        background-color: white;
+        transition: .4s;
+        border-radius: 50%;
+    }
+
+    input:checked + .slider {
+        background-color: #8b7355;
+    }
+
+    input:checked + .slider:before {
+        transform: translateX(26px);
+    }
+
+    .preview-placeholder {
+        padding: 3rem;
+        color: #999;
+        font-style: italic;
+    }
+
+    @media (max-width: 768px) {
+        .admin-header {
+            margin: -3rem -1.5rem 2rem -1.5rem;
+        }
+
+        .settings-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .color-picker-group {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="admin-header">
+    <a href="/admin?key=wedding2024" class="back-link">
+        <svg viewBox="0 0 24 24" width="20" height="20">
+            <path d="M20,11V13H8L13.5,18.5L12.08,19.92L4.16,12L12.08,4.08L13.5,5.5L8,11H20Z" fill="currentColor"/>
+        </svg>
+        Back to Dashboard
+    </a>
+    <h2>Welcome Modal Settings</h2>
+    <p>Configure the welcome message that appears when guests visit your gallery</p>
+</div>
+
+<div class="container">
+    <!-- Welcome Modal Configuration -->
+    <div class="section-card">
+        <div class="section-header">
+            <h3>Welcome Modal Configuration</h3>
+        </div>
+        <div class="section-content">
+            <div class="success-message" id="successMessage">
+                Welcome modal settings saved successfully!
+            </div>
+
+            <div class="welcome-info">
+                <strong>👋 Welcome Modal Feature:</strong> Display a personalized welcome message to guests when they first visit your wedding gallery. Perfect for setting the tone and providing important information.
+            </div>
+
+            <div class="settings-grid">
+                <div class="settings-form">
+                    <h4 style="color: #8b7355; margin-bottom: 1.5rem;">Modal Settings</h4>
+                    
+                    <form id="welcomeModalForm">
+                        <div class="form-group">
+                            <div class="switch-wrapper">
+                                <label for="modalEnabled">Enable Welcome Modal</label>
+                                <label class="switch">
+                                    <input type="checkbox" id="modalEnabled" {% if welcome_settings.get('enabled', True) %}checked{% endif %}>
+                                    <span class="slider"></span>
+                                </label>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="modalTitle">Modal Title</label>
+                            <input type="text" 
+                                   id="modalTitle" 
+                                   class="form-control" 
+                                   placeholder="e.g., Welcome to Our Wedding Gallery!"
+                                   value="{{ welcome_settings.get('title', 'Welcome to Our Wedding Gallery!') }}">
+                        </div>
+
+                        <div class="form-group">
+                            <label for="modalMessage">Welcome Message</label>
+                            <textarea id="modalMessage" 
+                                      rows="6" 
+                                      class="form-control" 
+                                      placeholder="Enter your welcome message here...">{{ welcome_settings.get('message', '') }}</textarea>
+                            <small style="color: #666;">You can use HTML tags for formatting (e.g., &lt;br&gt;, &lt;strong&gt;)</small>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="modalButtonText">Button Text</label>
+                            <input type="text" 
+                                   id="modalButtonText" 
+                                   class="form-control" 
+                                   placeholder="e.g., Get Started"
+                                   value="{{ welcome_settings.get('button_text', 'Get Started') }}">
+                        </div>
+
+                        <div class="form-group">
+                            <label>Modal Colors</label>
+                            <div class="color-picker-group">
+                                <div>
+                                    <label for="modalBgColor">Background Color</label>
+                                    <input type="color" 
+                                           id="modalBgColor" 
+                                           class="form-control" 
+                                           value="{{ welcome_settings.get('background_color', '#8b7355') }}">
+                                </div>
+                                <div>
+                                    <label for="modalTextColor">Text Color</label>
+                                    <input type="color" 
+                                           id="modalTextColor" 
+                                           class="form-control" 
+                                           value="{{ welcome_settings.get('text_color', '#ffffff') }}">
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <div class="switch-wrapper">
+                                <label for="showOnEveryVisit">Show on Every Visit</label>
+                                <label class="switch">
+                                    <input type="checkbox" id="showOnEveryVisit" {% if welcome_settings.get('show_on_every_visit', False) %}checked{% endif %}>
+                                    <span class="slider"></span>
+                                </label>
+                            </div>
+                            <small style="color: #666;">If disabled, the modal will only show once per session</small>
+                        </div>
+
+                        <button type="submit" class="btn btn-primary">
+                            <svg viewBox="0 0 24 24" width="20" height="20">
+                                <path d="M15,9H5V5H15M12,19A3,3 0 0,1 9,16A3,3 0 0,1 12,13A3,3 0 0,1 15,16A3,3 0 0,1 12,19M17,3H5C3.89,3 3,3.89 3,5V19A2,2 0 0,0 5,21H19A2,2 0 0,0 21,19V7L17,3Z" fill="currentColor"/>
+                            </svg>
+                            Save Settings
+                        </button>
+                    </form>
+                </div>
+                
+                <div class="modal-preview">
+                    <h4 style="color: #8b7355; margin-bottom: 1.5rem;">Modal Preview</h4>
+                    
+                    {% if welcome_settings.get('enabled', True) %}
+                        <div class="preview-modal" id="modalPreview">
+                            <div class="preview-modal-header" id="previewHeader">
+                                {{ welcome_settings.get('title', 'Welcome to Our Wedding Gallery!') }}
+                            </div>
+                            <div class="preview-modal-body" id="previewBody">
+                                {{ welcome_settings.get('message', 'Welcome to our special day! Feel free to browse through our wedding photos and share your memories with us.')|safe }}
+                            </div>
+                            <div class="preview-modal-footer">
+                                <button class="preview-btn" id="previewButton">
+                                    {{ welcome_settings.get('button_text', 'Get Started') }}
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <div style="margin-top: 1.5rem;">
+                            <button class="btn btn-secondary" onclick="testModal()">
+                                <svg viewBox="0 0 24 24" width="20" height="20">
+                                    <path d="M12,2A10,10 0 0,0 2,12A10,10 0 0,0 12,22A10,10 0 0,0 22,12A10,10 0 0,0 12,2M12,4A8,8 0 0,1 20,12A8,8 0 0,1 12,20A8,8 0 0,1 4,12A8,8 0 0,1 12,4M12,6A6,6 0 0,0 6,12A6,6 0 0,0 12,18A6,6 0 0,0 18,12A6,6 0 0,0 12,6M12,8A4,4 0 0,1 16,12A4,4 0 0,1 12,16A4,4 0 0,1 8,12A4,4 0 0,1 12,8Z" fill="currentColor"/>
+                                </svg>
+                                Test Modal
+                            </button>
+                        </div>
+                    {% else %}
+                        <div class="preview-placeholder">
+                            Welcome modal is currently disabled
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Welcome Modal Examples -->
+    <div class="section-card">
+        <div class="section-header">
+            <h3>Welcome Message Examples</h3>
+        </div>
+        <div class="section-content">
+            <div class="settings-grid">
+                <div class="settings-form">
+                    <h4 style="color: #8b7355; margin-bottom: 1.5rem;">Example Messages</h4>
+                    <div style="text-align: left;">
+                        <div style="background: #f9f5f0; padding: 1.5rem; border-radius: 8px; margin-bottom: 1rem;">
+                            <strong style="color: #8b7355;">Simple Welcome:</strong>
+                            <p style="color: #666; margin: 0.5rem 0 0 0;">
+                                "Welcome to our wedding gallery! We're so excited to share our special day with you. Feel free to browse through our photos and leave your memories in the guestbook."
+                            </p>
+                        </div>
+                        
+                        <div style="background: #e8f5e8; padding: 1rem; border-radius: 8px; margin-bottom: 1rem;">
+                            <strong style="color: #28a745;">With Instructions:</strong>
+                            <p style="color: #666; margin: 0.5rem 0 0 0;">
+                                "Welcome to our wedding celebration! 📸<br><br>• Browse through our wedding photos<br>• Share your own photos and memories<br>• Sign our digital guestbook<br>• Leave a message for us<br><br>Thank you for being part of our special day!"
+                            </p>
+                        </div>
+                        
+                        <div style="background: #fff3cd; padding: 1rem; border-radius: 8px;">
+                            <strong style="color: #856404;">Personal Touch:</strong>
+                            <p style="color: #666; margin: 0.5rem 0 0 0;">
+                                "Dear friends and family,<br><br>Thank you for joining us on our wedding day! We've created this gallery to share our memories with you and to collect yours too.<br><br>Please feel free to upload your photos and leave us a message. We can't wait to see your perspective of our special day!<br><br>With love,<br>Sarah & Michael"
+                            </p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="info-panel">
+                    <h4>Tips for Great Welcome Messages</h4>
+                    <div style="text-align: left;">
+                        <div style="background: #f9f5f0; padding: 1.5rem; border-radius: 8px; margin-bottom: 1rem;">
+                            <strong style="color: #8b7355;">Keep it Personal:</strong>
+                            <p style="color: #666; margin: 0.5rem 0 0 0;">
+                                Use your names and make it feel personal to your guests. Mention specific details about your wedding day.
+                            </p>
+                        </div>
+                        
+                        <div style="background: #e8f5e8; padding: 1rem; border-radius: 8px; margin-bottom: 1rem;">
+                            <strong style="color: #28a745;">Include Instructions:</strong>
+                            <p style="color: #666; margin: 0.5rem 0 0 0;">
+                                Let guests know what they can do on the site - upload photos, sign the guestbook, leave messages, etc.
+                            </p>
+                        </div>
+                        
+                        <div style="background: #fff3cd; padding: 1rem; border-radius: 8px;">
+                            <strong style="color: #856404;">Set the Tone:</strong>
+                            <p style="color: #666; margin: 0.5rem 0 0 0;">
+                                Match the tone to your wedding style - formal, casual, romantic, or fun. Use emojis for a more casual feel.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Test Modal Overlay -->
+<div class="modal-overlay" id="testModal" style="display: none;">
+    <div class="modal-content" id="testModalContent">
+        <div class="modal-header" id="testModalHeader">
+            Welcome to Our Wedding Gallery!
+        </div>
+        <div class="modal-body" id="testModalBody">
+            Welcome to our special day! Feel free to browse through our wedding photos and share your memories with us.
+        </div>
+        <div class="modal-footer">
+            <button class="btn btn-primary" onclick="closeTestModal()">Get Started</button>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // Update preview when form changes
+    document.addEventListener('DOMContentLoaded', function() {
+        updatePreview();
+        
+        // Add event listeners for real-time preview updates
+        document.getElementById('modalTitle').addEventListener('input', updatePreview);
+        document.getElementById('modalMessage').addEventListener('input', updatePreview);
+        document.getElementById('modalButtonText').addEventListener('input', updatePreview);
+        document.getElementById('modalBgColor').addEventListener('input', updatePreview);
+        document.getElementById('modalTextColor').addEventListener('input', updatePreview);
+        document.getElementById('modalEnabled').addEventListener('change', updatePreview);
+    });
+
+    function updatePreview() {
+        const enabled = document.getElementById('modalEnabled').checked;
+        const title = document.getElementById('modalTitle').value;
+        const message = document.getElementById('modalMessage').value;
+        const buttonText = document.getElementById('modalButtonText').value;
+        const bgColor = document.getElementById('modalBgColor').value;
+        const textColor = document.getElementById('modalTextColor').value;
+        
+        const previewHeader = document.getElementById('previewHeader');
+        const previewBody = document.getElementById('previewBody');
+        const previewButton = document.getElementById('previewButton');
+        const modalPreview = document.getElementById('modalPreview');
+        
+        if (enabled && modalPreview) {
+            modalPreview.style.display = 'block';
+            previewHeader.textContent = title;
+            previewBody.innerHTML = message;
+            previewButton.textContent = buttonText;
+            previewHeader.style.backgroundColor = bgColor;
+            previewHeader.style.color = textColor;
+        } else if (modalPreview) {
+            modalPreview.style.display = 'none';
+        }
+    }
+
+    function testModal() {
+        const title = document.getElementById('modalTitle').value;
+        const message = document.getElementById('modalMessage').value;
+        const buttonText = document.getElementById('modalButtonText').value;
+        const bgColor = document.getElementById('modalBgColor').value;
+        const textColor = document.getElementById('modalTextColor').value;
+        
+        document.getElementById('testModalHeader').textContent = title;
+        document.getElementById('testModalBody').innerHTML = message;
+        document.getElementById('testModalHeader').style.backgroundColor = bgColor;
+        document.getElementById('testModalHeader').style.color = textColor;
+        
+        document.getElementById('testModal').style.display = 'block';
+    }
+
+    function closeTestModal() {
+        document.getElementById('testModal').style.display = 'none';
+    }
+
+    // Handle form submission
+    document.getElementById('welcomeModalForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        const urlParams = new URLSearchParams(window.location.search);
+        const key = urlParams.get('key');
+        
+        const formData = {
+            enabled: document.getElementById('modalEnabled').checked,
+            title: document.getElementById('modalTitle').value,
+            message: document.getElementById('modalMessage').value,
+            button_text: document.getElementById('modalButtonText').value,
+            background_color: document.getElementById('modalBgColor').value,
+            text_color: document.getElementById('modalTextColor').value,
+            show_on_every_visit: document.getElementById('showOnEveryVisit').checked
+        };
+        
+        fetch(`/admin/save-welcome-settings?key=${key}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(formData)
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                const successMessage = document.getElementById('successMessage');
+                successMessage.style.display = 'block';
+                setTimeout(() => {
+                    successMessage.style.display = 'none';
+                }, 3000);
+            } else {
+                alert('Error saving settings: ' + (data.error || 'Unknown error'));
+            }
+        })
+        .catch(error => {
+            alert('Error saving settings: ' + error.message);
+        });
+    });
+
+    // Close test modal when clicking outside
+    document.getElementById('testModal').addEventListener('click', function(e) {
+        if (e.target === this) {
+            closeTestModal();
+        }
+    });
+</script>
+{% endblock %} 
