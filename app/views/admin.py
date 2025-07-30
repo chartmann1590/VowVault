@@ -1349,3 +1349,131 @@ def clear_cache():
         
     except Exception as e:
         return jsonify({'success': False, 'error': str(e)}), 500 
+
+@admin_bp.route('/slideshow')
+def admin_slideshow():
+    # Check for SSO session first
+    sso_user_email = session.get('sso_user_email')
+    sso_user_domain = session.get('sso_user_domain')
+    admin_key = request.args.get('key', '')
+    
+    # Verify admin access
+    if not verify_admin_access(admin_key, sso_user_email, sso_user_domain):
+        # If SSO is enabled, redirect to SSO login
+        sso_settings = get_sso_settings()
+        if sso_settings['enabled']:
+            return redirect(url_for('auth.sso_login'))
+        else:
+            return "Unauthorized", 401
+    
+    # Get slideshow settings
+    from app.views.slideshow import get_slideshow_settings
+    slideshow_settings = get_slideshow_settings()
+    
+    # Get recent activities for slideshow
+    from datetime import datetime, timedelta
+    from app.models.photo import Photo
+    from app.models.guestbook import GuestbookEntry
+    from app.models.messages import Message
+    
+    # Get recent photos (last 24 hours)
+    since_time = datetime.utcnow() - timedelta(hours=24)
+    recent_photos = Photo.query.filter(
+        Photo.upload_date >= since_time
+    ).order_by(Photo.upload_date.desc()).limit(20).all()
+    
+    # Get recent guestbook entries
+    recent_guestbook = GuestbookEntry.query.filter(
+        GuestbookEntry.created_at >= since_time
+    ).order_by(GuestbookEntry.created_at.desc()).limit(10).all()
+    
+    # Get recent messages
+    recent_messages = Message.query.filter(
+        Message.created_at >= since_time,
+        Message.is_hidden == False
+    ).order_by(Message.created_at.desc()).limit(10).all()
+    
+    return render_template('admin_slideshow.html',
+                         slideshow_settings=slideshow_settings,
+                         recent_photos=recent_photos,
+                         recent_guestbook=recent_guestbook,
+                         recent_messages=recent_messages,
+                         admin_key=admin_key)
+
+@admin_bp.route('/logs')
+def admin_logs():
+    # Check for SSO session first
+    sso_user_email = session.get('sso_user_email')
+    sso_user_domain = session.get('sso_user_domain')
+    admin_key = request.args.get('key', '')
+    
+    # Verify admin access
+    if not verify_admin_access(admin_key, sso_user_email, sso_user_domain):
+        # If SSO is enabled, redirect to SSO login
+        sso_settings = get_sso_settings()
+        if sso_settings['enabled']:
+            return redirect(url_for('auth.sso_login'))
+        else:
+            return "Unauthorized", 401
+    
+    # Get email logs
+    email_logs = EmailLog.query.order_by(EmailLog.received_at.desc()).limit(100).all()
+    
+    # Get Immich sync logs
+    immich_sync_logs = ImmichSyncLog.query.order_by(ImmichSyncLog.sync_date.desc()).limit(100).all()
+    
+    # Get system logs (if any)
+    system_logs = []  # Placeholder for system logs
+    
+    return render_template('admin_logs.html',
+                         email_logs=email_logs,
+                         immich_sync_logs=immich_sync_logs,
+                         system_logs=system_logs,
+                         admin_key=admin_key)
+
+@admin_bp.route('/database')
+def admin_database():
+    # Check for SSO session first
+    sso_user_email = session.get('sso_user_email')
+    sso_user_domain = session.get('sso_user_domain')
+    admin_key = request.args.get('key', '')
+    
+    # Verify admin access
+    if not verify_admin_access(admin_key, sso_user_email, sso_user_domain):
+        # If SSO is enabled, redirect to SSO login
+        sso_settings = get_sso_settings()
+        if sso_settings['enabled']:
+            return redirect(url_for('auth.sso_login'))
+        else:
+            return "Unauthorized", 401
+    
+    # Get database statistics
+    from app.models.photo import Photo
+    from app.models.guestbook import GuestbookEntry
+    from app.models.messages import Message, MessageComment
+    from app.models.notifications import NotificationUser, Notification
+    
+    stats = {
+        'total_photos': Photo.query.count(),
+        'total_guestbook': GuestbookEntry.query.count(),
+        'total_messages': Message.query.count(),
+        'total_comments': MessageComment.query.count(),
+        'total_notification_users': NotificationUser.query.count(),
+        'total_notifications': Notification.query.count(),
+        'total_email_logs': EmailLog.query.count(),
+        'total_immich_logs': ImmichSyncLog.query.count()
+    }
+    
+    # Get database optimization status
+    from app.utils.db_optimization import db_optimizer
+    optimization_status = {
+        'cache_enabled': db_optimizer.is_enabled(),
+        'cache_size': db_optimizer.get_cache_size(),
+        'last_optimization': Settings.get('last_database_optimization', 'Never'),
+        'database_size': 'Unknown'  # Could be implemented to get actual DB size
+    }
+    
+    return render_template('admin_database.html',
+                         stats=stats,
+                         optimization_status=optimization_status,
+                         admin_key=admin_key) 

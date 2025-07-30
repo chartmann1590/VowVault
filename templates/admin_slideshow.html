@@ -1,0 +1,628 @@
+{% extends "base.html" %}
+
+{% block title %}Slideshow Settings - Admin{% endblock %}
+
+{% block extra_styles %}
+<style>
+    .admin-header {
+        background: linear-gradient(135deg, #2c2c2c 0%, #4a4a4a 100%);
+        color: white;
+        padding: 2rem 0;
+        margin: -3rem -20px 2rem -20px;
+        text-align: center;
+    }
+
+    .admin-header h2 {
+        font-family: 'Playfair Display', serif;
+        font-size: 2rem;
+        margin-bottom: 0.5rem;
+    }
+
+    .back-link {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        color: white;
+        text-decoration: none;
+        margin-bottom: 1rem;
+        opacity: 0.8;
+        transition: opacity 0.3s ease;
+    }
+
+    .back-link:hover {
+        opacity: 1;
+        color: white;
+        text-decoration: none;
+    }
+
+    .section-card {
+        background: white;
+        border-radius: 15px;
+        overflow: hidden;
+        box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+        margin-bottom: 2rem;
+    }
+
+    .section-header {
+        background: #f9f5f0;
+        padding: 1.5rem 2rem;
+        border-bottom: 1px solid #e8ddd3;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .section-header h3 {
+        color: #8b7355;
+        font-family: 'Playfair Display', serif;
+        font-size: 1.5rem;
+        margin: 0;
+    }
+
+    .section-content {
+        padding: 2rem;
+    }
+
+    .settings-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 2rem;
+        margin-bottom: 2rem;
+    }
+
+    .settings-form {
+        background: #f9f5f0;
+        padding: 1.5rem;
+        border-radius: 10px;
+    }
+
+    .slideshow-preview {
+        background: #faf9f7;
+        padding: 2rem;
+        border-radius: 15px;
+        text-align: center;
+        border: 2px dashed #e8ddd3;
+    }
+
+    .form-group {
+        margin-bottom: 1.5rem;
+    }
+
+    .form-group label {
+        display: block;
+        margin-bottom: 0.5rem;
+        font-weight: 600;
+        color: #6b5d54;
+    }
+
+    .form-control {
+        width: 100%;
+        padding: 0.75rem;
+        border: 2px solid #e8ddd3;
+        border-radius: 8px;
+        font-size: 1rem;
+        transition: border-color 0.3s ease;
+    }
+
+    .form-control:focus {
+        outline: none;
+        border-color: #8b7355;
+    }
+
+    .btn {
+        padding: 0.75rem 1.5rem;
+        border: none;
+        border-radius: 25px;
+        cursor: pointer;
+        font-size: 1rem;
+        transition: all 0.3s ease;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .btn-primary {
+        background: #8b7355;
+        color: white;
+    }
+
+    .btn-primary:hover {
+        background: #6b5d54;
+        transform: translateY(-2px);
+    }
+
+    .btn-secondary {
+        background: #6c757d;
+        color: white;
+    }
+
+    .btn-secondary:hover {
+        background: #5a6268;
+        transform: translateY(-2px);
+    }
+
+    .success-message {
+        background: #d4edda;
+        color: #155724;
+        padding: 1rem;
+        border-radius: 10px;
+        margin-bottom: 1rem;
+        display: none;
+    }
+
+    .slideshow-info {
+        background: #e8f4fd;
+        border: 1px solid #bee5eb;
+        color: #0c5460;
+        padding: 1rem;
+        border-radius: 10px;
+        margin-bottom: 1.5rem;
+    }
+
+    .switch-wrapper {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 1rem;
+        background: white;
+        border-radius: 8px;
+        border: 2px solid #e8ddd3;
+    }
+
+    .switch {
+        position: relative;
+        display: inline-block;
+        width: 60px;
+        height: 34px;
+    }
+
+    .switch input {
+        opacity: 0;
+        width: 0;
+        height: 0;
+    }
+
+    .slider {
+        position: absolute;
+        cursor: pointer;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background-color: #ccc;
+        transition: .4s;
+        border-radius: 34px;
+    }
+
+    .slider:before {
+        position: absolute;
+        content: "";
+        height: 26px;
+        width: 26px;
+        left: 4px;
+        bottom: 4px;
+        background-color: white;
+        transition: .4s;
+        border-radius: 50%;
+    }
+
+    input:checked + .slider {
+        background-color: #8b7355;
+    }
+
+    input:checked + .slider:before {
+        transform: translateX(26px);
+    }
+
+    .preview-slideshow {
+        background: white;
+        border-radius: 15px;
+        box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+        max-width: 600px;
+        margin: 0 auto;
+        overflow: hidden;
+    }
+
+    .preview-slide {
+        height: 300px;
+        background: linear-gradient(45deg, #f0f0f0, #e0e0e0);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        position: relative;
+    }
+
+    .preview-slide::before {
+        content: "📸";
+        font-size: 4rem;
+        opacity: 0.3;
+    }
+
+    .preview-controls {
+        background: #f9f5f0;
+        padding: 1rem;
+        display: flex;
+        justify-content: center;
+        gap: 1rem;
+    }
+
+    .preview-btn {
+        background: #8b7355;
+        color: white;
+        border: none;
+        padding: 0.5rem 1rem;
+        border-radius: 20px;
+        cursor: pointer;
+        font-size: 0.9rem;
+        transition: all 0.3s ease;
+    }
+
+    .preview-btn:hover {
+        background: #6b5d54;
+        transform: translateY(-2px);
+    }
+
+    @media (max-width: 768px) {
+        .admin-header {
+            margin: -3rem -1.5rem 2rem -1.5rem;
+        }
+
+        .settings-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="admin-header">
+    <a href="/admin?key=wedding2024" class="back-link">
+        <svg viewBox="0 0 24 24" width="20" height="20">
+            <path d="M20,11V13H8L13.5,18.5L12.08,19.92L4.16,12L12.08,4.08L13.5,5.5L8,11H20Z" fill="currentColor"/>
+        </svg>
+        Back to Dashboard
+    </a>
+    <h2>Slideshow Settings</h2>
+    <p>Configure photo slideshow display options</p>
+</div>
+
+<div class="container">
+    <!-- Slideshow Configuration -->
+    <div class="section-card">
+        <div class="section-header">
+            <h3>Slideshow Configuration</h3>
+        </div>
+        <div class="section-content">
+            <div class="success-message" id="successMessage">
+                Slideshow settings saved successfully!
+            </div>
+
+            <div class="slideshow-info">
+                <strong>🎠 Slideshow Feature:</strong> Configure how photos are displayed in the automatic slideshow on your wedding gallery homepage.
+            </div>
+
+            <div class="settings-grid">
+                <div class="settings-form">
+                    <h4 style="color: #8b7355; margin-bottom: 1.5rem;">Slideshow Settings</h4>
+                    
+                    <form id="slideshowSettingsForm">
+                        <div class="form-group">
+                            <div class="switch-wrapper">
+                                <label for="slideshowEnabled">Enable Slideshow</label>
+                                <label class="switch">
+                                    <input type="checkbox" id="slideshowEnabled" {% if slideshow_settings.get('enabled', True) %}checked{% endif %}>
+                                    <span class="slider"></span>
+                                </label>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="slideshowSpeed">Transition Speed (seconds)</label>
+                            <input type="number" 
+                                   id="slideshowSpeed" 
+                                   class="form-control" 
+                                   min="1" 
+                                   max="10"
+                                   step="0.5"
+                                   value="{{ slideshow_settings.get('speed', 3) }}">
+                            <small style="color: #666;">How long each photo displays before transitioning</small>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="slideshowEffect">Transition Effect</label>
+                            <select id="slideshowEffect" class="form-control">
+                                <option value="fade" {% if slideshow_settings.get('effect', 'fade') == 'fade' %}selected{% endif %}>Fade</option>
+                                <option value="slide" {% if slideshow_settings.get('effect', 'fade') == 'slide' %}selected{% endif %}>Slide</option>
+                                <option value="zoom" {% if slideshow_settings.get('effect', 'fade') == 'zoom' %}selected{% endif %}>Zoom</option>
+                                <option value="none" {% if slideshow_settings.get('effect', 'fade') == 'none' %}selected{% endif %}>None</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="slideshowOrder">Photo Order</label>
+                            <select id="slideshowOrder" class="form-control">
+                                <option value="random" {% if slideshow_settings.get('order', 'random') == 'random' %}selected{% endif %}>Random</option>
+                                <option value="newest" {% if slideshow_settings.get('order', 'random') == 'newest' %}selected{% endif %}>Newest First</option>
+                                <option value="oldest" {% if slideshow_settings.get('order', 'random') == 'oldest' %}selected{% endif %}>Oldest First</option>
+                                <option value="likes" {% if slideshow_settings.get('order', 'random') == 'likes' %}selected{% endif %}>Most Liked</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="slideshowMaxPhotos">Maximum Photos</label>
+                            <input type="number" 
+                                   id="slideshowMaxPhotos" 
+                                   class="form-control" 
+                                   min="5" 
+                                   max="50"
+                                   value="{{ slideshow_settings.get('max_photos', 20) }}">
+                            <small style="color: #666;">Maximum number of photos to include in slideshow</small>
+                        </div>
+
+                        <div class="form-group">
+                            <div class="switch-wrapper">
+                                <label for="slideshowAutoplay">Autoplay</label>
+                                <label class="switch">
+                                    <input type="checkbox" id="slideshowAutoplay" {% if slideshow_settings.get('autoplay', True) %}checked{% endif %}>
+                                    <span class="slider"></span>
+                                </label>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <div class="switch-wrapper">
+                                <label for="slideshowLoop">Loop Continuously</label>
+                                <label class="switch">
+                                    <input type="checkbox" id="slideshowLoop" {% if slideshow_settings.get('loop', True) %}checked{% endif %}>
+                                    <span class="slider"></span>
+                                </label>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <div class="switch-wrapper">
+                                <label for="slideshowShowControls">Show Navigation Controls</label>
+                                <label class="switch">
+                                    <input type="checkbox" id="slideshowShowControls" {% if slideshow_settings.get('show_controls', True) %}checked{% endif %}>
+                                    <span class="slider"></span>
+                                </label>
+                            </div>
+                        </div>
+
+                        <button type="submit" class="btn btn-primary">
+                            <svg viewBox="0 0 24 24" width="20" height="20">
+                                <path d="M15,9H5V5H15M12,19A3,3 0 0,1 9,16A3,3 0 0,1 12,13A3,3 0 0,1 15,16A3,3 0 0,1 12,19M17,3H5C3.89,3 3,3.89 3,5V19A2,2 0 0,0 5,21H19A2,2 0 0,0 21,19V7L17,3Z" fill="currentColor"/>
+                            </svg>
+                            Save Settings
+                        </button>
+                    </form>
+                </div>
+                
+                <div class="slideshow-preview">
+                    <h4 style="color: #8b7355; margin-bottom: 1.5rem;">Slideshow Preview</h4>
+                    
+                    {% if slideshow_settings.get('enabled', True) %}
+                        <div class="preview-slideshow">
+                            <div class="preview-slide" id="previewSlide">
+                                <!-- Preview content will be updated by JavaScript -->
+                            </div>
+                            <div class="preview-controls">
+                                <button class="preview-btn" onclick="previousSlide()">⏮️ Previous</button>
+                                <button class="preview-btn" onclick="playPauseSlideshow()" id="playPauseBtn">⏸️ Pause</button>
+                                <button class="preview-btn" onclick="nextSlide()">⏭️ Next</button>
+                            </div>
+                        </div>
+                        
+                        <div style="margin-top: 1.5rem;">
+                            <p style="color: #666; font-size: 0.9rem;">
+                                <strong>Current Settings:</strong><br>
+                                Speed: <span id="currentSpeed">{{ slideshow_settings.get('speed', 3) }}</span>s<br>
+                                Effect: <span id="currentEffect">{{ slideshow_settings.get('effect', 'fade') }}</span><br>
+                                Order: <span id="currentOrder">{{ slideshow_settings.get('order', 'random') }}</span>
+                            </p>
+                        </div>
+                    {% else %}
+                        <div style="padding: 3rem; color: #999; font-style: italic;">
+                            Slideshow is currently disabled
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Slideshow Information -->
+    <div class="section-card">
+        <div class="section-header">
+            <h3>Slideshow Information</h3>
+        </div>
+        <div class="section-content">
+            <div class="settings-grid">
+                <div class="settings-form">
+                    <h4 style="color: #8b7355; margin-bottom: 1.5rem;">How It Works</h4>
+                    <div style="text-align: left;">
+                        <div style="background: #f9f5f0; padding: 1.5rem; border-radius: 8px; margin-bottom: 1rem;">
+                            <strong style="color: #8b7355;">Automatic Display:</strong>
+                            <ul style="margin: 0.5rem 0 0 1rem; padding-left: 1rem; color: #666;">
+                                <li>Photos automatically cycle on the homepage</li>
+                                <li>Guests can pause and navigate manually</li>
+                                <li>Responsive design works on all devices</li>
+                                <li>Optimized for wedding photo viewing</li>
+                            </ul>
+                        </div>
+                        
+                        <div style="background: #e8f5e8; padding: 1rem; border-radius: 8px; margin-bottom: 1rem;">
+                            <strong style="color: #28a745;">Customization Options:</strong>
+                            <ul style="margin: 0.5rem 0 0 1rem; padding-left: 1rem; color: #666;">
+                                <li>Adjust transition speed and effects</li>
+                                <li>Choose photo ordering preferences</li>
+                                <li>Control autoplay and looping</li>
+                                <li>Show/hide navigation controls</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="slideshow-info">
+                    <h4 style="color: #8b7355; margin-bottom: 1.5rem;">Best Practices</h4>
+                    <div style="text-align: left;">
+                        <div style="background: #f9f5f0; padding: 1.5rem; border-radius: 8px; margin-bottom: 1rem;">
+                            <strong style="color: #8b7355;">Optimal Settings:</strong>
+                            <ul style="margin: 0.5rem 0 0 1rem; padding-left: 1rem; color: #666;">
+                                <li>3-5 second transitions work best</li>
+                                <li>Fade effect is most elegant</li>
+                                <li>Random order creates variety</li>
+                                <li>Keep controls visible for guests</li>
+                            </ul>
+                        </div>
+                        
+                        <div style="background: #e8f5e8; padding: 1rem; border-radius: 8px; margin-bottom: 1rem;">
+                            <strong style="color: #28a745;">Performance Tips:</strong>
+                            <ul style="margin: 0.5rem 0 0 1rem; padding-left: 1rem; color: #666;">
+                                <li>Limit to 20-30 photos for smooth performance</li>
+                                <li>Use optimized photo sizes</li>
+                                <li>Test on mobile devices</li>
+                                <li>Consider guest internet speeds</li>
+                            </ul>
+                        </div>
+                        
+                        <div style="background: #fff3cd; padding: 1rem; border-radius: 8px;">
+                            <strong style="color: #856404;">User Experience:</strong>
+                            <ul style="margin: 0.5rem 0 0 1rem; padding-left: 1rem; color: #666;">
+                                <li>Autoplay engages guests immediately</li>
+                                <li>Manual controls allow exploration</li>
+                                <li>Looping ensures continuous viewing</li>
+                                <li>Responsive design for all devices</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    let currentSlideIndex = 0;
+    let isPlaying = true;
+    let slideshowInterval;
+    const previewSlides = [
+        { title: "Wedding Ceremony", emoji: "💒" },
+        { title: "Reception Celebration", emoji: "🎉" },
+        { title: "First Dance", emoji: "💃" },
+        { title: "Family Photos", emoji: "👨‍👩‍👧‍👦" },
+        { title: "Wedding Party", emoji: "👰‍♀️" }
+    ];
+
+    function updatePreview() {
+        const slide = previewSlides[currentSlideIndex];
+        const previewSlide = document.getElementById('previewSlide');
+        if (previewSlide) {
+            previewSlide.innerHTML = `
+                <div style="text-align: center; color: #666;">
+                    <div style="font-size: 4rem; margin-bottom: 1rem;">${slide.emoji}</div>
+                    <div style="font-size: 1.2rem; font-weight: 600;">${slide.title}</div>
+                </div>
+            `;
+        }
+    }
+
+    function nextSlide() {
+        currentSlideIndex = (currentSlideIndex + 1) % previewSlides.length;
+        updatePreview();
+    }
+
+    function previousSlide() {
+        currentSlideIndex = (currentSlideIndex - 1 + previewSlides.length) % previewSlides.length;
+        updatePreview();
+    }
+
+    function playPauseSlideshow() {
+        const btn = document.getElementById('playPauseBtn');
+        if (isPlaying) {
+            clearInterval(slideshowInterval);
+            btn.innerHTML = '▶️ Play';
+            isPlaying = false;
+        } else {
+            const speed = parseInt(document.getElementById('slideshowSpeed').value) * 1000;
+            slideshowInterval = setInterval(nextSlide, speed);
+            btn.innerHTML = '⏸️ Pause';
+            isPlaying = true;
+        }
+    }
+
+    function updateCurrentSettings() {
+        document.getElementById('currentSpeed').textContent = document.getElementById('slideshowSpeed').value;
+        document.getElementById('currentEffect').textContent = document.getElementById('slideshowEffect').value;
+        document.getElementById('currentOrder').textContent = document.getElementById('slideshowOrder').value;
+    }
+
+    // Initialize preview
+    document.addEventListener('DOMContentLoaded', function() {
+        updatePreview();
+        const speed = parseInt(document.getElementById('slideshowSpeed').value) * 1000;
+        slideshowInterval = setInterval(nextSlide, speed);
+        
+        // Update current settings display
+        updateCurrentSettings();
+    });
+
+    // Update settings when form changes
+    document.getElementById('slideshowSpeed').addEventListener('change', function() {
+        updateCurrentSettings();
+        if (isPlaying) {
+            clearInterval(slideshowInterval);
+            const speed = parseInt(this.value) * 1000;
+            slideshowInterval = setInterval(nextSlide, speed);
+        }
+    });
+
+    document.getElementById('slideshowEffect').addEventListener('change', updateCurrentSettings);
+    document.getElementById('slideshowOrder').addEventListener('change', updateCurrentSettings);
+
+    // Handle form submission
+    document.getElementById('slideshowSettingsForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        const urlParams = new URLSearchParams(window.location.search);
+        const key = urlParams.get('key');
+        
+        const formData = {
+            enabled: document.getElementById('slideshowEnabled').checked,
+            speed: parseFloat(document.getElementById('slideshowSpeed').value),
+            effect: document.getElementById('slideshowEffect').value,
+            order: document.getElementById('slideshowOrder').value,
+            max_photos: parseInt(document.getElementById('slideshowMaxPhotos').value),
+            autoplay: document.getElementById('slideshowAutoplay').checked,
+            loop: document.getElementById('slideshowLoop').checked,
+            show_controls: document.getElementById('slideshowShowControls').checked
+        };
+        
+        fetch(`/admin/save-slideshow-settings?key=${key}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(formData)
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                const successMessage = document.getElementById('successMessage');
+                successMessage.style.display = 'block';
+                setTimeout(() => {
+                    successMessage.style.display = 'none';
+                }, 3000);
+            } else {
+                alert('Error saving settings: ' + (data.error || 'Unknown error'));
+            }
+        })
+        .catch(error => {
+            alert('Error saving settings: ' + error.message);
+        });
+    });
+</script>
+{% endblock %} 

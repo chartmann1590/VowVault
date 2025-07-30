@@ -1,0 +1,390 @@
+{% extends "base.html" %}
+
+{% block title %}System Logs - Admin Dashboard{% endblock %}
+
+{% block extra_styles %}
+<style>
+    .admin-header {
+        background: linear-gradient(135deg, #2c2c2c 0%, #4a4a4a 100%);
+        color: white;
+        padding: 3rem 0;
+        margin: -3rem -20px 3rem -20px;
+        text-align: center;
+    }
+
+    .admin-header h2 {
+        font-family: 'Playfair Display', serif;
+        font-size: 2.5rem;
+        margin-bottom: 1rem;
+    }
+
+    .back-link {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        color: white;
+        text-decoration: none;
+        margin-bottom: 2rem;
+        padding: 0.5rem 1rem;
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 10px;
+        transition: background 0.3s ease;
+    }
+
+    .back-link:hover {
+        background: rgba(255, 255, 255, 0.2);
+        color: white;
+    }
+
+    .logs-section {
+        background: white;
+        border-radius: 15px;
+        overflow: hidden;
+        box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+        margin-bottom: 3rem;
+    }
+
+    .section-header {
+        background: #f9f5f0;
+        padding: 1.5rem 2rem;
+        border-bottom: 1px solid #e8ddd3;
+    }
+
+    .section-header h3 {
+        color: #8b7355;
+        font-family: 'Playfair Display', serif;
+        font-size: 1.8rem;
+        margin: 0;
+    }
+
+    .section-content {
+        padding: 2rem;
+    }
+
+    .log-table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 1rem;
+    }
+
+    .log-table th {
+        background: #f9f5f0;
+        padding: 1rem;
+        text-align: left;
+        color: #6b5d54;
+        font-weight: 600;
+        border-bottom: 2px solid #e8ddd3;
+    }
+
+    .log-table td {
+        padding: 1rem;
+        border-bottom: 1px solid #f0f0f0;
+    }
+
+    .log-table tr:hover {
+        background: #faf9f7;
+    }
+
+    .status-success {
+        color: #28a745;
+        font-weight: bold;
+    }
+
+    .status-error {
+        color: #dc3545;
+        font-weight: bold;
+    }
+
+    .status-pending {
+        color: #ffc107;
+        font-weight: bold;
+    }
+
+    .status-rejected {
+        color: #dc3545;
+        font-weight: bold;
+    }
+
+    .log-message {
+        max-width: 300px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    .log-message:hover {
+        white-space: normal;
+        word-wrap: break-word;
+    }
+
+    .empty-state {
+        text-align: center;
+        padding: 3rem;
+        color: #666;
+    }
+
+    .empty-state svg {
+        width: 64px;
+        height: 64px;
+        fill: #ccc;
+        margin-bottom: 1rem;
+    }
+
+    .filter-controls {
+        display: flex;
+        gap: 1rem;
+        margin-bottom: 2rem;
+        flex-wrap: wrap;
+    }
+
+    .filter-btn {
+        background: #e8ddd3;
+        color: #6b5d54;
+        border: none;
+        padding: 0.5rem 1rem;
+        border-radius: 20px;
+        cursor: pointer;
+        font-size: 0.9rem;
+        transition: all 0.3s ease;
+    }
+
+    .filter-btn.active {
+        background: #8b7355;
+        color: white;
+    }
+
+    .filter-btn:hover {
+        transform: translateY(-2px);
+    }
+
+    .log-count {
+        background: #8b7355;
+        color: white;
+        padding: 0.25rem 0.5rem;
+        border-radius: 10px;
+        font-size: 0.8rem;
+        margin-left: 0.5rem;
+    }
+
+    @media (max-width: 768px) {
+        .log-table {
+            font-size: 0.9rem;
+        }
+
+        .log-table th,
+        .log-table td {
+            padding: 0.75rem 0.5rem;
+        }
+
+        .log-message {
+            max-width: 200px;
+        }
+
+        .filter-controls {
+            flex-direction: column;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="admin-header">
+    <a href="/admin?key={{ admin_key }}" class="back-link">
+        <svg viewBox="0 0 24 24" width="20" height="20">
+            <path d="M20,11V13H8L13.5,18.5L12.08,19.92L4.16,12L12.08,4.08L13.5,5.5L8,11H20Z" fill="currentColor"/>
+        </svg>
+        Back to Dashboard
+    </a>
+    <h2>System Logs</h2>
+    <p>Monitor email processing, Immich sync, and system activities</p>
+</div>
+
+<div class="container">
+    <!-- Email Processing Logs -->
+    <div class="logs-section">
+        <div class="section-header">
+            <h3>Email Processing Logs <span class="log-count">{{ email_logs|length }}</span></h3>
+        </div>
+        <div class="section-content">
+            <div class="filter-controls">
+                <button class="filter-btn active" onclick="filterLogs('email', 'all')">All</button>
+                <button class="filter-btn" onclick="filterLogs('email', 'success')">Success</button>
+                <button class="filter-btn" onclick="filterLogs('email', 'error')">Errors</button>
+                <button class="filter-btn" onclick="filterLogs('email', 'rejected')">Rejected</button>
+            </div>
+            
+            {% if email_logs %}
+            <div class="table-responsive">
+                <table class="log-table">
+                    <thead>
+                        <tr>
+                            <th>Sender</th>
+                            <th>Subject</th>
+                            <th>Received</th>
+                            <th>Status</th>
+                            <th>Photos</th>
+                            <th>Response</th>
+                            <th>Error</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for log in email_logs %}
+                        <tr class="email-log" data-status="{{ log.status }}">
+                            <td>{{ log.sender_email }}</td>
+                            <td>{{ log.subject[:50] }}{% if log.subject|length > 50 %}...{% endif %}</td>
+                            <td>{{ log.received_at.strftime('%b %d, %Y %H:%M') }}</td>
+                            <td>
+                                {% if log.status == 'success' %}
+                                    <span class="status-success">✓ Success</span>
+                                {% elif log.status == 'rejected' %}
+                                    <span class="status-rejected">✗ Rejected</span>
+                                {% elif log.status == 'error' %}
+                                    <span class="status-error">⚠ Error</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if log.photo_count > 0 %}
+                                    <span class="status-success">{{ log.photo_count }} photo(s)</span>
+                                {% else %}
+                                    -
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if log.response_sent %}
+                                    <span class="status-success">✓ {{ log.response_type|title }}</span>
+                                {% else %}
+                                    <span class="status-error">✗ Not sent</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if log.error_message %}
+                                    <span class="log-message" title="{{ log.error_message }}">Error</span>
+                                {% else %}
+                                    -
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="empty-state">
+                <svg viewBox="0 0 24 24">
+                    <path d="M20,8L12,13L4,8V6L12,11L20,6M20,4H4C2.89,4 2,4.89 2,6V18A2,2 0 0,0 4,20H20A2,2 0 0,0 22,18V6C22,4.89 21.1,4 20,4Z"/>
+                </svg>
+                <h3>No Email Logs</h3>
+                <p>Email processing logs will appear here once the email monitor is running and processes incoming emails.</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Immich Sync Logs -->
+    <div class="logs-section">
+        <div class="section-header">
+            <h3>Immich Sync Logs <span class="log-count">{{ immich_sync_logs|length }}</span></h3>
+        </div>
+        <div class="section-content">
+            <div class="filter-controls">
+                <button class="filter-btn active" onclick="filterLogs('immich', 'all')">All</button>
+                <button class="filter-btn" onclick="filterLogs('immich', 'success')">Success</button>
+                <button class="filter-btn" onclick="filterLogs('immich', 'error')">Errors</button>
+                <button class="filter-btn" onclick="filterLogs('immich', 'pending')">Pending</button>
+            </div>
+            
+            {% if immich_sync_logs %}
+            <div class="table-responsive">
+                <table class="log-table">
+                    <thead>
+                        <tr>
+                            <th>Filename</th>
+                            <th>Sync Date</th>
+                            <th>Status</th>
+                            <th>Asset ID</th>
+                            <th>Error</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for log in immich_sync_logs %}
+                        <tr class="immich-log" data-status="{{ log.status }}">
+                            <td>{{ log.filename }}</td>
+                            <td>{{ log.sync_date.strftime('%b %d, %Y %H:%M') }}</td>
+                            <td>
+                                {% if log.status == 'success' %}
+                                    <span class="status-success">✓ Success</span>
+                                {% elif log.status == 'error' %}
+                                    <span class="status-error">✗ Error</span>
+                                {% elif log.status == 'pending' %}
+                                    <span class="status-pending">⏳ Pending</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if log.immich_asset_id %}
+                                    <span class="status-success">{{ log.immich_asset_id[:20] }}...</span>
+                                {% else %}
+                                    -
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if log.error_message %}
+                                    <span class="log-message" title="{{ log.error_message }}">Error</span>
+                                {% else %}
+                                    -
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="empty-state">
+                <svg viewBox="0 0 24 24">
+                    <path d="M12,2A10,10 0 0,0 2,12A10,10 0 0,0 12,22A10,10 0 0,0 22,12A10,10 0 0,0 12,2M12,4A8,8 0 0,1 20,12A8,8 0 0,1 12,20A8,8 0 0,1 4,12A8,8 0 0,1 12,4M12,6A6,6 0 0,0 6,12A6,6 0 0,0 12,18A6,6 0 0,0 18,12A6,6 0 0,0 12,6M12,8A4,4 0 0,1 16,12A4,4 0 0,1 12,16A4,4 0 0,1 8,12A4,4 0 0,1 12,8Z"/>
+                </svg>
+                <h3>No Immich Sync Logs</h3>
+                <p>Immich sync logs will appear here once you enable Immich sync and files are synced.</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- System Logs (Placeholder) -->
+    <div class="logs-section">
+        <div class="section-header">
+            <h3>System Logs <span class="log-count">{{ system_logs|length }}</span></h3>
+        </div>
+        <div class="section-content">
+            <div class="empty-state">
+                <svg viewBox="0 0 24 24">
+                    <path d="M14,2H6A2,2 0 0,0 4,4V20A2,2 0 0,0 6,22H18A2,2 0 0,0 20,20V8L14,2M18,20H6V4H13V9H18V20Z"/>
+                </svg>
+                <h3>System Logs</h3>
+                <p>System logs feature is not yet implemented. This section will show application logs, error logs, and system events.</p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    function filterLogs(type, status) {
+        // Update filter buttons
+        const filterBtns = document.querySelectorAll(`.filter-controls button`);
+        filterBtns.forEach(btn => btn.classList.remove('active'));
+        event.target.classList.add('active');
+        
+        // Filter table rows
+        const rows = document.querySelectorAll(`.${type}-log`);
+        rows.forEach(row => {
+            if (status === 'all' || row.dataset.status === status) {
+                row.style.display = '';
+            } else {
+                row.style.display = 'none';
+            }
+        });
+    }
+</script>
+{% endblock %} 

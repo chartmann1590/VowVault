@@ -25,6 +25,10 @@ Welcome to the Wedding Gallery documentation. This directory contains comprehens
 - **[Email Setup](EMAIL_SETUP.md)** - Email integration configuration
 - **[Immich Setup](IMMICH_SETUP.md)** - Immich photo server integration
 
+### 🛠️ Admin Dashboard
+- **[Admin Dashboard Guide](ADMIN_DASHBOARD.md)** - Complete admin dashboard documentation
+- **[Admin Organization](ADMIN_ORGANIZATION.md)** - Admin page organization and navigation
+
 ### 📸 Screenshots
 - **[Screenshots](screenshots/)** - Visual examples of the application
 
@@ -84,8 +88,11 @@ docker run -p 5000:5000 wedding-gallery
 - **Immich Sync** - Sync photos to Immich photo server
 - **SSO Authentication** - Single Sign-On for admin access
 - **PWA Support** - Progressive Web App functionality
-- **Admin Dashboard** - Comprehensive admin interface
+- **Comprehensive Admin Dashboard** - Complete admin interface with navigation
 - **QR Code Generation** - Generate QR codes for easy sharing
+- **System Logs** - Monitor email processing and sync activities
+- **Database Maintenance** - Database optimization and maintenance tools
+- **Slideshow Settings** - Configure photo slideshow functionality
 
 ## 🔧 Configuration
 
@@ -97,6 +104,21 @@ The application can be configured through:
 - Immich integration settings
 
 See the individual documentation files for detailed configuration instructions.
+
+## 🆕 Recent Updates
+
+### Admin Dashboard Improvements (Latest)
+- **Enhanced Navigation**: Added comprehensive navigation system to main admin dashboard
+- **New Admin Pages**: Added System Logs and Database Maintenance pages
+- **Improved Organization**: Organized admin pages into logical categories
+- **Better User Experience**: Added visual icons, hover effects, and responsive design
+- **Complete Coverage**: All admin functionality now accessible through navigation
+
+### Admin Page Categories
+- **Content Management**: Photos & Videos, Guestbook, Message Board, Slideshow Settings
+- **Settings & Configuration**: Photobooth, QR Codes, Welcome Modal, SSO, CAPTCHA
+- **Integrations & Services**: Email Settings, Immich Sync, Push Notifications
+- **System & Maintenance**: System Logs, Database Maintenance
 
 ## 🐛 Troubleshooting
 

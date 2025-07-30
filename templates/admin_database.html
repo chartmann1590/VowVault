@@ -1,0 +1,537 @@
+{% extends "base.html" %}
+
+{% block title %}Database Maintenance - Admin Dashboard{% endblock %}
+
+{% block extra_styles %}
+<style>
+    .admin-header {
+        background: linear-gradient(135deg, #2c2c2c 0%, #4a4a4a 100%);
+        color: white;
+        padding: 3rem 0;
+        margin: -3rem -20px 3rem -20px;
+        text-align: center;
+    }
+
+    .admin-header h2 {
+        font-family: 'Playfair Display', serif;
+        font-size: 2.5rem;
+        margin-bottom: 1rem;
+    }
+
+    .back-link {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        color: white;
+        text-decoration: none;
+        margin-bottom: 2rem;
+        padding: 0.5rem 1rem;
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 10px;
+        transition: background 0.3s ease;
+    }
+
+    .back-link:hover {
+        background: rgba(255, 255, 255, 0.2);
+        color: white;
+    }
+
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 2rem;
+        margin-bottom: 3rem;
+    }
+
+    .stat-card {
+        background: white;
+        padding: 2rem;
+        border-radius: 15px;
+        box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+        text-align: center;
+        transition: transform 0.3s ease;
+    }
+
+    .stat-card:hover {
+        transform: translateY(-5px);
+    }
+
+    .stat-value {
+        font-size: 3rem;
+        font-weight: 700;
+        color: #8b7355;
+        margin-bottom: 0.5rem;
+    }
+
+    .stat-label {
+        color: #6b5d54;
+        font-size: 1.1rem;
+    }
+
+    .maintenance-section {
+        background: white;
+        border-radius: 15px;
+        overflow: hidden;
+        box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+        margin-bottom: 3rem;
+    }
+
+    .section-header {
+        background: #f9f5f0;
+        padding: 1.5rem 2rem;
+        border-bottom: 1px solid #e8ddd3;
+    }
+
+    .section-header h3 {
+        color: #8b7355;
+        font-family: 'Playfair Display', serif;
+        font-size: 1.8rem;
+        margin: 0;
+    }
+
+    .section-content {
+        padding: 2rem;
+    }
+
+    .maintenance-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        gap: 2rem;
+    }
+
+    .maintenance-card {
+        background: #faf9f7;
+        padding: 2rem;
+        border-radius: 10px;
+        border: 1px solid #e8ddd3;
+    }
+
+    .maintenance-card h4 {
+        color: #8b7355;
+        font-family: 'Playfair Display', serif;
+        font-size: 1.4rem;
+        margin-bottom: 1rem;
+    }
+
+    .maintenance-card p {
+        color: #666;
+        margin-bottom: 1.5rem;
+        line-height: 1.6;
+    }
+
+    .maintenance-btn {
+        background: #8b7355;
+        color: white;
+        border: none;
+        padding: 0.75rem 1.5rem;
+        border-radius: 10px;
+        cursor: pointer;
+        font-size: 1rem;
+        transition: all 0.3s ease;
+        width: 100%;
+    }
+
+    .maintenance-btn:hover {
+        background: #6b5d54;
+        transform: translateY(-2px);
+    }
+
+    .maintenance-btn:disabled {
+        background: #ccc;
+        cursor: not-allowed;
+        transform: none;
+    }
+
+    .status-indicator {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.5rem 1rem;
+        border-radius: 20px;
+        font-size: 0.9rem;
+        font-weight: 500;
+        margin-bottom: 1rem;
+    }
+
+    .status-indicator.active {
+        background: linear-gradient(135deg, #d4edda 0%, #c3e6cb 100%);
+        color: #155724;
+        border: 1px solid #c3e6cb;
+    }
+
+    .status-indicator.inactive {
+        background: linear-gradient(135deg, #f8d7da 0%, #f5c6cb 100%);
+        color: #721c24;
+        border: 1px solid #f5c6cb;
+    }
+
+    .status-dot {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        display: inline-block;
+    }
+
+    .status-indicator.active .status-dot {
+        background: #28a745;
+    }
+
+    .status-indicator.inactive .status-dot {
+        background: #dc3545;
+    }
+
+    .info-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 1rem;
+        margin-top: 1rem;
+    }
+
+    .info-item {
+        background: white;
+        padding: 1rem;
+        border-radius: 8px;
+        border: 1px solid #e8ddd3;
+    }
+
+    .info-label {
+        color: #6b5d54;
+        font-size: 0.9rem;
+        font-weight: 600;
+        margin-bottom: 0.5rem;
+    }
+
+    .info-value {
+        color: #8b7355;
+        font-size: 1.1rem;
+        font-weight: 600;
+    }
+
+    .loading-overlay {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(255, 255, 255, 0.9);
+        z-index: 2000;
+        justify-content: center;
+        align-items: center;
+    }
+
+    .loading-content {
+        text-align: center;
+        padding: 2rem;
+        background: white;
+        border-radius: 20px;
+        box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+    }
+
+    .spinner {
+        width: 50px;
+        height: 50px;
+        border: 5px solid #f3f3f3;
+        border-top: 5px solid #8b7355;
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+        margin: 0 auto 1rem;
+    }
+
+    @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+    }
+
+    .success-message {
+        background: #d4edda;
+        color: #155724;
+        padding: 1rem;
+        border-radius: 10px;
+        margin-bottom: 1rem;
+        display: none;
+    }
+
+    .error-message {
+        background: #f8d7da;
+        color: #721c24;
+        padding: 1rem;
+        border-radius: 10px;
+        margin-bottom: 1rem;
+        display: none;
+    }
+
+    @media (max-width: 768px) {
+        .stats-grid {
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+        }
+
+        .maintenance-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .stat-value {
+            font-size: 2rem;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="admin-header">
+    <a href="/admin?key={{ admin_key }}" class="back-link">
+        <svg viewBox="0 0 24 24" width="20" height="20">
+            <path d="M20,11V13H8L13.5,18.5L12.08,19.92L4.16,12L12.08,4.08L13.5,5.5L8,11H20Z" fill="currentColor"/>
+        </svg>
+        Back to Dashboard
+    </a>
+    <h2>Database Maintenance</h2>
+    <p>Monitor database statistics and perform maintenance tasks</p>
+</div>
+
+<div class="container">
+    <div class="success-message" id="successMessage">
+        Operation completed successfully!
+    </div>
+
+    <div class="error-message" id="errorMessage">
+        An error occurred during the operation.
+    </div>
+
+    <!-- Database Statistics -->
+    <div class="stats-grid">
+        <div class="stat-card">
+            <div class="stat-value">{{ stats.total_photos }}</div>
+            <div class="stat-label">Total Photos</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-value">{{ stats.total_guestbook }}</div>
+            <div class="stat-label">Guestbook Entries</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-value">{{ stats.total_messages }}</div>
+            <div class="stat-label">Message Posts</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-value">{{ stats.total_comments }}</div>
+            <div class="stat-label">Comments</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-value">{{ stats.total_notification_users }}</div>
+            <div class="stat-label">Notification Users</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-value">{{ stats.total_notifications }}</div>
+            <div class="stat-label">Notifications</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-value">{{ stats.total_email_logs }}</div>
+            <div class="stat-label">Email Logs</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-value">{{ stats.total_immich_logs }}</div>
+            <div class="stat-label">Immich Logs</div>
+        </div>
+    </div>
+
+    <!-- Database Optimization Status -->
+    <div class="maintenance-section">
+        <div class="section-header">
+            <h3>Database Optimization Status</h3>
+        </div>
+        <div class="section-content">
+            <div class="status-indicator {% if optimization_status.cache_enabled %}active{% else %}inactive{% endif %}">
+                <span class="status-dot"></span>
+                <span class="status-text">
+                    {% if optimization_status.cache_enabled %}
+                        🔄 Cache Active
+                    {% else %}
+                        ⏸️ Cache Inactive
+                    {% endif %}
+                </span>
+            </div>
+            
+            <div class="info-grid">
+                <div class="info-item">
+                    <div class="info-label">Cache Size</div>
+                    <div class="info-value">{{ optimization_status.cache_size }}</div>
+                </div>
+                <div class="info-item">
+                    <div class="info-label">Last Optimization</div>
+                    <div class="info-value">{{ optimization_status.last_optimization }}</div>
+                </div>
+                <div class="info-item">
+                    <div class="info-label">Database Size</div>
+                    <div class="info-value">{{ optimization_status.database_size }}</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Maintenance Tasks -->
+    <div class="maintenance-section">
+        <div class="section-header">
+            <h3>Maintenance Tasks</h3>
+        </div>
+        <div class="section-content">
+            <div class="maintenance-grid">
+                <div class="maintenance-card">
+                    <h4>Database Optimization</h4>
+                    <p>Optimize database tables and indexes for better performance. This will analyze and optimize the database structure.</p>
+                    <button class="maintenance-btn" onclick="optimizeDatabase()">
+                        <svg viewBox="0 0 24 24" width="20" height="20" style="margin-right: 0.5rem;">
+                            <path d="M12,2A10,10 0 0,0 2,12A10,10 0 0,0 12,22A10,10 0 0,0 22,12A10,10 0 0,0 12,2M12,4A8,8 0 0,1 20,12A8,8 0 0,1 12,20A8,8 0 0,1 4,12A8,8 0 0,1 12,4M12,6A6,6 0 0,0 6,12A6,6 0 0,0 12,18A6,6 0 0,0 18,12A6,6 0 0,0 12,6M12,8A4,4 0 0,1 16,12A4,4 0 0,1 12,16A4,4 0 0,1 8,12A4,4 0 0,1 12,8Z" fill="currentColor"/>
+                        </svg>
+                        Optimize Database
+                    </button>
+                </div>
+
+                <div class="maintenance-card">
+                    <h4>Cache Management</h4>
+                    <p>Clear all cached data and rebuild the cache. This will improve performance by refreshing cached queries.</p>
+                    <button class="maintenance-btn" onclick="clearCache()">
+                        <svg viewBox="0 0 24 24" width="20" height="20" style="margin-right: 0.5rem;">
+                            <path d="M19,3H5C3.89,3 3,3.89 3,5V19A2,2 0 0,0 5,21H19A2,2 0 0,0 21,19V5C21,3.89 20.1,3 19,3M19,5V19H5V5H19Z" fill="currentColor"/>
+                        </svg>
+                        Clear Cache
+                    </button>
+                </div>
+
+                <div class="maintenance-card">
+                    <h4>Database Maintenance</h4>
+                    <p>Perform comprehensive database maintenance including cleanup of old logs and optimization of storage.</p>
+                    <button class="maintenance-btn" onclick="performMaintenance()">
+                        <svg viewBox="0 0 24 24" width="20" height="20" style="margin-right: 0.5rem;">
+                            <path d="M12,2A10,10 0 0,0 2,12A10,10 0 0,0 12,22A10,10 0 0,0 22,12A10,10 0 0,0 12,2M12,4A8,8 0 0,1 20,12A8,8 0 0,1 12,20A8,8 0 0,1 4,12A8,8 0 0,1 12,4M12,6A6,6 0 0,0 6,12A6,6 0 0,0 12,18A6,6 0 0,0 18,12A6,6 0 0,0 12,6M12,8A4,4 0 0,1 16,12A4,4 0 0,1 12,16A4,4 0 0,1 8,12A4,4 0 0,1 12,8Z" fill="currentColor"/>
+                        </svg>
+                        Run Maintenance
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Loading Overlay -->
+<div class="loading-overlay" id="loadingOverlay">
+    <div class="loading-content">
+        <div class="spinner"></div>
+        <p id="loadingMessage">Processing...</p>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    function showLoading(message = 'Processing...') {
+        document.getElementById('loadingMessage').textContent = message;
+        document.getElementById('loadingOverlay').style.display = 'flex';
+    }
+
+    function hideLoading() {
+        document.getElementById('loadingOverlay').style.display = 'none';
+    }
+
+    function showSuccess(message) {
+        const successMsg = document.getElementById('successMessage');
+        successMsg.textContent = message;
+        successMsg.style.display = 'block';
+        setTimeout(() => {
+            successMsg.style.display = 'none';
+        }, 5000);
+    }
+
+    function showError(message) {
+        const errorMsg = document.getElementById('errorMessage');
+        errorMsg.textContent = message;
+        errorMsg.style.display = 'block';
+        setTimeout(() => {
+            errorMsg.style.display = 'none';
+        }, 5000);
+    }
+
+    async function optimizeDatabase() {
+        showLoading('Optimizing database...');
+        
+        try {
+            const response = await fetch('/admin/database-optimize?key={{ admin_key }}', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            });
+            
+            const data = await response.json();
+            hideLoading();
+            
+            if (data.success) {
+                showSuccess('Database optimization completed successfully!');
+                setTimeout(() => {
+                    window.location.reload();
+                }, 2000);
+            } else {
+                showError('Error optimizing database: ' + (data.error || 'Unknown error'));
+            }
+        } catch (error) {
+            hideLoading();
+            showError('Error optimizing database: ' + error.message);
+        }
+    }
+
+    async function clearCache() {
+        showLoading('Clearing cache...');
+        
+        try {
+            const response = await fetch('/admin/clear-cache?key={{ admin_key }}', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            });
+            
+            const data = await response.json();
+            hideLoading();
+            
+            if (data.success) {
+                showSuccess('Cache cleared successfully!');
+                setTimeout(() => {
+                    window.location.reload();
+                }, 2000);
+            } else {
+                showError('Error clearing cache: ' + (data.error || 'Unknown error'));
+            }
+        } catch (error) {
+            hideLoading();
+            showError('Error clearing cache: ' + error.message);
+        }
+    }
+
+    async function performMaintenance() {
+        showLoading('Performing database maintenance...');
+        
+        try {
+            const response = await fetch('/admin/database-maintenance?key={{ admin_key }}', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            });
+            
+            const data = await response.json();
+            hideLoading();
+            
+            if (data.success) {
+                showSuccess('Database maintenance completed successfully!');
+                setTimeout(() => {
+                    window.location.reload();
+                }, 2000);
+            } else {
+                showError('Error performing maintenance: ' + (data.error || 'Unknown error'));
+            }
+        } catch (error) {
+            hideLoading();
+            showError('Error performing maintenance: ' + error.message);
+        }
+    }
+</script>
+{% endblock %} 
