@@ -182,9 +182,19 @@ def select_photo_of_day():
     if admin_key != 'wedding2024':
         return jsonify({'success': False, 'message': 'Unauthorized'}), 403
     
-    data = request.get_json()
+    try:
+        data = request.get_json()
+    except Exception as e:
+        return jsonify({'success': False, 'message': f'Invalid JSON data: {str(e)}'}), 400
+    
+    if not data:
+        return jsonify({'success': False, 'message': 'No JSON data provided'}), 400
+    
     photo_id = data.get('photo_id')
     selected_date = data.get('date')
+    
+    print(f"DEBUG: Received data - photo_id: {photo_id}, selected_date: {selected_date}")
+    print(f"DEBUG: Data type - photo_id: {type(photo_id)}, selected_date: {type(selected_date)}")
     
     if not photo_id or not selected_date:
         return jsonify({'success': False, 'message': 'Photo ID and date required'}), 400
