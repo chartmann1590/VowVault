@@ -217,6 +217,8 @@
                 <source src="{{ url_for('static', filename='uploads/videos/' + today_photo.photo.filename) }}" type="video/mp4">
                 Your browser does not support the video tag.
             </video>
+            {% elif today_photo.photo.is_photobooth %}
+            <img src="{{ url_for('static', filename='uploads/photobooth/' + today_photo.photo.filename) }}" alt="Photo of the Day">
             {% else %}
             <img src="{{ url_for('static', filename='uploads/' + today_photo.photo.filename) }}" alt="Photo of the Day">
             {% endif %}
@@ -278,6 +280,8 @@
                 <video controls>
                     <source src="{{ url_for('static', filename='uploads/videos/' + photo_of_day.photo.filename) }}" type="video/mp4">
                 </video>
+                {% elif photo_of_day.photo.is_photobooth %}
+                <img src="{{ url_for('static', filename='uploads/photobooth/' + photo_of_day.photo.filename) }}" alt="Photo of the Day">
                 {% else %}
                 <img src="{{ url_for('static', filename='uploads/' + photo_of_day.photo.filename) }}" alt="Photo of the Day">
                 {% endif %}

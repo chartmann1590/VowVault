@@ -268,6 +268,8 @@
                 <video controls>
                     <source src="{{ url_for('static', filename='uploads/videos/' + photo.filename) }}" type="video/mp4">
                 </video>
+                {% elif photo.is_photobooth %}
+                <img src="{{ url_for('static', filename='uploads/photobooth/' + photo.filename) }}" alt="Auto-Candidate Photo">
                 {% else %}
                 <img src="{{ url_for('static', filename='uploads/' + photo.filename) }}" alt="Auto-Candidate Photo">
                 {% endif %}
@@ -332,6 +334,8 @@
                 <video controls>
                     <source src="{{ url_for('static', filename='uploads/videos/' + photo_of_day.photo.filename) }}" type="video/mp4">
                 </video>
+                {% elif photo_of_day.photo.is_photobooth %}
+                <img src="{{ url_for('static', filename='uploads/photobooth/' + photo_of_day.photo.filename) }}" alt="Photo of the Day">
                 {% else %}
                 <img src="{{ url_for('static', filename='uploads/' + photo_of_day.photo.filename) }}" alt="Photo of the Day">
                 {% endif %}
@@ -367,6 +371,8 @@
                 <video controls>
                     <source src="{{ url_for('static', filename='uploads/videos/' + candidate.photo.filename) }}" type="video/mp4">
                 </video>
+                {% elif candidate.photo.is_photobooth %}
+                <img src="{{ url_for('static', filename='uploads/photobooth/' + candidate.photo.filename) }}" alt="Candidate Photo">
                 {% else %}
                 <img src="{{ url_for('static', filename='uploads/' + candidate.photo.filename) }}" alt="Candidate Photo">
                 {% endif %}
