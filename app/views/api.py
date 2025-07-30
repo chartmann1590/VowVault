@@ -6,6 +6,7 @@ from app.models.notifications import Notification, NotificationUser
 from app import db
 from app.utils.notification_utils import create_notification_with_push
 from datetime import datetime
+import json
 
 api_bp = Blueprint('api', __name__)
 
@@ -378,5 +379,68 @@ def register_notification_user():
     
     except Exception as e:
         print(f"Error registering notification user: {e}")
+        db.session.rollback()
+        return jsonify({'success': False, 'message': str(e)})
+
+@api_bp.route('/notifications/register-push', methods=['POST'])
+def register_push_subscription():
+    """Register a push notification subscription"""
+    try:
+        data = request.get_json()
+        user_identifier = data.get('user_identifier', '')
+        subscription = data.get('subscription', {})
+        permission_granted = data.get('permission_granted', False)
+        
+        if not user_identifier:
+            return jsonify({'success': False, 'message': 'User identifier required'})
+        
+        if not subscription:
+            return jsonify({'success': False, 'message': 'Push subscription required'})
+        
+        # Find or create user
+        user = NotificationUser.query.filter_by(user_identifier=user_identifier).first()
+        if not user:
+            user = NotificationUser(
+                user_identifier=user_identifier,
+                user_name=request.cookies.get('user_name', 'Anonymous'),
+                notifications_enabled=True
+            )
+            db.session.add(user)
+        
+        # Update push subscription
+        user.push_subscription = json.dumps(subscription)
+        user.push_enabled = True
+        user.push_permission_granted = permission_granted
+        user.last_seen = datetime.utcnow()
+        
+        db.session.commit()
+        return jsonify({'success': True, 'message': 'Push subscription registered successfully'})
+    
+    except Exception as e:
+        print(f"Error registering push subscription: {e}")
+        db.session.rollback()
+        return jsonify({'success': False, 'message': str(e)})
+
+@api_bp.route('/notifications/unregister-push', methods=['POST'])
+def unregister_push_subscription():
+    """Unregister push notification subscription"""
+    try:
+        data = request.get_json()
+        user_identifier = data.get('user_identifier', '')
+        
+        if not user_identifier:
+            return jsonify({'success': False, 'message': 'User identifier required'})
+        
+        user = NotificationUser.query.filter_by(user_identifier=user_identifier).first()
+        if user:
+            user.push_subscription = None
+            user.push_enabled = False
+            user.push_permission_granted = False
+            db.session.commit()
+        
+        return jsonify({'success': True, 'message': 'Push subscription unregistered successfully'})
+    
+    except Exception as e:
+        print(f"Error unregistering push subscription: {e}")
         db.session.rollback()
         return jsonify({'success': False, 'message': str(e)}) 

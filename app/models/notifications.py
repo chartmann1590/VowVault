@@ -9,6 +9,10 @@ class NotificationUser(db.Model):
     last_seen = db.Column(db.DateTime, default=datetime.utcnow)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     device_info = db.Column(db.Text)  # Store browser/device information
+    # Push notification fields
+    push_subscription = db.Column(db.Text)  # JSON string of push subscription
+    push_enabled = db.Column(db.Boolean, default=False)
+    push_permission_granted = db.Column(db.Boolean, default=False)
 
 class Notification(db.Model):
     id = db.Column(db.Integer, primary_key=True)

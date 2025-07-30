@@ -92,6 +92,37 @@ def migrate_database():
         else:
             print("✅ is_photobooth column already exists")
             
+        # Check NotificationUser table for push notification fields
+        cursor.execute("PRAGMA table_info(notification_user)")
+        notification_user_columns = [column[1] for column in cursor.fetchall()]
+        
+        # Check if push_subscription column exists
+        if 'push_subscription' not in notification_user_columns:
+            print("Adding push_subscription column to NotificationUser table...")
+            cursor.execute("ALTER TABLE notification_user ADD COLUMN push_subscription TEXT")
+            conn.commit()
+            print("✅ push_subscription column added successfully!")
+        else:
+            print("✅ push_subscription column already exists")
+            
+        # Check if push_enabled column exists
+        if 'push_enabled' not in notification_user_columns:
+            print("Adding push_enabled column to NotificationUser table...")
+            cursor.execute("ALTER TABLE notification_user ADD COLUMN push_enabled BOOLEAN DEFAULT FALSE")
+            conn.commit()
+            print("✅ push_enabled column added successfully!")
+        else:
+            print("✅ push_enabled column already exists")
+            
+        # Check if push_permission_granted column exists
+        if 'push_permission_granted' not in notification_user_columns:
+            print("Adding push_permission_granted column to NotificationUser table...")
+            cursor.execute("ALTER TABLE notification_user ADD COLUMN push_permission_granted BOOLEAN DEFAULT FALSE")
+            conn.commit()
+            print("✅ push_permission_granted column added successfully!")
+        else:
+            print("✅ push_permission_granted column already exists")
+            
     except Exception as e:
         print(f"❌ Error during migration: {e}")
         conn.rollback()
