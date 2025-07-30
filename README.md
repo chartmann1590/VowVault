@@ -65,6 +65,7 @@ The application has been completely refactored from a monolithic structure to a 
 - 💌 **Message Board** - Share messages with optional photos
 - 📖 **Virtual Guestbook** - Sign digital guestbook with photos
 - 📱 **PWA Support** - Install as native app on mobile devices
+- 🏆 **Photo of the Day** - Vote for daily featured photos and see recent highlights
 
 ### For Admins
 - 🔐 **Admin Dashboard** - Comprehensive management tools
@@ -74,6 +75,7 @@ The application has been completely refactored from a monolithic structure to a 
 - 🔄 **Immich Sync** - Sync to your own Immich server
 - 📱 **PWA Debug Tools** - Monitor and troubleshoot PWA issues
 - 💾 **Batch Download** - Download all content as ZIP file
+- 🏆 **Photo of the Day Management** - Select and manage daily featured photos
 
 ## 📸 Screenshots
 
@@ -107,6 +109,9 @@ The application has been completely refactored from a monolithic structure to a 
 
 ![Guestbook](docs/screenshots/guestbook.png)
 *Digital guestbook with photo attachments*
+
+![Photo of the Day](docs/screenshots/photo-of-day.png)
+*Daily photo voting system with engagement tracking*
 
 ## 🚀 Quick Start
 
@@ -142,6 +147,7 @@ For detailed information, see our comprehensive documentation:
 - **[SSO Setup](docs/sso_setup.md)** - Configure secure admin authentication
 - **[Usage Guide](docs/usage.md)** - Step-by-step user instructions
 - **[PWA Guide](docs/pwa.md)** - Progressive Web App setup and troubleshooting
+- **[Photo of the Day](docs/photo_of_day.md)** - Daily photo voting system documentation
 
 ## 🔧 Configuration
 

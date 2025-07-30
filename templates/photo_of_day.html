@@ -1,0 +1,262 @@
+{% extends "base.html" %}
+
+{% block title %}Photo of the Day - VowVault{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8">
+    <!-- Header -->
+    <div class="text-center mb-8">
+        <h1 class="text-4xl font-bold text-gray-800 mb-2">📸 Photo of the Day</h1>
+        <p class="text-gray-600">Vote for today's featured photo and see recent highlights!</p>
+    </div>
+
+    <!-- Today's Photo of the Day -->
+    {% if today_photo %}
+    <div class="bg-white rounded-lg shadow-lg p-6 mb-8">
+        <div class="text-center mb-4">
+            <h2 class="text-2xl font-semibold text-gray-800 mb-2">Today's Featured Photo</h2>
+            <p class="text-gray-600">{{ today_photo.date.strftime('%B %d, %Y') }}</p>
+        </div>
+        
+        <div class="grid md:grid-cols-2 gap-6 items-center">
+            <!-- Photo Display -->
+            <div class="relative">
+                {% if today_photo.photo.media_type == 'video' %}
+                <video class="w-full h-64 object-cover rounded-lg" controls>
+                    <source src="{{ url_for('static', filename='uploads/videos/' + today_photo.photo.filename) }}" type="video/mp4">
+                    Your browser does not support the video tag.
+                </video>
+                {% else %}
+                <img src="{{ url_for('static', filename='uploads/' + today_photo.photo.filename) }}" 
+                     alt="Photo of the Day" 
+                     class="w-full h-64 object-cover rounded-lg">
+                {% endif %}
+                
+                <!-- Uploader Info -->
+                <div class="absolute bottom-0 left-0 right-0 bg-black bg-opacity-50 text-white p-3 rounded-b-lg">
+                    <p class="text-sm">📸 by {{ today_photo.photo.uploader_name }}</p>
+                </div>
+            </div>
+            
+            <!-- Voting Section -->
+            <div class="space-y-4">
+                <div class="text-center">
+                    <h3 class="text-xl font-semibold text-gray-800 mb-2">Vote for this photo!</h3>
+                    <p class="text-gray-600 mb-4">Show your appreciation for today's featured photo</p>
+                    
+                    <!-- Vote Count -->
+                    <div class="mb-4">
+                        <div class="text-3xl font-bold text-pink-500" id="vote-count">{{ today_photo.vote_count }}</div>
+                        <div class="text-sm text-gray-500">votes</div>
+                    </div>
+                    
+                    <!-- Vote Button -->
+                    {% if user_identifier %}
+                        {% if user_vote %}
+                        <button id="unvote-btn" 
+                                class="bg-red-500 hover:bg-red-600 text-white font-semibold py-3 px-6 rounded-lg transition duration-200 flex items-center justify-center w-full">
+                            <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z" clip-rule="evenodd"></path>
+                            </svg>
+                            Remove Vote
+                        </button>
+                        {% else %}
+                        <button id="vote-btn" 
+                                class="bg-pink-500 hover:bg-pink-600 text-white font-semibold py-3 px-6 rounded-lg transition duration-200 flex items-center justify-center w-full">
+                            <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z" clip-rule="evenodd"></path>
+                            </svg>
+                            Vote for this Photo!
+                        </button>
+                        {% endif %}
+                    {% else %}
+                        <div class="bg-gray-100 p-4 rounded-lg">
+                            <p class="text-gray-600 text-sm">Sign in to vote for today's photo</p>
+                        </div>
+                    {% endif %}
+                </div>
+                
+                <!-- Photo Details -->
+                <div class="bg-gray-50 p-4 rounded-lg">
+                    <h4 class="font-semibold text-gray-800 mb-2">Photo Details</h4>
+                    <div class="space-y-1 text-sm text-gray-600">
+                        <p><strong>Uploaded:</strong> {{ today_photo.photo.upload_date.strftime('%B %d, %Y') }}</p>
+                        {% if today_photo.photo.description %}
+                        <p><strong>Description:</strong> {{ today_photo.photo.description }}</p>
+                        {% endif %}
+                        {% if today_photo.photo.tags %}
+                        <p><strong>Tags:</strong> {{ today_photo.photo.tags }}</p>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% else %}
+    <!-- No Photo of the Day -->
+    <div class="bg-white rounded-lg shadow-lg p-8 text-center">
+        <div class="text-6xl mb-4">📸</div>
+        <h2 class="text-2xl font-semibold text-gray-800 mb-2">No Photo of the Day Yet</h2>
+        <p class="text-gray-600 mb-4">Check back later for today's featured photo!</p>
+        <a href="{{ url_for('main.index') }}" class="bg-pink-500 hover:bg-pink-600 text-white font-semibold py-2 px-4 rounded-lg transition duration-200">
+            Browse All Photos
+        </a>
+    </div>
+    {% endif %}
+
+    <!-- Recent Photos of the Day -->
+    {% if recent_photos %}
+    <div class="bg-white rounded-lg shadow-lg p-6">
+        <h2 class="text-2xl font-semibold text-gray-800 mb-6">Recent Photos of the Day</h2>
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {% for photo_of_day in recent_photos %}
+            <div class="bg-gray-50 rounded-lg overflow-hidden">
+                <div class="relative">
+                    {% if photo_of_day.photo.media_type == 'video' %}
+                    <video class="w-full h-48 object-cover" controls>
+                        <source src="{{ url_for('static', filename='uploads/videos/' + photo_of_day.photo.filename) }}" type="video/mp4">
+                    </video>
+                    {% else %}
+                    <img src="{{ url_for('static', filename='uploads/' + photo_of_day.photo.filename) }}" 
+                         alt="Photo of the Day" 
+                         class="w-full h-48 object-cover">
+                    {% endif %}
+                    
+                    <div class="absolute top-2 right-2 bg-pink-500 text-white px-2 py-1 rounded text-xs font-semibold">
+                        {{ photo_of_day.date.strftime('%b %d') }}
+                    </div>
+                </div>
+                
+                <div class="p-4">
+                    <p class="text-sm text-gray-600 mb-2">by {{ photo_of_day.photo.uploader_name }}</p>
+                    <div class="flex items-center text-sm text-gray-500">
+                        <svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z" clip-rule="evenodd"></path>
+                        </svg>
+                        {{ photo_of_day.vote_count }} votes
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+<!-- JavaScript for voting functionality -->
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const voteBtn = document.getElementById('vote-btn');
+    const unvoteBtn = document.getElementById('unvote-btn');
+    const voteCount = document.getElementById('vote-count');
+    
+    if (voteBtn) {
+        voteBtn.addEventListener('click', function() {
+            fetch('/api/photo-of-day/vote', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({})
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Update UI
+                    voteCount.textContent = data.vote_count;
+                    voteBtn.style.display = 'none';
+                    
+                    // Show unvote button
+                    const newUnvoteBtn = document.createElement('button');
+                    newUnvoteBtn.id = 'unvote-btn';
+                    newUnvoteBtn.className = 'bg-red-500 hover:bg-red-600 text-white font-semibold py-3 px-6 rounded-lg transition duration-200 flex items-center justify-center w-full';
+                    newUnvoteBtn.innerHTML = `
+                        <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z" clip-rule="evenodd"></path>
+                        </svg>
+                        Remove Vote
+                    `;
+                    voteBtn.parentNode.appendChild(newUnvoteBtn);
+                    
+                    // Add event listener to new button
+                    newUnvoteBtn.addEventListener('click', unvoteHandler);
+                    
+                    // Show success message
+                    showNotification('Vote recorded successfully!', 'success');
+                } else {
+                    showNotification(data.message, 'error');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                showNotification('An error occurred while voting', 'error');
+            });
+        });
+    }
+    
+    if (unvoteBtn) {
+        unvoteBtn.addEventListener('click', unvoteHandler);
+    }
+    
+    function unvoteHandler() {
+        fetch('/api/photo-of-day/unvote', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({})
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                // Update UI
+                voteCount.textContent = data.vote_count;
+                unvoteBtn.style.display = 'none';
+                
+                // Show vote button
+                const newVoteBtn = document.createElement('button');
+                newVoteBtn.id = 'vote-btn';
+                newVoteBtn.className = 'bg-pink-500 hover:bg-pink-600 text-white font-semibold py-3 px-6 rounded-lg transition duration-200 flex items-center justify-center w-full';
+                newVoteBtn.innerHTML = `
+                    <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z" clip-rule="evenodd"></path>
+                    </svg>
+                    Vote for this Photo!
+                `;
+                unvoteBtn.parentNode.appendChild(newVoteBtn);
+                
+                // Add event listener to new button
+                newVoteBtn.addEventListener('click', function() {
+                    location.reload(); // Reload to get fresh state
+                });
+                
+                // Show success message
+                showNotification('Vote removed successfully!', 'success');
+            } else {
+                showNotification(data.message, 'error');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            showNotification('An error occurred while removing vote', 'error');
+        });
+    }
+    
+    function showNotification(message, type) {
+        // Create notification element
+        const notification = document.createElement('div');
+        notification.className = `fixed top-4 right-4 p-4 rounded-lg shadow-lg z-50 ${
+            type === 'success' ? 'bg-green-500 text-white' : 'bg-red-500 text-white'
+        }`;
+        notification.textContent = message;
+        
+        document.body.appendChild(notification);
+        
+        // Remove notification after 3 seconds
+        setTimeout(() => {
+            notification.remove();
+        }, 3000);
+    }
+});
+</script>
+{% endblock %} 

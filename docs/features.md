@@ -98,6 +98,29 @@ Install as a native app on mobile devices for quick access. Get the full app exp
 
 **PWA Features:**
 - Native app experience
+
+### 🏆 Photo of the Day
+Vote for daily featured photos and see which moments are most loved by your guests. Admins can select photos to be featured each day, and guests can vote once per day.
+
+**Voting Features:**
+- **Daily Featured Photos:** Admins select photos to be featured each day
+- **One Vote Per Day:** Each guest can vote once per day for the featured photo
+- **Vote Tracking:** See how many votes each photo has received
+- **Recent History:** View photos of the day from the past week
+- **Real-time Updates:** Vote counts update instantly
+- **User-Friendly Interface:** Clean, intuitive voting interface
+
+**Guest Experience:**
+- Visit the "📸 Photo of the Day" page from the main navigation
+- View today's featured photo with details and uploader information
+- Click "Vote for this Photo!" to cast your vote
+- See the updated vote count and recent photos of the day
+- Change your mind by clicking "Remove Vote" (one vote per day)
+
+**Recent Photos:**
+- View photos of the day from the past 7 days
+- See vote counts and uploader information
+- Browse through recent highlights
 - Offline support
 - Fast loading
 - Custom app icons
@@ -201,6 +224,34 @@ Download all gallery content (photos, videos, data) as a comprehensive ZIP file.
 - Guestbook and message photos
 - Complete database export
 - Photobooth borders
+
+### 🏆 Photo of the Day Management
+Select and manage daily featured photos that guests can vote on. Create engaging content and track guest engagement.
+
+**Management Features:**
+- **Photo Selection:** Choose any uploaded photo to be featured on any date
+- **Date Management:** Set photos for past, present, or future dates
+- **Candidate System:** Mark photos as candidates for future selection
+- **Vote Statistics:** View voting statistics and engagement metrics
+- **Easy Interface:** Simple admin interface for managing all Photo of the Day content
+- **Photo Preview:** Preview selected photos before confirming
+- **Bulk Management:** View all photos of the day in one place
+
+**Admin Workflow:**
+1. Access Photo of the Day management at `/admin/photo-of-day?key=wedding2024`
+2. Select a photo from the dropdown (all uploaded photos available)
+3. Choose which date this photo should be featured
+4. Preview your selection before confirming
+5. Click "Set as Photo of the Day" to save
+6. View, edit, or delete existing photos of the day
+
+**Statistics Available:**
+- Total Photos of the Day created
+- Number of candidate photos
+- Voting engagement statistics
+- Recent activity overview
+- Vote counts per photo
+- Unique voter tracking
 
 ### 🔄 System Reset
 Complete system reset with confirmation to start fresh. Perfect for testing or starting over.
