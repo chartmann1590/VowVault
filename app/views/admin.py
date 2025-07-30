@@ -754,6 +754,84 @@ def upload_border():
     
     return jsonify({'error': 'Invalid file type'}), 400
 
+@admin_bp.route('/upload-couple-photo', methods=['POST'])
+def upload_couple_photo():
+    # Check for SSO session first
+    sso_user_email = session.get('sso_user_email')
+    sso_user_domain = session.get('sso_user_domain')
+    admin_key = request.args.get('key', '')
+    
+    # Verify admin access
+    if not verify_admin_access(admin_key, sso_user_email, sso_user_domain):
+        return "Unauthorized", 401
+    
+    if 'couple_photo' not in request.files:
+        return jsonify({'error': 'No file provided'}), 400
+    
+    file = request.files['couple_photo']
+    if file.filename == '':
+        return jsonify({'error': 'No file selected'}), 400
+    
+    from app.utils.file_utils import allowed_file
+    if file and allowed_file(file.filename):
+        # Remove old couple photo if exists
+        welcome_settings = Settings.get('welcome_modal', '{}')
+        welcome_settings = json.loads(welcome_settings) if welcome_settings else {}
+        
+        if welcome_settings.get('couple_photo'):
+            old_filepath = os.path.join(current_app.config['UPLOAD_FOLDER'], welcome_settings['couple_photo'])
+            if os.path.exists(old_filepath):
+                os.remove(old_filepath)
+        
+        # Save new couple photo
+        filename = secure_filename(file.filename)
+        timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+        filename = f"couple_photo_{timestamp}_{filename}"
+        filepath = os.path.join(current_app.config['UPLOAD_FOLDER'], filename)
+        
+        # Ensure upload folder exists
+        os.makedirs(current_app.config['UPLOAD_FOLDER'], exist_ok=True)
+        
+        file.save(filepath)
+        
+        # Update settings
+        welcome_settings['couple_photo'] = filename
+        Settings.set('welcome_modal', json.dumps(welcome_settings))
+        
+        return jsonify({'success': True, 'message': 'Couple photo uploaded successfully'})
+    else:
+        return jsonify({'error': 'Invalid file type'}), 400
+
+@admin_bp.route('/remove-couple-photo', methods=['POST'])
+def remove_couple_photo():
+    # Check for SSO session first
+    sso_user_email = session.get('sso_user_email')
+    sso_user_domain = session.get('sso_user_domain')
+    admin_key = request.args.get('key', '')
+    
+    # Verify admin access
+    if not verify_admin_access(admin_key, sso_user_email, sso_user_domain):
+        return "Unauthorized", 401
+    
+    try:
+        # Get current welcome settings
+        welcome_settings = Settings.get('welcome_modal', '{}')
+        welcome_settings = json.loads(welcome_settings) if welcome_settings else {}
+        
+        # Remove file if exists
+        if welcome_settings.get('couple_photo'):
+            filepath = os.path.join(current_app.config['UPLOAD_FOLDER'], welcome_settings['couple_photo'])
+            if os.path.exists(filepath):
+                os.remove(filepath)
+            
+            # Remove from settings
+            del welcome_settings['couple_photo']
+            Settings.set('welcome_modal', json.dumps(welcome_settings))
+        
+        return jsonify({'success': True, 'message': 'Couple photo removed successfully'})
+    except Exception as e:
+        return jsonify({'error': f'Error removing couple photo: {str(e)}'}), 500
+
 @admin_bp.route('/delete/<int:photo_id>')
 def delete_photo(photo_id):
     # Check for SSO session first

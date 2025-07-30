@@ -351,12 +351,49 @@
                         </div>
 
                         <div class="form-group">
+                            <label for="couplePhoto">Couple Photo (Optional)</label>
+                            <input type="file" 
+                                   id="couplePhoto" 
+                                   class="form-control" 
+                                   accept="image/*">
+                            {% if welcome_settings.get('couple_photo') %}
+                            <div style="margin-top: 0.5rem;">
+                                <img src="{{ welcome_settings.get('couple_photo') }}" 
+                                     alt="Current couple photo" 
+                                     style="max-width: 200px; border-radius: 8px;">
+                                <button type="button" class="btn btn-secondary" onclick="removeCouplePhoto()" style="margin-left: 0.5rem;">
+                                    Remove Photo
+                                </button>
+                            </div>
+                            {% endif %}
+                            <small style="color: #666;">Upload a photo of the couple to display in the welcome modal</small>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="instructions">Instructions (Optional)</label>
+                            <textarea id="instructions" 
+                                      rows="4" 
+                                      class="form-control" 
+                                      placeholder="Enter instructions for using the gallery...">{{ welcome_settings.get('instructions', '') }}</textarea>
+                            <small style="color: #666;">One instruction per line. These will be displayed as a bulleted list.</small>
+                        </div>
+
+                        <div class="form-group">
                             <label for="modalButtonText">Button Text</label>
                             <input type="text" 
                                    id="modalButtonText" 
                                    class="form-control" 
-                                   placeholder="e.g., Get Started"
-                                   value="{{ welcome_settings.get('button_text', 'Get Started') }}">
+                                   placeholder="e.g., Enter Gallery"
+                                   value="{{ welcome_settings.get('button_text', 'Enter Gallery') }}">
+                        </div>
+
+                        <div class="form-group">
+                            <label for="guestbookButtonText">Guestbook Button Text</label>
+                            <input type="text" 
+                                   id="guestbookButtonText" 
+                                   class="form-control" 
+                                   placeholder="e.g., Sign Our Guestbook"
+                                   value="{{ welcome_settings.get('guestbook_button_text', 'Sign Our Guestbook') }}">
                         </div>
 
                         <div class="form-group">
@@ -377,6 +414,28 @@
                                            value="{{ welcome_settings.get('text_color', '#ffffff') }}">
                                 </div>
                             </div>
+                        </div>
+
+                        <div class="form-group">
+                            <div class="switch-wrapper">
+                                <label for="showEmailSection">Show Email Upload Section</label>
+                                <label class="switch">
+                                    <input type="checkbox" id="showEmailSection" {% if welcome_settings.get('show_email_section', True) %}checked{% endif %}>
+                                    <span class="slider"></span>
+                                </label>
+                            </div>
+                            <small style="color: #666;">Display information about emailing photos to the gallery</small>
+                        </div>
+
+                        <div class="form-group">
+                            <div class="switch-wrapper">
+                                <label for="showGuestbookButton">Show Guestbook Button</label>
+                                <label class="switch">
+                                    <input type="checkbox" id="showGuestbookButton" {% if welcome_settings.get('show_guestbook_button', True) %}checked{% endif %}>
+                                    <span class="slider"></span>
+                                </label>
+                            </div>
+                            <small style="color: #666;">Display a button to sign the guestbook</small>
                         </div>
 
                         <div class="form-group">
@@ -408,11 +467,44 @@
                                 {{ welcome_settings.get('title', 'Welcome to Our Wedding Gallery!') }}
                             </div>
                             <div class="preview-modal-body" id="previewBody">
-                                {{ welcome_settings.get('message', 'Welcome to our special day! Feel free to browse through our wedding photos and share your memories with us.')|safe }}
+                                {% if welcome_settings.get('couple_photo') %}
+                                <img src="{{ welcome_settings.get('couple_photo') }}" alt="Couple Photo" class="couple-photo" style="width: 100%; max-width: 300px; margin: 0 auto 1rem; display: block; border-radius: 10px;">
+                                {% endif %}
+                                
+                                <p class="welcome-message" id="previewMessage">
+                                    {{ welcome_settings.get('message', 'Welcome to our special day! Feel free to browse through our wedding photos and share your memories with us.')|safe }}
+                                </p>
+                                
+                                {% if welcome_settings.get('instructions') %}
+                                <div class="instructions-section" id="previewInstructions" style="background: #f9f5f0; padding: 1rem; border-radius: 10px; margin: 1rem 0;">
+                                    <h3 style="color: #8b7355; font-size: 1.2rem; margin-bottom: 0.5rem;">How to Use the Gallery</h3>
+                                    <ul style="list-style: none; padding: 0; margin: 0;">
+                                        {% for instruction in welcome_settings.get('instructions', []) %}
+                                        <li style="display: flex; align-items: flex-start; gap: 0.5rem; margin-bottom: 0.5rem; color: #666;">
+                                            <span style="color: #8b7355;">✨</span>
+                                            {{ instruction }}
+                                        </li>
+                                        {% endfor %}
+                                    </ul>
+                                </div>
+                                {% endif %}
+                                
+                                {% if welcome_settings.get('show_email_section', True) %}
+                                <div class="email-upload-section" id="previewEmailSection" style="margin-top: 1rem; padding: 1rem; background: linear-gradient(135deg, #f9f5f0 0%, #f5e6d3 100%); border-radius: 10px; border-left: 3px solid #8b7355;">
+                                    <h3 style="color: #8b7355; font-size: 1.1rem; margin-bottom: 0.5rem;">📧 Email Your Photos</h3>
+                                    <p style="color: #6b5d54; font-size: 0.9rem; margin-bottom: 0.5rem;">Can't upload right now? Email your photos to us and we'll add them automatically.</p>
+                                    <p style="color: #6b5d54; font-size: 0.8rem; margin: 0;"><strong>Send to:</strong> your-email@example.com</p>
+                                </div>
+                                {% endif %}
                             </div>
                             <div class="preview-modal-footer">
+                                {% if welcome_settings.get('show_guestbook_button', True) %}
+                                <a href="#" class="guestbook-modal-btn" id="previewGuestbookBtn" style="background: #e8ddd3; color: #6b5d54; border: none; padding: 0.5rem 1rem; border-radius: 20px; font-size: 0.9rem; cursor: pointer; text-decoration: none; display: inline-block; margin-right: 0.5rem;">
+                                    {{ welcome_settings.get('guestbook_button_text', 'Sign Our Guestbook') }}
+                                </a>
+                                {% endif %}
                                 <button class="preview-btn" id="previewButton">
-                                    {{ welcome_settings.get('button_text', 'Get Started') }}
+                                    {{ welcome_settings.get('button_text', 'Enter Gallery') }}
                                 </button>
                             </div>
                         </div>
@@ -524,9 +616,16 @@
         document.getElementById('modalTitle').addEventListener('input', updatePreview);
         document.getElementById('modalMessage').addEventListener('input', updatePreview);
         document.getElementById('modalButtonText').addEventListener('input', updatePreview);
+        document.getElementById('guestbookButtonText').addEventListener('input', updatePreview);
+        document.getElementById('instructions').addEventListener('input', updatePreview);
         document.getElementById('modalBgColor').addEventListener('input', updatePreview);
         document.getElementById('modalTextColor').addEventListener('input', updatePreview);
         document.getElementById('modalEnabled').addEventListener('change', updatePreview);
+        document.getElementById('showEmailSection').addEventListener('change', updatePreview);
+        document.getElementById('showGuestbookButton').addEventListener('change', updatePreview);
+        
+        // Handle couple photo upload
+        document.getElementById('couplePhoto').addEventListener('change', handleCouplePhotoUpload);
     });
 
     function updatePreview() {
@@ -534,21 +633,70 @@
         const title = document.getElementById('modalTitle').value;
         const message = document.getElementById('modalMessage').value;
         const buttonText = document.getElementById('modalButtonText').value;
+        const guestbookButtonText = document.getElementById('guestbookButtonText').value;
+        const instructions = document.getElementById('instructions').value;
+        const showEmailSection = document.getElementById('showEmailSection').checked;
+        const showGuestbookButton = document.getElementById('showGuestbookButton').checked;
         const bgColor = document.getElementById('modalBgColor').value;
         const textColor = document.getElementById('modalTextColor').value;
         
         const previewHeader = document.getElementById('previewHeader');
         const previewBody = document.getElementById('previewBody');
         const previewButton = document.getElementById('previewButton');
+        const previewGuestbookBtn = document.getElementById('previewGuestbookBtn');
+        const previewMessage = document.getElementById('previewMessage');
+        const previewInstructions = document.getElementById('previewInstructions');
+        const previewEmailSection = document.getElementById('previewEmailSection');
         const modalPreview = document.getElementById('modalPreview');
         
         if (enabled && modalPreview) {
             modalPreview.style.display = 'block';
             previewHeader.textContent = title;
-            previewBody.innerHTML = message;
-            previewButton.textContent = buttonText;
             previewHeader.style.backgroundColor = bgColor;
             previewHeader.style.color = textColor;
+            
+            // Update message
+            if (previewMessage) {
+                previewMessage.innerHTML = message;
+            }
+            
+            // Update button text
+            if (previewButton) {
+                previewButton.textContent = buttonText;
+            }
+            
+            // Update guestbook button
+            if (previewGuestbookBtn) {
+                previewGuestbookBtn.textContent = guestbookButtonText;
+                previewGuestbookBtn.style.display = showGuestbookButton ? 'inline-block' : 'none';
+            }
+            
+            // Update instructions
+            if (previewInstructions) {
+                if (instructions.trim()) {
+                    const instructionList = instructions.split('\n').filter(instruction => instruction.trim());
+                    const instructionHtml = instructionList.map(instruction => 
+                        `<li style="display: flex; align-items: flex-start; gap: 0.5rem; margin-bottom: 0.5rem; color: #666;">
+                            <span style="color: #8b7355;">✨</span>
+                            ${instruction.trim()}
+                        </li>`
+                    ).join('');
+                    previewInstructions.innerHTML = `
+                        <h3 style="color: #8b7355; font-size: 1.2rem; margin-bottom: 0.5rem;">How to Use the Gallery</h3>
+                        <ul style="list-style: none; padding: 0; margin: 0;">
+                            ${instructionHtml}
+                        </ul>
+                    `;
+                    previewInstructions.style.display = 'block';
+                } else {
+                    previewInstructions.style.display = 'none';
+                }
+            }
+            
+            // Update email section
+            if (previewEmailSection) {
+                previewEmailSection.style.display = showEmailSection ? 'block' : 'none';
+            }
         } else if (modalPreview) {
             modalPreview.style.display = 'none';
         }
@@ -558,19 +706,123 @@
         const title = document.getElementById('modalTitle').value;
         const message = document.getElementById('modalMessage').value;
         const buttonText = document.getElementById('modalButtonText').value;
+        const guestbookButtonText = document.getElementById('guestbookButtonText').value;
+        const instructions = document.getElementById('instructions').value;
+        const showEmailSection = document.getElementById('showEmailSection').checked;
+        const showGuestbookButton = document.getElementById('showGuestbookButton').checked;
         const bgColor = document.getElementById('modalBgColor').value;
         const textColor = document.getElementById('modalTextColor').value;
         
+        let modalContent = '';
+        
+        // Add couple photo if exists
+        const couplePhoto = '{{ welcome_settings.get("couple_photo", "") }}';
+        if (couplePhoto) {
+            modalContent += `<img src="${couplePhoto}" alt="Couple Photo" style="width: 100%; max-width: 300px; margin: 0 auto 1rem; display: block; border-radius: 10px;">`;
+        }
+        
+        // Add message
+        modalContent += `<p style="font-size: 1.1rem; line-height: 1.8; color: #555; text-align: center; margin-bottom: 2rem;">${message}</p>`;
+        
+        // Add instructions if provided
+        if (instructions.trim()) {
+            const instructionList = instructions.split('\n').filter(instruction => instruction.trim());
+            const instructionHtml = instructionList.map(instruction => 
+                `<li style="display: flex; align-items: flex-start; gap: 0.5rem; margin-bottom: 0.5rem; color: #666;">
+                    <span style="color: #8b7355;">✨</span>
+                    ${instruction.trim()}
+                </li>`
+            ).join('');
+            modalContent += `
+                <div style="background: #f9f5f0; padding: 1rem; border-radius: 10px; margin: 1rem 0;">
+                    <h3 style="color: #8b7355; font-size: 1.2rem; margin-bottom: 0.5rem;">How to Use the Gallery</h3>
+                    <ul style="list-style: none; padding: 0; margin: 0;">
+                        ${instructionHtml}
+                    </ul>
+                </div>
+            `;
+        }
+        
+        // Add email section if enabled
+        if (showEmailSection) {
+            modalContent += `
+                <div style="margin-top: 1rem; padding: 1rem; background: linear-gradient(135deg, #f9f5f0 0%, #f5e6d3 100%); border-radius: 10px; border-left: 3px solid #8b7355;">
+                    <h3 style="color: #8b7355; font-size: 1.1rem; margin-bottom: 0.5rem;">📧 Email Your Photos</h3>
+                    <p style="color: #6b5d54; font-size: 0.9rem; margin-bottom: 0.5rem;">Can't upload right now? Email your photos to us and we'll add them automatically.</p>
+                    <p style="color: #6b5d54; font-size: 0.8rem; margin: 0;"><strong>Send to:</strong> your-email@example.com</p>
+                </div>
+            `;
+        }
+        
         document.getElementById('testModalHeader').textContent = title;
-        document.getElementById('testModalBody').innerHTML = message;
+        document.getElementById('testModalBody').innerHTML = modalContent;
         document.getElementById('testModalHeader').style.backgroundColor = bgColor;
         document.getElementById('testModalHeader').style.color = textColor;
+        
+        // Update footer buttons
+        const testModalFooter = document.querySelector('#testModal .modal-footer');
+        testModalFooter.innerHTML = '';
+        
+        if (showGuestbookButton) {
+            testModalFooter.innerHTML += `<a href="#" class="btn btn-secondary" style="margin-right: 0.5rem;">${guestbookButtonText}</a>`;
+        }
+        testModalFooter.innerHTML += `<button class="btn btn-primary" onclick="closeTestModal()">${buttonText}</button>`;
         
         document.getElementById('testModal').style.display = 'block';
     }
 
     function closeTestModal() {
         document.getElementById('testModal').style.display = 'none';
+    }
+
+    function handleCouplePhotoUpload(event) {
+        const file = event.target.files[0];
+        if (file) {
+            const formData = new FormData();
+            formData.append('couple_photo', file);
+            
+            const urlParams = new URLSearchParams(window.location.search);
+            const key = urlParams.get('key');
+            
+            fetch(`/admin/upload-couple-photo?key=${key}`, {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Reload the page to show the new photo
+                    window.location.reload();
+                } else {
+                    alert('Error uploading photo: ' + (data.error || 'Unknown error'));
+                }
+            })
+            .catch(error => {
+                alert('Error uploading photo: ' + error.message);
+            });
+        }
+    }
+
+    function removeCouplePhoto() {
+        if (confirm('Are you sure you want to remove the couple photo?')) {
+            const urlParams = new URLSearchParams(window.location.search);
+            const key = urlParams.get('key');
+            
+            fetch(`/admin/remove-couple-photo?key=${key}`, {
+                method: 'POST'
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    window.location.reload();
+                } else {
+                    alert('Error removing photo: ' + (data.error || 'Unknown error'));
+                }
+            })
+            .catch(error => {
+                alert('Error removing photo: ' + error.message);
+            });
+        }
     }
 
     // Handle form submission
@@ -585,6 +837,10 @@
             title: document.getElementById('modalTitle').value,
             message: document.getElementById('modalMessage').value,
             button_text: document.getElementById('modalButtonText').value,
+            guestbook_button_text: document.getElementById('guestbookButtonText').value,
+            instructions: document.getElementById('instructions').value,
+            show_email_section: document.getElementById('showEmailSection').checked,
+            show_guestbook_button: document.getElementById('showGuestbookButton').checked,
             background_color: document.getElementById('modalBgColor').value,
             text_color: document.getElementById('modalTextColor').value,
             show_on_every_visit: document.getElementById('showOnEveryVisit').checked
