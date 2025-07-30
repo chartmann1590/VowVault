@@ -46,9 +46,10 @@ def index():
     media_filter = request.args.get('media_type', '')
     tag_filter = request.args.get('tag', '')
     
-    # Get all content with pagination (photos, videos, photobooth, and emailed content)
+    # For lazy loading, we'll only load initial photos on the server
+    # The rest will be loaded via JavaScript API calls
     page = request.args.get('page', 1, type=int)
-    per_page = 10
+    per_page = 12  # Initial load of 12 photos
     
     # Build query with filters
     photos_query = Photo.query
@@ -118,6 +119,78 @@ def index():
                          media_filter=media_filter,
                          tag_filter=tag_filter,
                          all_tags=all_tags)
+
+@main_bp.route('/api/photos')
+def api_photos():
+    """API endpoint for lazy loading photos"""
+    page = request.args.get('page', 1, type=int)
+    per_page = request.args.get('per_page', 12, type=int)  # Load more photos per request for better UX
+    
+    # Get search parameters
+    search_query = request.args.get('search', '').strip()
+    media_filter = request.args.get('media_type', '')
+    tag_filter = request.args.get('tag', '')
+    
+    # Build query with filters
+    photos_query = Photo.query
+    
+    # Apply search filter
+    if search_query:
+        search_term = f'%{search_query}%'
+        photos_query = photos_query.filter(
+            db.or_(
+                Photo.uploader_name.ilike(search_term),
+                Photo.description.ilike(search_term),
+                Photo.tags.ilike(search_term)
+            )
+        )
+    
+    # Apply media type filter
+    if media_filter:
+        if media_filter == 'photos':
+            photos_query = photos_query.filter(Photo.media_type == 'image')
+        elif media_filter == 'videos':
+            photos_query = photos_query.filter(Photo.media_type == 'video')
+        elif media_filter == 'photobooth':
+            photos_query = photos_query.filter(Photo.is_photobooth == True)
+    
+    # Apply tag filter
+    if tag_filter:
+        photos_query = photos_query.filter(Photo.tags.ilike(f'%{tag_filter}%'))
+    
+    # Order by upload date (newest first)
+    photos_query = photos_query.order_by(Photo.upload_date.desc())
+    photos = photos_query.paginate(page=page, per_page=per_page, error_out=False)
+    
+    # Convert photos to JSON-serializable format
+    photos_data = []
+    for photo in photos.items:
+        photo_data = {
+            'id': photo.id,
+            'filename': photo.filename,
+            'thumbnail_filename': photo.thumbnail_filename,
+            'uploader_name': photo.uploader_name,
+            'upload_date': photo.upload_date.strftime('%b %d, %Y'),
+            'description': photo.description,
+            'tags': photo.tags,
+            'media_type': photo.media_type,
+            'is_photobooth': photo.is_photobooth,
+            'duration': photo.duration,
+            'likes': photo.likes,
+            'comments_count': len(photo.comments),
+            'url': f'/photo/{photo.id}'
+        }
+        photos_data.append(photo_data)
+    
+    return jsonify({
+        'photos': photos_data,
+        'has_next': photos.has_next,
+        'has_prev': photos.has_prev,
+        'page': photos.page,
+        'pages': photos.pages,
+        'total': photos.total,
+        'per_page': photos.per_page
+    })
 
 @main_bp.route('/photo/<int:photo_id>')
 def view_photo(photo_id):

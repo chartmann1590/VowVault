@@ -64,6 +64,42 @@
         transform: scale(1.05);
     }
 
+    /* Loading indicator styles */
+    .loading-indicator {
+        text-align: center;
+        padding: 2rem;
+        margin: 2rem 0;
+    }
+
+    .loading-spinner {
+        width: 40px;
+        height: 40px;
+        border: 4px solid #f3f3f3;
+        border-top: 4px solid #8b7355;
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+        margin: 0 auto 1rem;
+    }
+
+    @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+    }
+
+    .loading-indicator p {
+        color: #6b5d54;
+        font-size: 1rem;
+        margin: 0;
+    }
+
+    .end-of-content {
+        text-align: center;
+        padding: 2rem;
+        margin: 2rem 0;
+        color: #6b5d54;
+        font-style: italic;
+    }
+
     /* Video indicator overlay */
     .video-indicator {
         position: absolute;
@@ -835,7 +871,7 @@
 </div>
 
 {% if photos %}
-    <div class="photo-grid">
+    <div class="photo-grid" id="photo-grid">
         {% for photo in photos %}
                     <div class="photo-card" onclick="window.location.href='{{ url_for('main.view_photo', photo_id=photo.id) }}'">
             <div class="photo-wrapper">
@@ -904,39 +940,17 @@
         {% endfor %}
     </div>
     
-    <!-- Pagination Controls -->
-    {% if photos.pages > 1 %}
-    <div class="pagination-container">
-        <div class="pagination-info">
-            Showing {{ photos.items|length }} of {{ photos.total }} items
-        </div>
-        <div class="pagination-controls">
-            {% if photos.has_prev %}
-                <a href="{{ url_for('main.index', page=photos.prev_num) }}" class="pagination-btn">Previous</a>
-            {% else %}
-                <button class="pagination-btn" disabled>Previous</button>
-            {% endif %}
-            
-            {% for page_num in photos.iter_pages(left_edge=2, left_current=2, right_current=3, right_edge=2) %}
-                {% if page_num %}
-                    {% if page_num != photos.page %}
-                        <a href="{{ url_for('main.index', page=page_num) }}" class="pagination-btn">{{ page_num }}</a>
-                    {% else %}
-                        <button class="pagination-btn current" disabled>{{ page_num }}</button>
-                    {% endif %}
-                {% else %}
-                    <span class="pagination-ellipsis">...</span>
-                {% endif %}
-            {% endfor %}
-            
-            {% if photos.has_next %}
-                <a href="{{ url_for('main.index', page=photos.next_num) }}" class="pagination-btn">Next</a>
-            {% else %}
-                <button class="pagination-btn" disabled>Next</button>
-            {% endif %}
-        </div>
+    <!-- Loading indicator for lazy loading -->
+    <div id="loading-indicator" class="loading-indicator" style="display: none;">
+        <div class="loading-spinner"></div>
+        <p>Loading more photos...</p>
     </div>
-    {% endif %}
+    
+    <!-- End of content indicator -->
+    <div id="end-of-content" class="end-of-content" style="display: none;">
+        <p>You've reached the end of the gallery!</p>
+    </div>
+{% endif %}
 {% else %}
     <div class="empty-state">
         <h3>No photos or videos yet!</h3>
@@ -948,6 +962,16 @@
 
 {% block scripts %}
 <script>
+    // Lazy loading variables
+    let currentPage = 1;
+    let isLoading = false;
+    let hasMorePhotos = true;
+    let currentFilters = {
+        search: '{{ search_query|e }}',
+        media_type: '{{ media_filter|e }}',
+        tag: '{{ tag_filter|e }}'
+    };
+
     // Show modal on page load if needed
     {% if show_modal %}
     window.addEventListener('load', function() {
@@ -956,6 +980,238 @@
         }, 100);
     });
     {% endif %}
+
+    // Initialize lazy loading
+    document.addEventListener('DOMContentLoaded', function() {
+        initializeLazyLoading();
+    });
+
+    function initializeLazyLoading() {
+        // Set up intersection observer for infinite scroll
+        const loadingIndicator = document.getElementById('loading-indicator');
+        if (loadingIndicator) {
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting && !isLoading && hasMorePhotos) {
+                        loadMorePhotos();
+                    }
+                });
+            }, {
+                rootMargin: '100px' // Start loading 100px before reaching the indicator
+            });
+            
+            observer.observe(loadingIndicator);
+        }
+
+        // Handle filter form submission
+        const filterForm = document.getElementById('filter-form');
+        if (filterForm) {
+            filterForm.addEventListener('submit', function(e) {
+                e.preventDefault();
+                resetGallery();
+                applyFilters();
+            });
+        }
+
+        // Handle clear filters
+        const clearBtn = document.querySelector('.clear-btn');
+        if (clearBtn) {
+            clearBtn.addEventListener('click', function(e) {
+                e.preventDefault();
+                resetGallery();
+                clearFilters();
+            });
+        }
+    }
+
+    function resetGallery() {
+        const photoGrid = document.getElementById('photo-grid');
+        if (photoGrid) {
+            photoGrid.innerHTML = '';
+        }
+        currentPage = 1;
+        hasMorePhotos = true;
+        hideEndOfContent();
+        hideLoadingIndicator();
+    }
+
+    function applyFilters() {
+        const searchInput = document.querySelector('input[name="search"]');
+        const mediaTypeSelect = document.querySelector('select[name="media_type"]');
+        const tagSelect = document.querySelector('select[name="tag"]');
+
+        currentFilters = {
+            search: searchInput ? searchInput.value : '',
+            media_type: mediaTypeSelect ? mediaTypeSelect.value : '',
+            tag: tagSelect ? tagSelect.value : ''
+        };
+
+        loadMorePhotos();
+    }
+
+    function clearFilters() {
+        const searchInput = document.querySelector('input[name="search"]');
+        const mediaTypeSelect = document.querySelector('select[name="media_type"]');
+        const tagSelect = document.querySelector('select[name="tag"]');
+
+        if (searchInput) searchInput.value = '';
+        if (mediaTypeSelect) mediaTypeSelect.value = '';
+        if (tagSelect) tagSelect.value = '';
+
+        currentFilters = {
+            search: '',
+            media_type: '',
+            tag: ''
+        };
+
+        loadMorePhotos();
+    }
+
+    async function loadMorePhotos() {
+        if (isLoading || !hasMorePhotos) return;
+
+        isLoading = true;
+        showLoadingIndicator();
+
+        try {
+            const params = new URLSearchParams({
+                page: currentPage,
+                per_page: 12,
+                ...currentFilters
+            });
+
+            const response = await fetch(`/api/photos?${params}`);
+            const data = await response.json();
+
+            if (data.photos && data.photos.length > 0) {
+                appendPhotos(data.photos);
+                currentPage++;
+                hasMorePhotos = data.has_next;
+            } else {
+                hasMorePhotos = false;
+            }
+
+            if (!hasMorePhotos) {
+                showEndOfContent();
+            }
+        } catch (error) {
+            console.error('Error loading photos:', error);
+        } finally {
+            isLoading = false;
+            hideLoadingIndicator();
+        }
+    }
+
+    function appendPhotos(photos) {
+        const photoGrid = document.getElementById('photo-grid');
+        if (!photoGrid) return;
+
+        photos.forEach(photo => {
+            const photoCard = createPhotoCard(photo);
+            photoGrid.appendChild(photoCard);
+        });
+    }
+
+    function createPhotoCard(photo) {
+        const card = document.createElement('div');
+        card.className = 'photo-card';
+        card.onclick = () => window.location.href = photo.url;
+
+        const mediaType = photo.media_type;
+        const isPhotobooth = photo.is_photobooth;
+        const hasThumbnail = photo.thumbnail_filename;
+        const duration = photo.duration;
+
+        let imageSrc = '';
+        let imageAlt = '';
+
+        if (mediaType === 'video') {
+            imageSrc = hasThumbnail 
+                ? `/static/uploads/thumbnails/${photo.thumbnail_filename}`
+                : `data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='300'%3E%3Crect width='400' height='300' fill='%23f0f0f0'/%3E%3Ctext x='50%25' y='50%25' text-anchor='middle' dy='.3em' fill='%23999' font-family='sans-serif' font-size='16'%3EVideo Preview%3C/text%3E%3C/svg%3E`;
+            imageAlt = `Video by ${photo.uploader_name}`;
+        } else if (isPhotobooth) {
+            imageSrc = `/static/uploads/photobooth/${photo.filename}`;
+            imageAlt = `Photobooth by ${photo.uploader_name}`;
+        } else {
+            imageSrc = `/static/uploads/${photo.filename}`;
+            imageAlt = `Photo by ${photo.uploader_name}`;
+        }
+
+        const tags = photo.tags ? photo.tags.split(',').map(tag => tag.trim()).filter(tag => tag) : [];
+
+        card.innerHTML = `
+            <div class="photo-wrapper">
+                <img src="${imageSrc}" alt="${imageAlt}" loading="lazy">
+                ${mediaType === 'video' ? `
+                    <div class="video-indicator">
+                        <svg viewBox="0 0 24 24">
+                            <path d="M8,5.14V19.14L19,12.14L8,5.14Z"/>
+                        </svg>
+                    </div>
+                    ${duration ? `<div class="video-duration">${Math.floor(duration / 60)}:${String(duration % 60).padStart(2, '0')}</div>` : ''}
+                    <div class="media-type-badge">Video</div>
+                ` : ''}
+                ${isPhotobooth ? '<div class="photobooth-badge">Photobooth</div>' : ''}
+            </div>
+            <div class="photo-info">
+                <div class="photo-meta">
+                    <span class="uploader-name">${photo.uploader_name}</span>
+                    <span class="upload-date">${photo.upload_date}</span>
+                </div>
+                ${photo.description ? `<p class="description-preview">${photo.description}</p>` : ''}
+                ${tags.length > 0 ? `
+                    <div class="tags-container">
+                        ${tags.map(tag => `<span class="tag">${tag}</span>`).join('')}
+                    </div>
+                ` : ''}
+                <div class="photo-stats">
+                    <div class="stat-item">
+                        <svg viewBox="0 0 24 24">
+                            <path d="M12,21.35L10.55,20.03C5.4,15.36 2,12.27 2,8.5C2,5.41 4.42,3 7.5,3C9.24,3 10.91,3.81 12,5.08C13.09,3.81 14.76,3 16.5,3C19.58,3 22,5.41 22,8.5C22,12.27 18.6,15.36 13.45,20.03L12,21.35Z"/>
+                        </svg>
+                        <span>${photo.likes}</span>
+                    </div>
+                    <div class="stat-item">
+                        <svg viewBox="0 0 24 24">
+                            <path d="M9,22A1,1 0 0,1 8,21V18H4A2,2 0 0,1 2,16V4C2,2.89 2.9,2 4,2H20A2,2 0 0,1 22,4V16A2,2 0 0,1 20,18H13.9L10.2,21.71C10,21.9 9.75,22 9.5,22V22H9Z"/>
+                        </svg>
+                        <span>${photo.comments_count}</span>
+                    </div>
+                </div>
+            </div>
+        `;
+
+        return card;
+    }
+
+    function showLoadingIndicator() {
+        const indicator = document.getElementById('loading-indicator');
+        if (indicator) {
+            indicator.style.display = 'block';
+        }
+    }
+
+    function hideLoadingIndicator() {
+        const indicator = document.getElementById('loading-indicator');
+        if (indicator) {
+            indicator.style.display = 'none';
+        }
+    }
+
+    function showEndOfContent() {
+        const endContent = document.getElementById('end-of-content');
+        if (endContent) {
+            endContent.style.display = 'block';
+        }
+    }
+
+    function hideEndOfContent() {
+        const endContent = document.getElementById('end-of-content');
+        if (endContent) {
+            endContent.style.display = 'none';
+        }
+    }
 
     function closeWelcomeModal() {
         const modal = document.getElementById('welcomeModal');
