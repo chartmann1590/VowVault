@@ -632,6 +632,11 @@ class Slideshow {
         document.addEventListener('fullscreenchange', () => {
             this.handleFullscreenChange();
         });
+        
+        // Handle keyboard events
+        document.addEventListener('keydown', (event) => {
+            this.handleKeydown(event);
+        });
     }
     
     togglePlayPause() {
@@ -895,11 +900,42 @@ class Slideshow {
         this.showSlide(this.currentSlide);
     }
     
+    previousSlide() {
+        if (this.slides.length === 0) return;
+        
+        this.currentSlide = (this.currentSlide - 1 + this.slides.length) % this.slides.length;
+        this.showSlide(this.currentSlide);
+    }
+    
     startAutoRefresh() {
         if (this.settings.auto_refresh === 'true') {
             setInterval(() => {
                 this.loadActivities();
             }, parseInt(this.settings.refresh_interval));
+        }
+    }
+
+    handleKeydown(event) {
+        // Exit slideshow fullscreen mode on Escape key
+        if (event.key === 'Escape' && this.isFullscreen) {
+            this.toggleSlideshowFullscreen();
+        }
+        
+        // Space bar to toggle play/pause
+        if (event.key === ' ') {
+            event.preventDefault();
+            this.togglePlayPause();
+        }
+        
+        // Arrow keys for manual navigation
+        if (event.key === 'ArrowRight') {
+            event.preventDefault();
+            this.nextSlide();
+        }
+        
+        if (event.key === 'ArrowLeft') {
+            event.preventDefault();
+            this.previousSlide();
         }
     }
 }
