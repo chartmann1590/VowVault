@@ -863,8 +863,8 @@ def index():
     
     # Build query with filters using optimized approach
     photos_query = Photo.query.options(
-        db.joinedload(Photo.comments).load_only('id', 'content', 'created_at'),
-        db.joinedload(Photo.likes_rel).load_only('id', 'user_identifier')
+        db.joinedload(Photo.comments),
+        db.joinedload(Photo.likes_rel)
     )
     
     # Apply search filter with optimized LIKE queries

@@ -97,8 +97,8 @@ photos = Photo.query.all()  # N+1 query problem
 
 # After optimization
 photos = Photo.query.options(
-    db.joinedload(Photo.comments).load_only('id', 'content', 'created_at'),
-    db.joinedload(Photo.likes_rel).load_only('id', 'user_identifier')
+    db.joinedload(Photo.comments),
+    db.joinedload(Photo.likes_rel)
 ).order_by(Photo.upload_date.desc()).paginate(page=page, per_page=20)
 ```
 

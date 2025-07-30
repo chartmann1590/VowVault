@@ -170,6 +170,82 @@ def migrate_database():
         conn.commit()
         print("✅ Indexes created successfully!")
 
+        # --- Database Optimization Indexes ---
+        print("Creating database optimization indexes...")
+        
+        # Photo table indexes for thousands of photos
+        photo_indexes = [
+            "CREATE INDEX IF NOT EXISTS idx_photo_upload_date ON photo(upload_date DESC)",
+            "CREATE INDEX IF NOT EXISTS idx_photo_media_type ON photo(media_type)",
+            "CREATE INDEX IF NOT EXISTS idx_photo_is_photobooth ON photo(is_photobooth)",
+            "CREATE INDEX IF NOT EXISTS idx_photo_likes ON photo(likes DESC)",
+            "CREATE INDEX IF NOT EXISTS idx_photo_uploader_name ON photo(uploader_name)",
+            "CREATE INDEX IF NOT EXISTS idx_photo_description ON photo(description)",
+            "CREATE INDEX IF NOT EXISTS idx_photo_tags ON photo(tags)",
+            "CREATE INDEX IF NOT EXISTS idx_photo_media_upload ON photo(media_type, upload_date DESC)",
+            "CREATE INDEX IF NOT EXISTS idx_photo_photobooth_upload ON photo(is_photobooth, upload_date DESC)",
+            "CREATE INDEX IF NOT EXISTS idx_photo_likes_upload ON photo(likes DESC, upload_date DESC)"
+        ]
+        
+        # Comment and Like table indexes
+        comment_like_indexes = [
+            "CREATE INDEX IF NOT EXISTS idx_comment_photo_id ON comment(photo_id)",
+            "CREATE INDEX IF NOT EXISTS idx_comment_created_at ON comment(created_at DESC)",
+            "CREATE INDEX IF NOT EXISTS idx_like_photo_id ON like(photo_id)",
+            "CREATE INDEX IF NOT EXISTS idx_like_user_identifier ON like(user_identifier)",
+            "CREATE INDEX IF NOT EXISTS idx_like_photo_user ON like(photo_id, user_identifier)"
+        ]
+        
+        # Message and Guestbook indexes
+        message_guestbook_indexes = [
+            "CREATE INDEX IF NOT EXISTS idx_message_created_at ON message(created_at DESC)",
+            "CREATE INDEX IF NOT EXISTS idx_message_is_hidden ON message(is_hidden)",
+            "CREATE INDEX IF NOT EXISTS idx_message_author ON message(author_name)",
+            "CREATE INDEX IF NOT EXISTS idx_guestbook_created_at ON guestbook_entry(created_at DESC)",
+            "CREATE INDEX IF NOT EXISTS idx_guestbook_name ON guestbook_entry(name)"
+        ]
+        
+        # Notification indexes
+        notification_indexes = [
+            "CREATE INDEX IF NOT EXISTS idx_notification_user_created ON notification(user_identifier, created_at DESC)",
+            "CREATE INDEX IF NOT EXISTS idx_notification_is_read ON notification(is_read)",
+            "CREATE INDEX IF NOT EXISTS idx_notification_type ON notification(notification_type)",
+            "CREATE INDEX IF NOT EXISTS idx_notification_user_identifier ON notification_user(user_identifier)",
+            "CREATE INDEX IF NOT EXISTS idx_notification_user_enabled ON notification_user(notifications_enabled)"
+        ]
+        
+        # Settings and log indexes
+        other_indexes = [
+            "CREATE INDEX IF NOT EXISTS idx_settings_key ON settings(key)",
+            "CREATE INDEX IF NOT EXISTS idx_email_log_received_at ON email_log(received_at DESC)",
+            "CREATE INDEX IF NOT EXISTS idx_email_log_status ON email_log(status)",
+            "CREATE INDEX IF NOT EXISTS idx_immich_sync_date ON immich_sync_log(sync_date DESC)",
+            "CREATE INDEX IF NOT EXISTS idx_immich_sync_status ON immich_sync_log(status)"
+        ]
+        
+        # Create all indexes
+        all_indexes = photo_indexes + comment_like_indexes + message_guestbook_indexes + notification_indexes + other_indexes
+        
+        for index_sql in all_indexes:
+            try:
+                cursor.execute(index_sql)
+                print(f"✅ Created index: {index_sql.split('IF NOT EXISTS ')[1].split(' ON ')[0]}")
+            except Exception as e:
+                print(f"⚠️  Warning creating index: {e}")
+        
+        conn.commit()
+        print("✅ Database optimization indexes created successfully!")
+        
+        # Analyze database for better query planning
+        print("📈 Analyzing database for query optimization...")
+        cursor.execute("ANALYZE")
+        print("✅ Database analysis completed!")
+        
+        # Update database statistics
+        print("📊 Updating database statistics...")
+        cursor.execute("PRAGMA optimize")
+        print("✅ Database statistics updated!")
+
     except Exception as e:
         print(f"❌ Error during migration: {e}")
         conn.rollback()
