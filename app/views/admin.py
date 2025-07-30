@@ -301,9 +301,8 @@ def admin_photobooth():
         return "Unauthorized", 401
     
     # Get photobooth settings
-    border_settings = {
-        'border_url': Settings.get('photobooth_border_url', '')
-    }
+    border_settings_json = Settings.get('photobooth_border', '{}')
+    border_settings = json.loads(border_settings_json) if border_settings_json else {}
     
     # Get photobooth statistics
     photobooth_count = Photo.query.filter_by(is_photobooth=True).count()
@@ -738,6 +737,10 @@ def upload_border():
         timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
         filename = f"border_{timestamp}_{filename}"
         filepath = os.path.join(current_app.config['BORDER_FOLDER'], filename)
+        
+        # Ensure border folder exists
+        os.makedirs(current_app.config['BORDER_FOLDER'], exist_ok=True)
+        
         file.save(filepath)
         
         # Update settings
@@ -753,6 +756,35 @@ def upload_border():
         })
     
     return jsonify({'error': 'Invalid file type'}), 400
+
+@admin_bp.route('/remove-border', methods=['POST'])
+def remove_border():
+    # Check for SSO session first
+    sso_user_email = session.get('sso_user_email')
+    sso_user_domain = session.get('sso_user_domain')
+    admin_key = request.args.get('key', '')
+    
+    # Verify admin access
+    if not verify_admin_access(admin_key, sso_user_email, sso_user_domain):
+        return "Unauthorized", 401
+    
+    try:
+        # Get current border settings
+        border_settings = Settings.get('photobooth_border', '{}')
+        border_settings = json.loads(border_settings) if border_settings else {}
+        
+        # Remove file if exists
+        if border_settings.get('filename'):
+            filepath = os.path.join(current_app.config['BORDER_FOLDER'], border_settings['filename'])
+            if os.path.exists(filepath):
+                os.remove(filepath)
+            
+            # Clear settings
+            Settings.set('photobooth_border', '{}')
+        
+        return jsonify({'success': True, 'message': 'Border removed successfully'})
+    except Exception as e:
+        return jsonify({'error': f'Error removing border: {str(e)}'}), 500
 
 @admin_bp.route('/upload-couple-photo', methods=['POST'])
 def upload_couple_photo():

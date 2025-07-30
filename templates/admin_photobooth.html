@@ -288,6 +288,9 @@
                             <a href="{{ url_for('photobooth.photobooth') }}" target="_blank" class="btn btn-secondary" style="margin-top: 1rem;">
                                 View Photobooth
                             </a>
+                            <button type="button" class="btn btn-secondary" onclick="removeBorder()" style="margin-top: 0.5rem;">
+                                Remove Border
+                            </button>
                         </p>
                     {% else %}
                         <div class="no-border">
@@ -316,6 +319,24 @@
                         <div style="background: #f9f5f0; padding: 1rem; border-radius: 10px; text-align: center;">
                             <div style="font-size: 2rem; font-weight: bold; color: #8b7355;">{{ recent_photobooth }}</div>
                             <div style="color: #6b5d54; font-size: 0.9rem;">Last 7 Days</div>
+                        </div>
+                    </div>
+                    
+                    <div style="margin-top: 1.5rem;">
+                        <h5 style="color: #8b7355; margin-bottom: 1rem;">Quick Actions</h5>
+                        <div style="display: flex; gap: 1rem; flex-wrap: wrap;">
+                            <a href="{{ url_for('photobooth.photobooth') }}" target="_blank" class="btn btn-primary">
+                                <svg viewBox="0 0 24 24" width="20" height="20">
+                                    <path d="M4,4H7L9,2H15L17,4H20A2,2 0 0,1 22,6V18A2,2 0 0,1 20,20H4A2,2 0 0,1 2,18V6A2,2 0 0,1 4,4M12,7A5,5 0 0,0 7,12A5,5 0 0,0 12,17A5,5 0 0,0 17,12A5,5 0 0,0 12,7M12,9A3,3 0 0,1 15,12A3,3 0 0,1 12,15A3,3 0 0,1 9,12A3,3 0 0,1 12,9Z" fill="currentColor"/>
+                                </svg>
+                                Test Photobooth
+                            </a>
+                            <a href="/admin/photos?key=wedding2024&filter=photobooth" class="btn btn-secondary">
+                                <svg viewBox="0 0 24 24" width="20" height="20">
+                                    <path d="M8.5,13.5L11,16.5L14.5,12L19,18H5M21,19V5C21,3.89 20.1,3 19,3H5A2,2 0 0,0 3,5V19A2,2 0 0,0 5,21H19A2,2 0 0,0 21,19Z" fill="currentColor"/>
+                                </svg>
+                                View All Photos
+                            </a>
                         </div>
                     </div>
                 </div>
@@ -359,6 +380,33 @@
             </div>
         </div>
     </div>
+
+    <!-- Border Preview Section -->
+    {% if border_settings.get('border_url') %}
+    <div class="section-card">
+        <div class="section-header">
+            <h3>Border Preview</h3>
+        </div>
+        <div class="section-content">
+            <div style="text-align: center;">
+                <h4 style="color: #8b7355; margin-bottom: 1.5rem;">How Your Border Will Look</h4>
+                <div style="position: relative; display: inline-block; max-width: 100%;">
+                    <div style="width: 320px; height: 180px; background: #f0f0f0; border-radius: 10px; position: relative; overflow: hidden; margin: 0 auto;">
+                        <img src="{{ border_settings.get('border_url') }}" 
+                             alt="Border Preview" 
+                             style="width: 100%; height: 100%; object-fit: contain;">
+                        <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background: rgba(255,255,255,0.8); padding: 0.5rem; border-radius: 5px; font-size: 0.8rem; color: #666;">
+                            Photo Area
+                        </div>
+                    </div>
+                    <p style="color: #666; font-size: 0.9rem; margin-top: 1rem;">
+                        This is how your border will appear over photos in the photobooth
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
 </div>
 {% endblock %}
 
@@ -411,6 +459,46 @@
         
         // Reset the input
         input.value = '';
+    }
+
+    // Remove border functionality
+    async function removeBorder() {
+        if (!confirm('Are you sure you want to remove the current border?')) {
+            return;
+        }
+        
+        const urlParams = new URLSearchParams(window.location.search);
+        const key = urlParams.get('key');
+        
+        try {
+            const response = await fetch(`/admin/remove-border?key=${key}`, {
+                method: 'POST'
+            });
+            
+            const data = await response.json();
+            
+            if (data.success) {
+                // Update the current border display
+                const currentBorderDiv = document.querySelector('.current-border');
+                currentBorderDiv.innerHTML = `
+                    <h4 style="color: #8b7355; margin-bottom: 1.5rem;">Current Border</h4>
+                    <div class="no-border">
+                        No border uploaded yet
+                    </div>
+                `;
+                
+                const successMessage = document.getElementById('successMessage');
+                successMessage.textContent = 'Border removed successfully!';
+                successMessage.style.display = 'block';
+                setTimeout(() => {
+                    successMessage.style.display = 'none';
+                }, 3000);
+            } else {
+                alert('Error removing border: ' + (data.error || 'Unknown error'));
+            }
+        } catch (error) {
+            alert('Error removing border: ' + error.message);
+        }
     }
 </script>
 {% endblock %} 
