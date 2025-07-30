@@ -1,0 +1,571 @@
+{% extends "base.html" %}
+
+{% block title %}Live Event Slideshow{% endblock %}
+
+{% block content %}
+<div class="slideshow-container">
+    <div class="slideshow-header">
+        <h1>Live Event Activity</h1>
+        <p class="slideshow-subtitle">Real-time updates from today's celebration</p>
+        <div class="slideshow-controls">
+            <button id="playPauseBtn" class="control-btn">
+                <span class="play-icon">▶</span>
+                <span class="pause-icon" style="display: none;">⏸</span>
+            </button>
+            <button id="fullscreenBtn" class="control-btn">⛶</button>
+            <div class="refresh-indicator">
+                <span id="lastUpdate">Updating...</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="slideshow-content">
+        <div id="slideshow" class="slideshow-display">
+            <div class="loading-message">
+                <div class="spinner"></div>
+                <p>Loading today's activities...</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="slideshow-info">
+        <div class="info-panel">
+            <h3>Today's Highlights</h3>
+            <div class="stats">
+                <div class="stat-item">
+                    <span class="stat-number" id="photoCount">0</span>
+                    <span class="stat-label">Photos</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-number" id="guestbookCount">0</span>
+                    <span class="stat-label">Guestbook Entries</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-number" id="messageCount">0</span>
+                    <span class="stat-label">Messages</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.slideshow-container {
+    min-height: 100vh;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    display: flex;
+    flex-direction: column;
+    position: relative;
+    overflow: hidden;
+}
+
+.slideshow-header {
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(10px);
+    padding: 2rem;
+    text-align: center;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+    z-index: 10;
+}
+
+.slideshow-header h1 {
+    font-size: 3rem;
+    color: #2c3e50;
+    margin-bottom: 0.5rem;
+    font-weight: 700;
+}
+
+.slideshow-subtitle {
+    font-size: 1.2rem;
+    color: #7f8c8d;
+    margin-bottom: 2rem;
+}
+
+.slideshow-controls {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 1rem;
+}
+
+.control-btn {
+    background: #3498db;
+    color: white;
+    border: none;
+    padding: 0.75rem 1.5rem;
+    border-radius: 25px;
+    font-size: 1.1rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 15px rgba(52, 152, 219, 0.3);
+}
+
+.control-btn:hover {
+    background: #2980b9;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(52, 152, 219, 0.4);
+}
+
+.refresh-indicator {
+    background: rgba(46, 204, 113, 0.1);
+    padding: 0.5rem 1rem;
+    border-radius: 20px;
+    font-size: 0.9rem;
+    color: #27ae60;
+}
+
+.slideshow-content {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 2rem;
+    position: relative;
+}
+
+.slideshow-display {
+    width: 100%;
+    max-width: 1200px;
+    height: 70vh;
+    background: rgba(255, 255, 255, 0.95);
+    border-radius: 20px;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+    overflow: hidden;
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.slide {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    transition: opacity 1s ease-in-out;
+    padding: 2rem;
+    box-sizing: border-box;
+}
+
+.slide.active {
+    opacity: 1;
+}
+
+.slide-content {
+    text-align: center;
+    max-width: 90%;
+}
+
+.slide-photo {
+    max-width: 100%;
+    max-height: 60vh;
+    border-radius: 15px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+    margin-bottom: 1rem;
+}
+
+.slide-video {
+    max-width: 100%;
+    max-height: 60vh;
+    border-radius: 15px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+    margin-bottom: 1rem;
+}
+
+.slide-info {
+    background: rgba(255, 255, 255, 0.9);
+    padding: 1.5rem;
+    border-radius: 15px;
+    margin-top: 1rem;
+    backdrop-filter: blur(10px);
+}
+
+.slide-title {
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: #2c3e50;
+    margin-bottom: 0.5rem;
+}
+
+.slide-description {
+    font-size: 1.1rem;
+    color: #7f8c8d;
+    margin-bottom: 0.5rem;
+}
+
+.slide-meta {
+    font-size: 0.9rem;
+    color: #95a5a6;
+}
+
+.slide-guestbook {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 2rem;
+    border-radius: 15px;
+    text-align: center;
+    max-width: 600px;
+    margin: 0 auto;
+}
+
+.slide-guestbook .guestbook-name {
+    font-size: 1.8rem;
+    font-weight: 700;
+    margin-bottom: 1rem;
+}
+
+.slide-guestbook .guestbook-message {
+    font-size: 1.2rem;
+    line-height: 1.6;
+    margin-bottom: 1rem;
+}
+
+.slide-guestbook .guestbook-location {
+    font-size: 1rem;
+    opacity: 0.8;
+}
+
+.slide-message {
+    background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+    color: white;
+    padding: 2rem;
+    border-radius: 15px;
+    text-align: center;
+    max-width: 600px;
+    margin: 0 auto;
+}
+
+.slide-message .message-author {
+    font-size: 1.5rem;
+    font-weight: 700;
+    margin-bottom: 1rem;
+}
+
+.slide-message .message-content {
+    font-size: 1.2rem;
+    line-height: 1.6;
+}
+
+.loading-message {
+    text-align: center;
+    color: #7f8c8d;
+}
+
+.spinner {
+    width: 50px;
+    height: 50px;
+    border: 4px solid #f3f3f3;
+    border-top: 4px solid #3498db;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    margin: 0 auto 1rem;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+.slideshow-info {
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(10px);
+    padding: 2rem;
+    box-shadow: 0 -4px 20px rgba(0,0,0,0.1);
+}
+
+.info-panel h3 {
+    text-align: center;
+    color: #2c3e50;
+    margin-bottom: 1.5rem;
+    font-size: 1.5rem;
+}
+
+.stats {
+    display: flex;
+    justify-content: space-around;
+    max-width: 600px;
+    margin: 0 auto;
+}
+
+.stat-item {
+    text-align: center;
+}
+
+.stat-number {
+    display: block;
+    font-size: 2.5rem;
+    font-weight: 700;
+    color: #3498db;
+}
+
+.stat-label {
+    font-size: 0.9rem;
+    color: #7f8c8d;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+@media (max-width: 768px) {
+    .slideshow-header h1 {
+        font-size: 2rem;
+    }
+    
+    .slideshow-display {
+        height: 50vh;
+    }
+    
+    .stats {
+        flex-direction: column;
+        gap: 1rem;
+    }
+    
+    .slide-guestbook,
+    .slide-message {
+        padding: 1.5rem;
+    }
+}
+</style>
+
+<script>
+class Slideshow {
+    constructor() {
+        this.currentSlide = 0;
+        this.slides = [];
+        this.isPlaying = true;
+        this.interval = null;
+        this.settings = {
+            slideshow_interval: 5000,
+            transition_effect: 'fade',
+            auto_refresh: true,
+            refresh_interval: 900000
+        };
+        
+        this.init();
+    }
+    
+    async init() {
+        await this.loadSettings();
+        this.setupEventListeners();
+        this.startSlideshow();
+        this.startAutoRefresh();
+    }
+    
+    async loadSettings() {
+        try {
+            const response = await fetch('/api/slideshow/settings');
+            const settings = await response.json();
+            this.settings = { ...this.settings, ...settings };
+        } catch (error) {
+            console.error('Error loading settings:', error);
+        }
+    }
+    
+    setupEventListeners() {
+        const playPauseBtn = document.getElementById('playPauseBtn');
+        const fullscreenBtn = document.getElementById('fullscreenBtn');
+        
+        playPauseBtn.addEventListener('click', () => this.togglePlayPause());
+        fullscreenBtn.addEventListener('click', () => this.toggleFullscreen());
+    }
+    
+    togglePlayPause() {
+        this.isPlaying = !this.isPlaying;
+        const playIcon = document.querySelector('.play-icon');
+        const pauseIcon = document.querySelector('.pause-icon');
+        
+        if (this.isPlaying) {
+            playIcon.style.display = 'none';
+            pauseIcon.style.display = 'inline';
+            this.startSlideshow();
+        } else {
+            playIcon.style.display = 'inline';
+            pauseIcon.style.display = 'none';
+            this.stopSlideshow();
+        }
+    }
+    
+    toggleFullscreen() {
+        if (!document.fullscreenElement) {
+            document.documentElement.requestFullscreen();
+        } else {
+            document.exitFullscreen();
+        }
+    }
+    
+    startSlideshow() {
+        if (this.interval) clearInterval(this.interval);
+        this.interval = setInterval(() => {
+            this.nextSlide();
+        }, parseInt(this.settings.slideshow_interval));
+    }
+    
+    stopSlideshow() {
+        if (this.interval) {
+            clearInterval(this.interval);
+            this.interval = null;
+        }
+    }
+    
+    async loadActivities() {
+        try {
+            const response = await fetch('/api/slideshow/activities');
+            const data = await response.json();
+            this.slides = data.activities;
+            this.updateStats(data.activities);
+            this.updateLastUpdate();
+            this.renderSlides();
+        } catch (error) {
+            console.error('Error loading activities:', error);
+        }
+    }
+    
+    updateStats(activities) {
+        const photoCount = activities.filter(a => a.type === 'photo').length;
+        const guestbookCount = activities.filter(a => a.type === 'guestbook').length;
+        const messageCount = activities.filter(a => a.type === 'message').length;
+        
+        document.getElementById('photoCount').textContent = photoCount;
+        document.getElementById('guestbookCount').textContent = guestbookCount;
+        document.getElementById('messageCount').textContent = messageCount;
+    }
+    
+    updateLastUpdate() {
+        const now = new Date();
+        const timeString = now.toLocaleTimeString();
+        document.getElementById('lastUpdate').textContent = `Last updated: ${timeString}`;
+    }
+    
+    renderSlides() {
+        const slideshow = document.getElementById('slideshow');
+        slideshow.innerHTML = '';
+        
+        if (this.slides.length === 0) {
+            slideshow.innerHTML = `
+                <div class="slide active">
+                    <div class="slide-content">
+                        <h2>No recent activity</h2>
+                        <p>Check back soon for updates from the celebration!</p>
+                    </div>
+                </div>
+            `;
+            return;
+        }
+        
+        this.slides.forEach((slide, index) => {
+            const slideElement = this.createSlideElement(slide, index);
+            slideshow.appendChild(slideElement);
+        });
+        
+        this.showSlide(0);
+    }
+    
+    createSlideElement(slide, index) {
+        const slideDiv = document.createElement('div');
+        slideDiv.className = 'slide';
+        slideDiv.dataset.index = index;
+        
+        let content = '';
+        
+        switch (slide.type) {
+            case 'photo':
+                content = this.createPhotoSlide(slide);
+                break;
+            case 'guestbook':
+                content = this.createGuestbookSlide(slide);
+                break;
+            case 'message':
+                content = this.createMessageSlide(slide);
+                break;
+        }
+        
+        slideDiv.innerHTML = content;
+        return slideDiv;
+    }
+    
+    createPhotoSlide(slide) {
+        const content = slide.content;
+        const isVideo = content.media_type === 'video';
+        const mediaElement = isVideo ? 
+            `<video class="slide-video" controls autoplay muted loop>
+                <source src="/static/uploads/${content.filename}" type="video/mp4">
+                Your browser does not support the video tag.
+             </video>` :
+            `<img src="/static/uploads/${content.filename}" alt="Photo" class="slide-photo">`;
+        
+        return `
+            <div class="slide-content">
+                ${mediaElement}
+                <div class="slide-info">
+                    <div class="slide-title">New ${content.is_photobooth ? 'Photobooth ' : ''}${isVideo ? 'Video' : 'Photo'}</div>
+                    <div class="slide-description">${content.uploader_name}</div>
+                    ${content.description ? `<div class="slide-description">${content.description}</div>` : ''}
+                    <div class="slide-meta">${new Date(content.upload_date).toLocaleString()}</div>
+                </div>
+            </div>
+        `;
+    }
+    
+    createGuestbookSlide(slide) {
+        const content = slide.content;
+        return `
+            <div class="slide-content">
+                <div class="slide-guestbook">
+                    <div class="guestbook-name">${content.name}</div>
+                    <div class="guestbook-message">${content.message}</div>
+                    ${content.location ? `<div class="guestbook-location">📍 ${content.location}</div>` : ''}
+                    ${content.photo_filename ? `<img src="/static/uploads/guestbook/${content.photo_filename}" alt="Guest photo" style="max-width: 200px; border-radius: 10px; margin-top: 1rem;">` : ''}
+                </div>
+            </div>
+        `;
+    }
+    
+    createMessageSlide(slide) {
+        const content = slide.content;
+        return `
+            <div class="slide-content">
+                <div class="slide-message">
+                    <div class="message-author">${content.author_name}</div>
+                    <div class="message-content">${content.content}</div>
+                    ${content.photo_filename ? `<img src="/static/uploads/messages/${content.photo_filename}" alt="Message photo" style="max-width: 200px; border-radius: 10px; margin-top: 1rem;">` : ''}
+                </div>
+            </div>
+        `;
+    }
+    
+    showSlide(index) {
+        const slides = document.querySelectorAll('.slide');
+        slides.forEach(slide => slide.classList.remove('active'));
+        
+        if (slides[index]) {
+            slides[index].classList.add('active');
+        }
+    }
+    
+    nextSlide() {
+        if (this.slides.length === 0) return;
+        
+        this.currentSlide = (this.currentSlide + 1) % this.slides.length;
+        this.showSlide(this.currentSlide);
+    }
+    
+    startAutoRefresh() {
+        if (this.settings.auto_refresh === 'true') {
+            setInterval(() => {
+                this.loadActivities();
+            }, parseInt(this.settings.refresh_interval));
+        }
+    }
+}
+
+// Initialize slideshow when page loads
+document.addEventListener('DOMContentLoaded', () => {
+    const slideshow = new Slideshow();
+    slideshow.loadActivities();
+});
+</script>
+{% endblock %} 

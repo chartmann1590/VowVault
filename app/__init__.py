@@ -71,6 +71,7 @@ def create_app(config_name='default'):
     from app.views.photobooth import photobooth_bp
     from app.views.upload import upload_bp
     from app.views.photo_of_day import photo_of_day_bp
+    from app.views.slideshow import slideshow_bp
 
     app.register_blueprint(main_bp)
     app.register_blueprint(admin_bp, url_prefix='/admin')
@@ -81,6 +82,7 @@ def create_app(config_name='default'):
     app.register_blueprint(photobooth_bp, url_prefix='/photobooth')
     app.register_blueprint(upload_bp, url_prefix='/upload')
     app.register_blueprint(photo_of_day_bp)
+    app.register_blueprint(slideshow_bp)
 
     # Register error handlers
     @app.errorhandler(413)

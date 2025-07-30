@@ -268,6 +268,70 @@ def migrate_database():
         conn.commit()
         print("✅ CAPTCHA settings migration completed!")
 
+        # --- Slideshow Tables Migration ---
+        print("🎬 Creating slideshow tables...")
+        
+        # Create slideshow_settings table
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS slideshow_settings (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                key VARCHAR(100) UNIQUE NOT NULL,
+                value TEXT NOT NULL,
+                updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+            )
+        """)
+        
+        # Create slideshow_activity table
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS slideshow_activity (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                activity_type VARCHAR(50) NOT NULL,
+                content_id INTEGER NOT NULL,
+                content_summary TEXT,
+                created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+                is_active BOOLEAN DEFAULT TRUE
+            )
+        """)
+        
+        # Add default slideshow settings
+        slideshow_settings = [
+            ('slideshow_interval', '5000'),
+            ('transition_effect', 'fade'),
+            ('show_photos', 'true'),
+            ('show_guestbook', 'true'),
+            ('show_messages', 'true'),
+            ('auto_refresh', 'true'),
+            ('refresh_interval', '900000'),
+            ('max_activities', '50'),
+            ('time_range_hours', '24')
+        ]
+        
+        for setting_key, default_value in slideshow_settings:
+            cursor.execute("SELECT value FROM slideshow_settings WHERE key = ?", (setting_key,))
+            if not cursor.fetchone():
+                cursor.execute("INSERT INTO slideshow_settings (key, value) VALUES (?, ?)", (setting_key, default_value))
+                print(f"✅ Added slideshow setting: {setting_key}")
+            else:
+                print(f"✅ Slideshow setting already exists: {setting_key}")
+        
+        # Create indexes for slideshow tables
+        slideshow_indexes = [
+            "CREATE INDEX IF NOT EXISTS idx_slideshow_settings_key ON slideshow_settings(key)",
+            "CREATE INDEX IF NOT EXISTS idx_slideshow_activity_type ON slideshow_activity(activity_type)",
+            "CREATE INDEX IF NOT EXISTS idx_slideshow_activity_created ON slideshow_activity(created_at DESC)",
+            "CREATE INDEX IF NOT EXISTS idx_slideshow_activity_active ON slideshow_activity(is_active)"
+        ]
+        
+        for index_sql in slideshow_indexes:
+            try:
+                cursor.execute(index_sql)
+                print(f"✅ Created slideshow index: {index_sql.split('IF NOT EXISTS ')[1].split(' ON ')[0]}")
+            except Exception as e:
+                print(f"⚠️  Warning creating slideshow index: {e}")
+        
+        conn.commit()
+        print("✅ Slideshow tables migration completed!")
+
     except Exception as e:
         print(f"❌ Error during migration: {e}")
         conn.rollback()

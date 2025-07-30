@@ -76,6 +76,7 @@ The application has been completely refactored from a monolithic structure to a 
 - 📖 **Virtual Guestbook** - Sign digital guestbook with photos
 - 📱 **PWA Support** - Install as native app on mobile devices
 - 🏆 **Photo of the Day** - Vote for daily featured photos with automatic candidate selection based on popularity
+- 🎬 **Live Event Slideshow** - Real-time slideshow of all wedding activities with automatic updates
 
 ### For Admins
 - 🔐 **Admin Dashboard** - Comprehensive management tools
