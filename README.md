@@ -35,7 +35,16 @@ A beautiful, self-hosted wedding photo gallery application that allows wedding g
 
 ## 🔄 Recent Updates
 
-### Major Refactoring (Latest)
+### Lazy Loading Gallery (Latest)
+Added smooth infinite scroll for large photo galleries to improve performance and user experience:
+
+- ✅ **Infinite Scroll**: Smooth scrolling that loads photos as you browse
+- ✅ **Performance Optimization**: Faster initial load times and reduced server load
+- ✅ **Loading Indicators**: Beautiful animated spinners while photos load
+- ✅ **Filter Integration**: All search and filter features work seamlessly
+- ✅ **Mobile Optimized**: Perfect performance on all devices
+
+### Major Refactoring
 The application has been completely refactored from a monolithic structure to a modern, modular Flask application:
 
 - ✅ **Modular Architecture**: Converted from single `app.py` (3,000+ lines) to organized Blueprint structure
@@ -58,6 +67,7 @@ The application has been completely refactored from a monolithic structure to a 
 ### For Guests
 - 📸 **Easy Photo/Video Upload** - No login required, drag-and-drop interface
 - 🔍 **Search & Tagging** - Find photos quickly with search and custom tags
+- ⚡ **Lazy Loading Gallery** - Smooth infinite scroll for large photo collections
 - 📧 **Email Photo Upload** - Send photos directly via email
 - 🤳 **Virtual Photobooth** - Take photos with custom wedding borders
 - ❤️ **Like & Comment** - Interact with photos and videos

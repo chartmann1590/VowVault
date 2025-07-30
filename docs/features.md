@@ -18,6 +18,7 @@ Find photos quickly with powerful search and tagging features. Organize and disc
 - **Tag Filter:** Filter by specific tags like "ceremony", "reception", "dance"
 - **Real-time Results:** Instant search results as you type
 - **Mobile Optimized:** Responsive search interface for all devices
+- **Lazy Loading:** Smooth infinite scroll for large galleries
 
 **Tagging System:**
 - **Custom Tags:** Add tags when uploading (e.g., "ceremony", "reception", "cake")
@@ -35,6 +36,24 @@ Find photos quickly with powerful search and tagging features. Organize and disc
 - `friends` - Friend group photos
 - `decorations` - Wedding decorations and venue
 - `food` - Catering and meal photos
+
+### ⚡ Lazy Loading Gallery
+Experience smooth, fast browsing with intelligent lazy loading for large photo galleries. No more waiting for all photos to load at once.
+
+**Performance Features:**
+- **Infinite Scroll:** Smooth scrolling that loads photos as you browse
+- **Smart Loading:** Only loads photos when needed, reducing initial page load time
+- **Loading Indicators:** Beautiful animated spinners while photos load
+- **End-of-Content Detection:** Know when you've reached the end of the gallery
+- **Filter Integration:** All search and filter features work seamlessly with lazy loading
+- **Mobile Optimized:** Perfect performance on all devices
+
+**Technical Benefits:**
+- **Faster Initial Load:** Only loads 12 photos initially instead of all photos
+- **Reduced Server Load:** Efficient API calls that load photos in batches
+- **Better Memory Usage:** Optimized for large galleries with hundreds of photos
+- **Smooth UX:** No page breaks or pagination buttons to interrupt browsing
+- **Real-time Updates:** New photos appear automatically as you scroll
 
 ### 📧 Email Photo Upload
 Send photos directly via email to automatically add them to the gallery. Perfect for guests who prefer email over web uploads.
