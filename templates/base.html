@@ -944,7 +944,7 @@
             }
             
             // Try to register Service Worker
-            navigator.serviceWorker.register('/static/sw.js', {
+            navigator.serviceWorker.register('/sw.js', {
                 scope: '/'
             })
                 .then((registration) => {
@@ -963,22 +963,34 @@
                     }
                 })
                 .catch((registrationError) => {
-                    console.error('SW registration failed: ', registrationError);
+                    console.error('SW registration failed with /sw.js: ', registrationError);
                     
-                    // Provide helpful error message
-                    if (registrationError.name === 'SecurityError') {
-                        console.error('PWA Debug: Security error - this usually means HTTPS is required for Service Workers');
-                        console.error('PWA Debug: Try accessing the site via HTTPS or localhost');
-                        console.error('PWA Debug: For development, you can use HTTP on localhost or 10.0.0.x addresses');
-                    } else if (registrationError.name === 'NetworkError') {
-                        console.error('PWA Debug: Network error - check if the Service Worker file exists');
-                    } else if (registrationError.name === 'TypeError') {
-                        console.error('PWA Debug: TypeError - check if the Service Worker file is valid JavaScript');
-                    }
-                    
-                    // Fallback: Try to initialize push notifications without Service Worker
-                    console.log('PWA Debug: Attempting to initialize notifications without Service Worker...');
-                    initializeNotificationsWithoutSW();
+                    // Try fallback path
+                    console.log('PWA Debug: Trying fallback path /static/sw.js...');
+                    navigator.serviceWorker.register('/static/sw.js', {
+                        scope: '/'
+                    })
+                        .then((registration) => {
+                            console.log('SW registered successfully with fallback: ', registration);
+                        })
+                        .catch((fallbackError) => {
+                            console.error('SW registration failed with fallback: ', fallbackError);
+                            
+                            // Provide helpful error message
+                            if (fallbackError.name === 'SecurityError') {
+                                console.error('PWA Debug: Security error - this usually means HTTPS is required for Service Workers');
+                                console.error('PWA Debug: Try accessing the site via HTTPS or localhost');
+                                console.error('PWA Debug: For development, you can use HTTP on localhost or 10.0.0.x addresses');
+                            } else if (fallbackError.name === 'NetworkError') {
+                                console.error('PWA Debug: Network error - check if the Service Worker file exists');
+                            } else if (fallbackError.name === 'TypeError') {
+                                console.error('PWA Debug: TypeError - check if the Service Worker file is valid JavaScript');
+                            }
+                            
+                            // Fallback: Try to initialize push notifications without Service Worker
+                            console.log('PWA Debug: Attempting to initialize notifications without Service Worker...');
+                            initializeNotificationsWithoutSW();
+                        });
                 });
         });
     } else {
