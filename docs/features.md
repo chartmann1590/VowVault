@@ -100,7 +100,7 @@ Install as a native app on mobile devices for quick access. Get the full app exp
 - Native app experience
 
 ### 🏆 Photo of the Day
-Vote for daily featured photos and see which moments are most loved by your guests. Admins can select photos to be featured each day, and guests can vote once per day.
+Vote for daily featured photos and see which moments are most loved by your guests. Admins can select photos to be featured each day, and guests can vote once per day. The system now includes automatic candidate selection based on photo popularity.
 
 **Voting Features:**
 - **Daily Featured Photos:** Admins select photos to be featured each day
@@ -125,6 +125,13 @@ Vote for daily featured photos and see which moments are most loved by your gues
 - Fast loading
 - Custom app icons
 - App shortcuts
+
+**Automatic Candidate System:**
+- **Smart Selection:** Photos with enough likes automatically become candidates
+- **Configurable Threshold:** Admins can adjust the minimum likes required (default: 3)
+- **Popularity-Based:** Most-liked photos are prioritized for selection
+- **Visual Indicators:** Auto-candidates marked with orange "Auto" labels
+- **Manual Override:** Admins can still manually select any photo
 
 ### 🎉 Welcome Modal
 Greet guests with a personalized message and instructions. Set the tone for your wedding gallery experience.
@@ -226,10 +233,13 @@ Download all gallery content (photos, videos, data) as a comprehensive ZIP file.
 - Photobooth borders
 
 ### 🏆 Photo of the Day Management
-Select and manage daily featured photos that guests can vote on. Create engaging content and track guest engagement.
+Select and manage daily featured photos that guests can vote on. Create engaging content and track guest engagement. The system now includes automatic candidate selection based on photo popularity.
 
 **Management Features:**
 - **Photo Selection:** Choose any uploaded photo to be featured on any date
+- **Automatic Candidate System:** Photos with enough likes automatically become candidates
+- **Likes Threshold Configuration:** Adjust the minimum likes required for auto-candidates (1-50)
+- **Auto-Candidate Management:** View and manage photos eligible for automatic selection
 - **Date Management:** Set photos for past, present, or future dates
 - **Candidate System:** Mark photos as candidates for future selection
 - **Vote Statistics:** View voting statistics and engagement metrics
@@ -239,15 +249,28 @@ Select and manage daily featured photos that guests can vote on. Create engaging
 
 **Admin Workflow:**
 1. Access Photo of the Day management at `/admin/photo-of-day?key=wedding2024`
-2. Select a photo from the dropdown (all uploaded photos available)
-3. Choose which date this photo should be featured
-4. Preview your selection before confirming
-5. Click "Set as Photo of the Day" to save
-6. View, edit, or delete existing photos of the day
+2. Configure auto-candidates by setting the likes threshold (default: 3)
+3. View photos that meet the likes threshold for automatic selection
+4. Manually trigger adding auto-candidates or add them individually
+5. Select a photo from candidates or all uploaded photos
+6. Choose which date this photo should be featured
+7. Preview your selection before confirming
+8. Click "Set as Photo of the Day" to save
+9. View, edit, or delete existing photos of the day
+
+**Auto-Candidate Features:**
+- **Threshold Control:** Real-time adjustment of likes threshold (1-50)
+- **Eligible Photos Display:** See all photos that meet the current threshold
+- **Manual Trigger:** "Add Auto-Candidates Now" button for immediate processing
+- **Visual Distinction:** Auto-candidates marked with orange "Auto" labels
+- **Duplicate Prevention:** System prevents adding the same photo twice
+- **Popularity Sorting:** Photos sorted by likes count for easy selection
 
 **Statistics Available:**
 - Total Photos of the Day created
-- Number of candidate photos
+- Number of candidate photos (manual + auto)
+- Number of auto-candidate eligible photos
+- Current likes threshold setting
 - Voting engagement statistics
 - Recent activity overview
 - Vote counts per photo

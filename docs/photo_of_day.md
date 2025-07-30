@@ -1,6 +1,6 @@
 # 📸 Photo of the Day Voting System
 
-The Photo of the Day feature allows wedding guests to vote on daily featured photos, creating an engaging and interactive experience for your wedding gallery.
+The Photo of the Day feature allows wedding guests to vote on daily featured photos, creating an engaging and interactive experience for your wedding gallery. The system now includes automatic candidate selection based on photo popularity.
 
 ## ✨ Features
 
@@ -13,7 +13,10 @@ The Photo of the Day feature allows wedding guests to vote on daily featured pho
 
 ### For Admins
 - **Photo Selection**: Choose any uploaded photo to be featured on any date
+- **Automatic Candidate System**: Photos with enough likes automatically become candidates
+- **Likes Threshold Configuration**: Adjust the minimum likes required for auto-candidates
 - **Candidate Management**: Mark photos as candidates for future selection
+- **Auto-Candidate Management**: View and manage photos eligible for automatic selection
 - **Vote Statistics**: View voting statistics and engagement metrics
 - **Date Management**: Set photos for past, present, or future dates
 - **Easy Management**: Simple admin interface for managing all Photo of the Day content
@@ -21,11 +24,7 @@ The Photo of the Day feature allows wedding guests to vote on daily featured pho
 ## 🚀 Getting Started
 
 ### 1. Run the Migration
-First, run the Photo of the Day migration to create the necessary database tables:
-
-```bash
-python migrate_photo_of_day.py
-```
+The Photo of the Day tables are automatically created during the main migration process. No separate migration is needed.
 
 ### 2. Access the Feature
 - **For Guests**: Navigate to "📸 Photo of the Day" in the main navigation
@@ -42,11 +41,14 @@ python migrate_photo_of_day.py
 
 ### Admin Management Flow
 1. **Access Admin Panel**: Go to `/admin/photo-of-day?key=wedding2024`
-2. **Select Photo**: Choose from all uploaded photos in the dropdown
-3. **Choose Date**: Pick which date this photo should be featured
-4. **Preview**: See a preview of your selection before confirming
-5. **Confirm**: Click "Set as Photo of the Day" to save
-6. **Manage**: View, edit, or delete existing photos of the day
+2. **Configure Auto-Candidates**: Set the likes threshold for automatic candidate selection
+3. **View Auto-Candidates**: See photos that meet the likes threshold
+4. **Add Auto-Candidates**: Manually trigger adding eligible photos as candidates
+5. **Select Photo**: Choose from candidates or all uploaded photos
+6. **Choose Date**: Pick which date this photo should be featured
+7. **Preview**: See a preview of your selection before confirming
+8. **Confirm**: Click "Set as Photo of the Day" to save
+9. **Manage**: View, edit, or delete existing photos of the day
 
 ## 🛠️ Technical Details
 
@@ -90,6 +92,13 @@ CREATE TABLE photo_of_day_candidate (
 );
 ```
 
+#### Settings Table (for threshold configuration)
+```sql
+-- The likes threshold is stored in the existing settings table
+-- Key: 'photo_of_day_likes_threshold'
+-- Default value: '3'
+```
+
 ### API Endpoints
 
 #### Guest Endpoints
@@ -103,12 +112,14 @@ CREATE TABLE photo_of_day_candidate (
 - `POST /admin/photo-of-day/select` - Select a photo for a specific date
 - `POST /admin/photo-of-day/delete/{id}` - Delete a photo of the day
 - `POST /admin/photo-of-day/add-candidate` - Add a photo as a candidate
+- `POST /admin/photo-of-day/update-threshold` - Update likes threshold for auto-candidates
+- `POST /admin/photo-of-day/add-auto-candidates` - Manually trigger adding auto-candidates
 
 ## 🎨 Customization
 
 ### Styling
 The Photo of the Day feature uses the same design system as the rest of the application:
-- **Colors**: Pink theme (`#e91e63`) for voting buttons
+- **Colors**: Pink theme (`#e91e63`) for voting buttons, orange (`#ff9800`) for auto-candidates
 - **Typography**: Inter font family for consistency
 - **Layout**: Responsive grid system for mobile and desktop
 - **Animations**: Smooth transitions for vote interactions
@@ -124,6 +135,12 @@ The admin interface is protected by the same key system as other admin features:
 - Default key: `wedding2024`
 - Access URL: `/admin/photo-of-day?key=wedding2024`
 
+### Automatic Candidate Configuration
+- **Default Threshold**: 3 likes minimum for auto-candidates
+- **Configurable Range**: 1-50 likes threshold
+- **Real-time Updates**: Threshold changes apply immediately
+- **Visual Indicators**: Auto-candidates marked with orange "Auto" labels
+
 ### Database Configuration
 The feature works with the existing database configuration:
 - **SQLite**: Default local development
@@ -137,10 +154,13 @@ The feature works with the existing database configuration:
 - **Unique Voters**: Number of different users who voted
 - **Daily Engagement**: Votes per day tracking
 - **Photo Performance**: Which photos receive the most votes
+- **Auto-Candidate Metrics**: How many photos meet the likes threshold
 
 ### Admin Dashboard Metrics
 - Total Photos of the Day created
-- Number of candidate photos
+- Number of candidate photos (manual + auto)
+- Number of auto-candidate eligible photos
+- Current likes threshold setting
 - Voting engagement statistics
 - Recent activity overview
 
@@ -165,11 +185,17 @@ chmod 644 instance/wedding_photos.db
 - **"Photo not found"**: Ensure photo exists in database
 - **"Date already exists"**: Only one photo per date allowed
 
+#### Auto-Candidate Issues
+- **"No auto-candidates found"**: Increase likes threshold or add more likes to photos
+- **"Threshold validation error"**: Ensure threshold is between 1-50
+- **"Duplicate candidates"**: System prevents adding same photo twice
+
 ### Debug Steps
 1. **Check Database**: Verify tables exist with `sqlite3 instance/wedding_photos.db`
-2. **Check Logs**: Review application logs for errors
-3. **Test Migration**: Run `python migrate_photo_of_day.py` again
-4. **Verify Routes**: Check that blueprints are registered correctly
+2. **Check Settings**: Verify threshold setting: `SELECT * FROM settings WHERE key='photo_of_day_likes_threshold'`
+3. **Check Logs**: Review application logs for errors
+4. **Test Migration**: Run `python migration.py` to ensure all tables exist
+5. **Verify Routes**: Check that blueprints are registered correctly
 
 ## 🔮 Future Enhancements
 
@@ -180,12 +206,15 @@ chmod 644 instance/wedding_photos.db
 - **Social Sharing**: Share photos of the day on social media
 - **Email Notifications**: Notify users when new photos are selected
 - **Voting Rewards**: Special badges or recognition for active voters
+- **Smart Thresholds**: Dynamic threshold adjustment based on photo volume
+- **Batch Auto-Candidate Processing**: Scheduled automatic candidate addition
 
 ### Integration Ideas
 - **Wedding Timeline**: Integrate with wedding event timeline
 - **Guest Engagement**: Track guest participation metrics
 - **Photo Stories**: Create narratives around featured photos
 - **Memory Book**: Compile photos of the day into a keepsake book
+- **Popularity Analytics**: Track which types of photos get more likes
 
 ## 📚 Related Documentation
 
