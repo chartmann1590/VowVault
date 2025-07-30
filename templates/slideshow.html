@@ -4,7 +4,7 @@
 
 {% block content %}
 <div class="slideshow-container" id="slideshowContainer">
-    <div class="slideshow-header">
+    <div class="slideshow-header" id="slideshowHeader">
         <h1>Live Event Activity</h1>
         <p class="slideshow-subtitle">Real-time updates from today's celebration</p>
         <div class="slideshow-controls">
@@ -29,7 +29,7 @@
         </div>
     </div>
 
-    <div class="slideshow-info">
+    <div class="slideshow-info" id="slideshowInfo">
         <div class="info-panel">
             <h3>Today's Highlights</h3>
             <div class="stats">
@@ -79,6 +79,25 @@
 .slideshow-container.fullscreen .slideshow-display {
     height: 85vh;
     max-width: 95vw;
+}
+
+.slideshow-container.fullscreen .slideshow-header,
+.slideshow-container.fullscreen .slideshow-info {
+    display: none;
+}
+
+.slideshow-container.fullscreen .slideshow-content {
+    flex: 1;
+    height: 100vh;
+    padding: 0;
+}
+
+.slideshow-container.fullscreen .slideshow-display {
+    height: 100vh;
+    max-width: 100vw;
+    border-radius: 0;
+    background: transparent;
+    box-shadow: none;
 }
 
 .slideshow-header {
@@ -171,6 +190,7 @@
     justify-content: center;
     padding: 2rem;
     position: relative;
+    transition: all 0.3s ease;
 }
 
 .slideshow-display {
@@ -523,27 +543,6 @@
     letter-spacing: 1px;
 }
 
-/* Fullscreen slideshow specific styles */
-.slideshow-container.fullscreen .slideshow-header {
-    padding: 1rem;
-}
-
-.slideshow-container.fullscreen .slideshow-header h1 {
-    font-size: 2.5rem;
-}
-
-.slideshow-container.fullscreen .slideshow-info {
-    padding: 1rem;
-}
-
-.slideshow-container.fullscreen .stats {
-    max-width: 800px;
-}
-
-.slideshow-container.fullscreen .stat-number {
-    font-size: 3rem;
-}
-
 /* Progress bar for slide transitions */
 .slide-progress {
     position: absolute;
@@ -580,10 +579,6 @@
     .slide-guestbook,
     .slide-message {
         padding: 1.5rem;
-    }
-    
-    .slideshow-container.fullscreen .slideshow-header h1 {
-        font-size: 1.8rem;
     }
 }
 </style>
@@ -665,6 +660,9 @@ class Slideshow {
     
     toggleSlideshowFullscreen() {
         const container = document.getElementById('slideshowContainer');
+        const header = document.getElementById('slideshowHeader');
+        const info = document.getElementById('slideshowInfo');
+        
         if (!this.isFullscreen) {
             container.classList.add('fullscreen');
             this.isFullscreen = true;
@@ -806,12 +804,23 @@ class Slideshow {
     createPhotoSlide(slide) {
         const content = slide.content;
         const isVideo = content.media_type === 'video';
+        
+        // Determine the correct file path based on content type
+        let filePath = '';
+        if (content.is_photobooth) {
+            filePath = `/static/uploads/photobooth/${content.filename}`;
+        } else if (isVideo) {
+            filePath = `/static/uploads/videos/${content.filename}`;
+        } else {
+            filePath = `/static/uploads/${content.filename}`;
+        }
+        
         const mediaElement = isVideo ? 
             `<video class="slide-video" controls autoplay muted loop>
-                <source src="/static/uploads/${content.filename}" type="video/mp4">
+                <source src="${filePath}" type="video/mp4">
                 Your browser does not support the video tag.
              </video>` :
-            `<img src="/static/uploads/${content.filename}" alt="Photo" class="slide-photo">`;
+            `<img src="${filePath}" alt="Photo" class="slide-photo">`;
         
         return `
             <div class="slide-content">
@@ -828,13 +837,15 @@ class Slideshow {
     
     createGuestbookSlide(slide) {
         const content = slide.content;
+        const photoPath = content.photo_filename ? `/static/uploads/guestbook/${content.photo_filename}` : '';
+        
         return `
             <div class="slide-content">
                 <div class="slide-guestbook">
                     <div class="guestbook-name">${content.name}</div>
                     <div class="guestbook-message">${content.message}</div>
                     ${content.location ? `<div class="guestbook-location">📍 ${content.location}</div>` : ''}
-                    ${content.photo_filename ? `<img src="/static/uploads/guestbook/${content.photo_filename}" alt="Guest photo" style="max-width: 200px; border-radius: 10px; margin-top: 1rem;">` : ''}
+                    ${content.photo_filename ? `<img src="${photoPath}" alt="Guest photo" style="max-width: 200px; border-radius: 10px; margin-top: 1rem;">` : ''}
                 </div>
             </div>
         `;
@@ -842,12 +853,14 @@ class Slideshow {
     
     createMessageSlide(slide) {
         const content = slide.content;
+        const photoPath = content.photo_filename ? `/static/uploads/messages/${content.photo_filename}` : '';
+        
         return `
             <div class="slide-content">
                 <div class="slide-message">
                     <div class="message-author">${content.author_name}</div>
                     <div class="message-content">${content.content}</div>
-                    ${content.photo_filename ? `<img src="/static/uploads/messages/${content.photo_filename}" alt="Message photo" style="max-width: 200px; border-radius: 10px; margin-top: 1rem;">` : ''}
+                    ${content.photo_filename ? `<img src="${photoPath}" alt="Message photo" style="max-width: 200px; border-radius: 10px; margin-top: 1rem;">` : ''}
                 </div>
             </div>
         `;
