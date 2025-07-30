@@ -311,10 +311,14 @@
             background-color: #f9f5f0;
             margin: 0;
             padding: 0;
+            visibility: hidden;
+            opacity: 0;
         }
 
         #mobileNav .dropdown.active .dropdown-content {
-            display: block;
+            display: block !important;
+            visibility: visible !important;
+            opacity: 1 !important;
         }
 
         #mobileNav .dropdown-content a {
@@ -323,11 +327,21 @@
             border-bottom: 1px solid #e0e0e0;
             color: #6b5d54 !important;
             text-decoration: none;
+            background-color: transparent;
         }
 
         #mobileNav .dropdown-content a:hover {
             background-color: #e8ddd3;
             color: #8b7355 !important;
+        }
+
+        /* Ensure mobile dropdown links are visible */
+        #mobileNav .dropdown.active .dropdown-content a {
+            color: #6b5d54 !important;
+            text-decoration: none;
+            background-color: transparent;
+            opacity: 1 !important;
+            visibility: visible !important;
         }
 
         #mobileNav .dropdown-btn {
