@@ -16,12 +16,14 @@
 - Click "Upload"
 
 ### 3. Search and Filter Photos
-- Use the search bar to find photos by uploader name, description, or tags
-- Filter by media type: All Media, Photos Only, Videos Only, or Photobooth Only
-- Filter by specific tags using the tag dropdown
-- Click "Apply Filters" to see results
-- Click "Clear All" to reset filters
-- Tags are displayed on photo cards for easy identification
+- **Collapsible Interface:** The search and filter section is collapsed by default to save space
+- **Expand:** Click the "Search & Filter" header or the toggle button to expand the search options
+- **Search:** Use the search bar to find photos by uploader name, description, or tags
+- **Media Type Filter:** Filter by All Media, Photos Only, Videos Only, or Photobooth Only
+- **Tag Filter:** Filter by specific tags using the tag dropdown
+- **Apply Filters:** Click "Apply Filters" to see results
+- **Clear All:** Click "Clear All" to reset filters
+- **Tags:** Tags are displayed on photo cards for easy identification
 
 ### 4. Use Virtual Photobooth
 - Click "Virtual Photobooth" in navigation or from the welcome screen

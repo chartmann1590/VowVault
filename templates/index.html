@@ -539,6 +539,59 @@
         border-radius: 15px;
         margin-bottom: 2rem;
         box-shadow: 0 5px 20px rgba(0,0,0,0.05);
+        position: relative;
+    }
+
+    .search-filter-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1rem;
+        cursor: pointer;
+        user-select: none;
+    }
+
+    .search-filter-title {
+        font-family: 'Playfair Display', serif;
+        font-size: 1.3rem;
+        color: #8b7355;
+        margin: 0;
+    }
+
+    .search-filter-toggle {
+        background: #8b7355;
+        color: white;
+        border: none;
+        border-radius: 50%;
+        width: 40px;
+        height: 40px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        font-size: 1.2rem;
+    }
+
+    .search-filter-toggle:hover {
+        background: #6b5d54;
+        transform: scale(1.1);
+    }
+
+    .search-filter-toggle.collapsed {
+        transform: rotate(180deg);
+    }
+
+    .search-filter-content {
+        max-height: 500px;
+        overflow: hidden;
+        transition: max-height 0.3s ease;
+    }
+
+    .search-filter-content.collapsed {
+        max-height: 0;
+        padding-top: 0;
+        padding-bottom: 0;
     }
 
     .search-filter-form {
@@ -825,49 +878,59 @@
 
 <!-- Search and Filter Controls -->
 <div class="search-filter-container">
-                    <form method="GET" action="{{ url_for('main.index') }}" class="search-filter-form">
-        <div class="search-row">
-            <div class="search-input-group">
-                <input type="text" 
-                       name="search" 
-                       value="{{ search_query }}" 
-                       placeholder="Search by uploader, description, or tags..."
-                       class="search-input">
-                <button type="submit" class="search-btn">
-                    <svg viewBox="0 0 24 24" width="20" height="20">
-                        <path d="M9.5,3A6.5,6.5 0 0,1 16,9.5C16,11.11 15.41,12.59 14.44,13.73L14.71,14H15.5L20.5,19L19,20.5L14,15.5V14.71L13.73,14.44C12.59,15.41 11.11,16 9.5,16A6.5,6.5 0 0,1 3,9.5A6.5,6.5 0 0,1 9.5,3M9.5,5C7,5 5,7 5,9.5C5,12 7,14 9.5,14C12,14 14,12 14,9.5C14,7 12,5 9.5,5Z"/>
-                    </svg>
-                </button>
-            </div>
-        </div>
-        
-        <div class="filter-row">
-            <div class="filter-group">
-                <label for="media_type">Media Type:</label>
-                <select name="media_type" id="media_type" class="filter-select">
-                    <option value="">All Media</option>
-                    <option value="photos" {% if media_filter == 'photos' %}selected{% endif %}>Photos Only</option>
-                    <option value="videos" {% if media_filter == 'videos' %}selected{% endif %}>Videos Only</option>
-                    <option value="photobooth" {% if media_filter == 'photobooth' %}selected{% endif %}>Photobooth Only</option>
-                </select>
+    <div class="search-filter-header" onclick="toggleSearchFilter()">
+        <h3 class="search-filter-title">Search & Filter</h3>
+        <button class="search-filter-toggle" aria-expanded="false">
+            <svg viewBox="0 0 24 24" width="24" height="24">
+                <path d="M16.59,9H15V4H9V9H7.41C6.2,9 5.12,9.83 4.73,11L3,16.5L9,19V22H15V19L21,16.5L19.27,11C18.88,9.83 17.8,9 16.59,9Z"/>
+            </svg>
+        </button>
+    </div>
+    <div class="search-filter-content collapsed">
+        <form method="GET" action="{{ url_for('main.index') }}" class="search-filter-form">
+            <div class="search-row">
+                <div class="search-input-group">
+                    <input type="text" 
+                           name="search" 
+                           value="{{ search_query }}" 
+                           placeholder="Search by uploader, description, or tags..."
+                           class="search-input">
+                    <button type="submit" class="search-btn">
+                        <svg viewBox="0 0 24 24" width="20" height="20">
+                            <path d="M9.5,3A6.5,6.5 0 0,1 16,9.5C16,11.11 15.41,12.59 14.44,13.73L14.71,14H15.5L20.5,19L19,20.5L14,15.5V14.71L13.73,14.44C12.59,15.41 11.11,16 9.5,16A6.5,6.5 0 0,1 3,9.5A6.5,6.5 0 0,1 9.5,3M9.5,5C7,5 5,7 5,9.5C5,12 7,14 9.5,14C12,14 14,12 14,9.5C14,7 12,5 9.5,5Z"/>
+                        </svg>
+                    </button>
+                </div>
             </div>
             
-            <div class="filter-group">
-                <label for="tag">Filter by Tag:</label>
-                <select name="tag" id="tag" class="filter-select">
-                    <option value="">All Tags</option>
-                    {% for tag in all_tags %}
-                    <option value="{{ tag }}" {% if tag_filter == tag %}selected{% endif %}>{{ tag }}</option>
-                    {% endfor %}
-                </select>
+            <div class="filter-row">
+                <div class="filter-group">
+                    <label for="media_type">Media Type:</label>
+                    <select name="media_type" id="media_type" class="filter-select">
+                        <option value="">All Media</option>
+                        <option value="photos" {% if media_filter == 'photos' %}selected{% endif %}>Photos Only</option>
+                        <option value="videos" {% if media_filter == 'videos' %}selected{% endif %}>Videos Only</option>
+                        <option value="photobooth" {% if media_filter == 'photobooth' %}selected{% endif %}>Photobooth Only</option>
+                    </select>
+                </div>
+                
+                <div class="filter-group">
+                    <label for="tag">Filter by Tag:</label>
+                    <select name="tag" id="tag" class="filter-select">
+                        <option value="">All Tags</option>
+                        {% for tag in all_tags %}
+                        <option value="{{ tag }}" {% if tag_filter == tag %}selected{% endif %}>{{ tag }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                
+                <div class="filter-actions">
+                    <button type="submit" class="filter-btn">Apply Filters</button>
+                    <a href="{{ url_for('main.index') }}" class="clear-btn">Clear All</a>
+                </div>
             </div>
-            
-            <div class="filter-actions">
-                <button type="submit" class="filter-btn">Apply Filters</button>
-                <a href="{{ url_for('main.index') }}" class="clear-btn">Clear All</a>
-            </div>
-        </div>
-    </form>
+        </form>
+    </div>
 </div>
 
 {% if photos %}
@@ -1037,7 +1100,7 @@
         }
 
         // Handle filter form submission
-        const filterForm = document.getElementById('filter-form');
+        const filterForm = document.querySelector('.search-filter-form');
         if (filterForm) {
             filterForm.addEventListener('submit', function(e) {
                 e.preventDefault();
@@ -1273,6 +1336,17 @@
         }).catch(err => {
             console.error('Failed to copy email address: ', err);
         });
+    }
+
+    function toggleSearchFilter() {
+        const searchFilterContent = document.querySelector('.search-filter-content');
+        const searchFilterToggle = document.querySelector('.search-filter-toggle');
+
+        if (searchFilterContent && searchFilterToggle) {
+            searchFilterContent.classList.toggle('collapsed');
+            searchFilterToggle.classList.toggle('collapsed');
+            searchFilterToggle.setAttribute('aria-expanded', !searchFilterContent.classList.contains('collapsed'));
+        }
     }
 </script>
 {% endblock %}

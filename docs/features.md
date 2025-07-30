@@ -21,6 +21,9 @@
 - **Like System**: Guests can like their favorite photos
 - **Comments**: Leave comments on photos
 - **Responsive Design**: Works perfectly on mobile and desktop
+- **Collapsible Search**: Search and filter interface collapses by default to save space
+- **Advanced Filtering**: Filter by media type, tags, and search terms
+- **Smooth Animations**: Smooth expand/collapse animations for search interface
 
 ### Guestbook System
 - **Digital Guestbook**: Leave messages and well-wishes
