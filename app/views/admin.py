@@ -933,6 +933,45 @@ def debug_push_notification_test():
             'message': f'Error: {str(e)}'
         })
 
+@admin_bp.route('/debug/notification-users')
+def debug_notification_users():
+    """Debug endpoint for viewing notification users"""
+    try:
+        from app.models.notifications import NotificationUser, Notification
+        
+        # Get all notification users with their unread count
+        users = NotificationUser.query.all()
+        user_data = []
+        
+        for user in users:
+            unread_count = Notification.query.filter_by(
+                user_identifier=user.user_identifier,
+                is_read=False
+            ).count()
+            
+            user_data.append({
+                'user_name': user.user_name,
+                'user_identifier': user.user_identifier,
+                'notifications_enabled': user.notifications_enabled,
+                'push_enabled': user.push_enabled,
+                'push_permission_granted': user.push_permission_granted,
+                'unread_count': unread_count,
+                'last_seen': user.last_seen.isoformat() if user.last_seen else None,
+                'created_at': user.created_at.isoformat() if user.created_at else None
+            })
+        
+        return jsonify({
+            'success': True,
+            'users': user_data
+        })
+        
+    except Exception as e:
+        print(f"Error in debug notification users: {e}")
+        return jsonify({
+            'success': False,
+            'message': f'Error: {str(e)}'
+        })
+
 @admin_bp.route('/register-notification-user', methods=['POST'])
 def register_notification_user():
     # Check for SSO session first

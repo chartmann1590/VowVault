@@ -201,7 +201,7 @@
 
     // Test Push Notification
     function testPushNotification() {
-        fetch('/debug/push-notification-test')
+        fetch('/admin/debug/push-notification-test')
             .then(response => response.json())
             .then(data => {
                 if (data.success) {
@@ -288,7 +288,7 @@
     function loadNotificationUsers() {
         const usersDiv = document.getElementById('notificationUsers');
         
-        fetch('/debug/notification-users')
+        fetch('/admin/debug/notification-users')
             .then(response => response.json())
             .then(data => {
                 if (data.users) {
@@ -296,6 +296,8 @@
                     data.users.forEach(user => {
                         usersText += `User: ${user.user_name} (${user.user_identifier})\n`;
                         usersText += `  Enabled: ${user.notifications_enabled}\n`;
+                        usersText += `  Push Enabled: ${user.push_enabled}\n`;
+                        usersText += `  Push Permission: ${user.push_permission_granted}\n`;
                         usersText += `  Unread: ${user.unread_count}\n`;
                         usersText += `  Last Seen: ${user.last_seen || 'Never'}\n\n`;
                     });
