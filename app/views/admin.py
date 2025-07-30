@@ -893,20 +893,45 @@ def pwa_debug():
     if not verify_admin_access(admin_key, sso_user_email, sso_user_domain):
         return "Unauthorized", 401
     
-    # Check PWA requirements
-    debug_info = {
-        'https': request.is_secure,
-        'host': request.host,
-        'url': request.url,
-        'manifest_exists': os.path.exists('static/manifest.json'),
-        'sw_exists': os.path.exists('static/sw.js'),
-        'icons_exist': all(os.path.exists(f'static/icons/icon-{size}x{size}.png') 
-                         for size in [192, 512]),
-        'user_agent': request.headers.get('User-Agent', ''),
-        'accept_language': request.headers.get('Accept-Language', ''),
-    }
-    
-    return render_template('pwa_debug.html', debug_info=debug_info)
+    return render_template('pwa_debug.html')
+
+@admin_bp.route('/debug/push-notification-test')
+def debug_push_notification_test():
+    """Debug endpoint for testing push notifications"""
+    try:
+        # Create a test notification for the current user
+        user_identifier = request.cookies.get('user_identifier', 'test-user')
+        
+        # Create a test notification
+        from app.utils.notification_utils import create_notification_with_push
+        
+        success = create_notification_with_push(
+            user_identifier=user_identifier,
+            title='🧪 Test Notification',
+            message='This is a test push notification from the debug panel!',
+            notification_type='admin',
+            content_type='debug',
+            content_id=0
+        )
+        
+        if success:
+            return jsonify({
+                'success': True,
+                'message': 'Test notification created successfully',
+                'user_identifier': user_identifier
+            })
+        else:
+            return jsonify({
+                'success': False,
+                'message': 'Failed to create test notification'
+            })
+            
+    except Exception as e:
+        print(f"Error in debug push notification test: {e}")
+        return jsonify({
+            'success': False,
+            'message': f'Error: {str(e)}'
+        })
 
 @admin_bp.route('/register-notification-user', methods=['POST'])
 def register_notification_user():
