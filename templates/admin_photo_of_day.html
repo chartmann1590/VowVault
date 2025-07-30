@@ -391,8 +391,10 @@
 
 {% block content_scripts %}{{ super() }}
 <script>
+console.log('Photo of Day admin script loading...');
+
 // Global functions for onclick handlers
-function addAsCandidate(photoId) {
+window.addAsCandidate = function(photoId) {
     console.log('addAsCandidate called with photoId:', photoId);
     fetch('/admin/photo-of-day/add-candidate?key=wedding2024', {
         method: 'POST',
@@ -416,6 +418,11 @@ function addAsCandidate(photoId) {
         console.error('Error:', error);
         showNotification('An error occurred while adding the candidate', 'error');
     });
+}
+
+// Also define as regular function for compatibility
+function addAsCandidate(photoId) {
+    return window.addAsCandidate(photoId);
 }
 
 function deletePhotoOfDay(photoOfDayId) {
@@ -580,5 +587,10 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
 });
+
+// Debug: Check if functions are available
+console.log('Script loaded. addAsCandidate available:', typeof window.addAsCandidate);
+console.log('Script loaded. deletePhotoOfDay available:', typeof deletePhotoOfDay);
+console.log('Script loaded. showNotification available:', typeof showNotification);
 </script>
 {% endblock %} 
