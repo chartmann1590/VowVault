@@ -2,175 +2,394 @@
 
 {% block title %}Admin - Photo of the Day Management{% endblock %}
 
+{% block extra_styles %}
+<style>
+    .photo-of-day-admin-header {
+        text-align: center;
+        margin-bottom: 3rem;
+    }
+    .photo-of-day-admin-header h1 {
+        font-family: 'Playfair Display', serif;
+        font-size: 2.5rem;
+        color: #8b7355;
+        margin-bottom: 0.5rem;
+    }
+    .photo-of-day-admin-header p {
+        color: #6b5d54;
+        font-size: 1.1rem;
+    }
+    .admin-stats-grid {
+        display: flex;
+        gap: 2rem;
+        margin-bottom: 2.5rem;
+        justify-content: center;
+        flex-wrap: wrap;
+    }
+    .admin-stat-card {
+        background: #f9f5f0;
+        border-radius: 15px;
+        box-shadow: 0 4px 24px rgba(0,0,0,0.07);
+        padding: 2rem 2.5rem;
+        text-align: center;
+        min-width: 180px;
+    }
+    .admin-stat-card .stat-value {
+        font-size: 2.2rem;
+        font-weight: 700;
+        color: #e91e63;
+        margin-bottom: 0.3rem;
+    }
+    .admin-stat-card .stat-label {
+        color: #8b7355;
+        font-size: 1.1rem;
+    }
+    .admin-section-card {
+        background: white;
+        border-radius: 20px;
+        box-shadow: 0 10px 40px rgba(0,0,0,0.08);
+        margin-bottom: 2.5rem;
+        padding: 2.5rem 2rem;
+        max-width: 1100px;
+        margin-left: auto;
+        margin-right: auto;
+    }
+    .admin-section-title {
+        font-family: 'Playfair Display', serif;
+        font-size: 2rem;
+        color: #8b7355;
+        margin-bottom: 2rem;
+        text-align: left;
+    }
+    .admin-photo-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+        gap: 2rem;
+    }
+    .admin-photo-card {
+        background: #f9f5f0;
+        border-radius: 15px;
+        overflow: hidden;
+        box-shadow: 0 4px 24px rgba(0,0,0,0.07);
+        position: relative;
+        transition: box-shadow 0.2s;
+    }
+    .admin-photo-card:hover {
+        box-shadow: 0 8px 32px rgba(233, 30, 99, 0.13);
+    }
+    .admin-photo-card img,
+    .admin-photo-card video {
+        width: 100%;
+        height: 220px;
+        object-fit: cover;
+        display: block;
+    }
+    .admin-photo-date {
+        position: absolute;
+        top: 12px;
+        right: 12px;
+        background: #e91e63;
+        color: #fff;
+        padding: 0.3rem 0.9rem;
+        border-radius: 8px;
+        font-size: 0.95rem;
+        font-weight: 600;
+        box-shadow: 0 2px 8px rgba(233, 30, 99, 0.13);
+    }
+    .admin-photo-info {
+        padding: 1rem 1.2rem 0.7rem 1.2rem;
+    }
+    .admin-photo-info .uploader {
+        color: #8b7355;
+        font-size: 1rem;
+        margin-bottom: 0.3rem;
+    }
+    .admin-photo-info .votes {
+        display: flex;
+        align-items: center;
+        color: #e91e63;
+        font-weight: 600;
+        font-size: 1rem;
+        gap: 0.4rem;
+        margin-bottom: 0.7rem;
+    }
+    .admin-btn {
+        display: inline-block;
+        background: #e91e63;
+        color: #fff;
+        font-weight: 600;
+        border: none;
+        border-radius: 8px;
+        padding: 0.7rem 1.7rem;
+        font-size: 1rem;
+        cursor: pointer;
+        transition: background 0.2s;
+        margin-top: 0.5rem;
+    }
+    .admin-btn:hover {
+        background: #c2185b;
+    }
+    .admin-btn.delete {
+        background: #b71c1c;
+    }
+    .admin-btn.delete:hover {
+        background: #7f1010;
+    }
+    .admin-btn.candidate {
+        background: #1976d2;
+    }
+    .admin-btn.candidate:hover {
+        background: #0d47a1;
+    }
+    .admin-btn.auto {
+        background: #ff9800;
+    }
+    .admin-btn.auto:hover {
+        background: #e68900;
+    }
+    .admin-photo-candidate-label {
+        position: absolute;
+        top: 12px;
+        right: 12px;
+        background: #1976d2;
+        color: #fff;
+        padding: 0.3rem 0.9rem;
+        border-radius: 8px;
+        font-size: 0.95rem;
+        font-weight: 600;
+        box-shadow: 0 2px 8px rgba(25, 118, 210, 0.13);
+    }
+    .admin-photo-auto-label {
+        position: absolute;
+        top: 12px;
+        right: 12px;
+        background: #ff9800;
+        color: #fff;
+        padding: 0.3rem 0.9rem;
+        border-radius: 8px;
+        font-size: 0.95rem;
+        font-weight: 600;
+        box-shadow: 0 2px 8px rgba(255, 152, 0, 0.13);
+    }
+    .admin-photo-candidate-date {
+        color: #6b5d54;
+        font-size: 0.95rem;
+        margin-bottom: 0.5rem;
+    }
+    .admin-photo-preview {
+        width: 100%;
+        height: 180px;
+        object-fit: cover;
+        border-radius: 10px;
+        background: #f0f0f0;
+        margin-bottom: 1rem;
+    }
+    .admin-form-label {
+        color: #8b7355;
+        font-weight: 600;
+        margin-bottom: 0.5rem;
+        display: block;
+    }
+    .admin-form-input, .admin-form-select {
+        width: 100%;
+        padding: 0.8rem 1rem;
+        border: 1px solid #e0d7ce;
+        border-radius: 8px;
+        font-size: 1rem;
+        margin-bottom: 1.2rem;
+        background: #faf9f7;
+        color: #2c2c2c;
+    }
+    .threshold-controls {
+        display: flex;
+        gap: 1rem;
+        align-items: center;
+        margin-bottom: 2rem;
+        flex-wrap: wrap;
+    }
+    .threshold-input {
+        width: 120px;
+        padding: 0.8rem 1rem;
+        border: 1px solid #e0d7ce;
+        border-radius: 8px;
+        font-size: 1rem;
+        background: #faf9f7;
+        color: #2c2c2c;
+    }
+    .threshold-info {
+        background: #fff3cd;
+        border: 1px solid #ffeaa7;
+        border-radius: 8px;
+        padding: 1rem;
+        margin-bottom: 2rem;
+        color: #856404;
+    }
+</style>
+{% endblock %}
+
 {% block content %}
-<div class="container mx-auto px-4 py-8">
-    <!-- Header -->
-    <div class="text-center mb-8">
-        <h1 class="text-4xl font-bold text-gray-800 mb-2">📸 Photo of the Day Management</h1>
-        <p class="text-gray-600">Select and manage featured photos for each day</p>
-    </div>
+<div class="photo-of-day-admin-header">
+    <h1>📸 Photo of the Day Management</h1>
+    <p>Select and manage featured photos for each day</p>
+</div>
 
-    <!-- Quick Stats -->
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-        <div class="bg-white rounded-lg shadow-lg p-6 text-center">
-            <div class="text-3xl font-bold text-pink-500">{{ photos_of_day|length }}</div>
-            <div class="text-gray-600">Photos of the Day</div>
-        </div>
-        <div class="bg-white rounded-lg shadow-lg p-6 text-center">
-            <div class="text-3xl font-bold text-blue-500">{{ candidate_photos|length }}</div>
-            <div class="text-gray-600">Candidates</div>
-        </div>
-        <div class="bg-white rounded-lg shadow-lg p-6 text-center">
-            <div class="text-3xl font-bold text-green-500">{{ all_photos|length }}</div>
-            <div class="text-gray-600">Total Photos</div>
-        </div>
+<div class="admin-stats-grid">
+    <div class="admin-stat-card">
+        <div class="stat-value">{{ photos_of_day|length }}</div>
+        <div class="stat-label">Photos of the Day</div>
     </div>
-
-    <!-- Select New Photo of the Day -->
-    <div class="bg-white rounded-lg shadow-lg p-6 mb-8">
-        <h2 class="text-2xl font-semibold text-gray-800 mb-4">Select Photo of the Day</h2>
-        
-        <div class="grid md:grid-cols-2 gap-6">
-            <!-- Photo Selection -->
-            <div>
-                <label class="block text-sm font-medium text-gray-700 mb-2">Select Photo</label>
-                <select id="photo-select" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-transparent">
-                    <option value="">Choose a photo...</option>
-                    {% for photo in all_photos %}
-                    <option value="{{ photo.id }}" data-uploader="{{ photo.uploader_name }}" data-date="{{ photo.upload_date.strftime('%Y-%m-%d') }}">
-                        {{ photo.original_filename }} (by {{ photo.uploader_name }})
-                    </option>
-                    {% endfor %}
-                </select>
-            </div>
-            
-            <!-- Date Selection -->
-            <div>
-                <label class="block text-sm font-medium text-gray-700 mb-2">Select Date</label>
-                <input type="date" id="date-select" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-transparent">
-            </div>
-        </div>
-        
-        <!-- Photo Preview -->
-        <div id="photo-preview" class="mt-4 hidden">
-            <div class="bg-gray-50 rounded-lg p-4">
-                <h4 class="font-semibold text-gray-800 mb-2">Selected Photo Preview</h4>
-                <div class="grid md:grid-cols-2 gap-4">
-                    <div>
-                        <img id="preview-image" src="" alt="Preview" class="w-full h-48 object-cover rounded-lg">
-                    </div>
-                    <div>
-                        <p><strong>Uploader:</strong> <span id="preview-uploader"></span></p>
-                        <p><strong>Upload Date:</strong> <span id="preview-date"></span></p>
-                        <p><strong>Selected Date:</strong> <span id="preview-selected-date"></span></p>
-                    </div>
-                </div>
-            </div>
-        </div>
-        
-        <!-- Submit Button -->
-        <div class="mt-4">
-            <button id="select-photo-btn" class="bg-pink-500 hover:bg-pink-600 text-white font-semibold py-3 px-6 rounded-lg transition duration-200 disabled:opacity-50 disabled:cursor-not-allowed">
-                Set as Photo of the Day
-            </button>
-        </div>
+    <div class="admin-stat-card">
+        <div class="stat-value">{{ candidate_photos|length }}</div>
+        <div class="stat-label">Candidates</div>
     </div>
-
-    <!-- Current Photos of the Day -->
-    <div class="bg-white rounded-lg shadow-lg p-6 mb-8">
-        <h2 class="text-2xl font-semibold text-gray-800 mb-4">Current Photos of the Day</h2>
-        
-        {% if photos_of_day %}
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {% for photo_of_day in photos_of_day %}
-            <div class="bg-gray-50 rounded-lg overflow-hidden">
-                <div class="relative">
-                    {% if photo_of_day.photo.media_type == 'video' %}
-                    <video class="w-full h-48 object-cover" controls>
-                        <source src="{{ url_for('static', filename='uploads/videos/' + photo_of_day.photo.filename) }}" type="video/mp4">
-                    </video>
-                    {% else %}
-                    <img src="{{ url_for('static', filename='uploads/' + photo_of_day.photo.filename) }}" 
-                         alt="Photo of the Day" 
-                         class="w-full h-48 object-cover">
-                    {% endif %}
-                    
-                    <div class="absolute top-2 right-2 bg-pink-500 text-white px-2 py-1 rounded text-xs font-semibold">
-                        {{ photo_of_day.date.strftime('%b %d') }}
-                    </div>
-                </div>
-                
-                <div class="p-4">
-                    <p class="text-sm text-gray-600 mb-2">by {{ photo_of_day.photo.uploader_name }}</p>
-                    <div class="flex items-center text-sm text-gray-500 mb-3">
-                        <svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
-                            <path fill-rule="evenodd" d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z" clip-rule="evenodd"></path>
-                        </svg>
-                        {{ photo_of_day.vote_count }} votes
-                    </div>
-                    
-                    <button onclick="deletePhotoOfDay({{ photo_of_day.id }})" 
-                            class="bg-red-500 hover:bg-red-600 text-white text-sm py-2 px-4 rounded transition duration-200">
-                        Delete
-                    </button>
-                </div>
-            </div>
-            {% endfor %}
-        </div>
-        {% else %}
-        <div class="text-center py-8">
-            <div class="text-6xl mb-4">📸</div>
-            <p class="text-gray-600">No photos of the day selected yet</p>
-        </div>
-        {% endif %}
-    </div>
-
-    <!-- Photo Candidates -->
-    <div class="bg-white rounded-lg shadow-lg p-6">
-        <h2 class="text-2xl font-semibold text-gray-800 mb-4">Photo Candidates</h2>
-        
-        {% if candidate_photos %}
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {% for candidate in candidate_photos %}
-            <div class="bg-gray-50 rounded-lg overflow-hidden">
-                <div class="relative">
-                    {% if candidate.photo.media_type == 'video' %}
-                    <video class="w-full h-48 object-cover" controls>
-                        <source src="{{ url_for('static', filename='uploads/videos/' + candidate.photo.filename) }}" type="video/mp4">
-                    </video>
-                    {% else %}
-                    <img src="{{ url_for('static', filename='uploads/' + candidate.photo.filename) }}" 
-                         alt="Candidate Photo" 
-                         class="w-full h-48 object-cover">
-                    {% endif %}
-                    
-                    <div class="absolute top-2 right-2 bg-blue-500 text-white px-2 py-1 rounded text-xs font-semibold">
-                        Candidate
-                    </div>
-                </div>
-                
-                <div class="p-4">
-                    <p class="text-sm text-gray-600 mb-2">by {{ candidate.photo.uploader_name }}</p>
-                    <p class="text-xs text-gray-500 mb-3">Added: {{ candidate.date_added.strftime('%b %d, %Y') }}</p>
-                    
-                    <button onclick="addAsCandidate({{ candidate.photo.id }})" 
-                            class="bg-blue-500 hover:bg-blue-600 text-white text-sm py-2 px-4 rounded transition duration-200">
-                        Select as Photo of Day
-                    </button>
-                </div>
-            </div>
-            {% endfor %}
-        </div>
-        {% else %}
-        <div class="text-center py-8">
-            <div class="text-6xl mb-4">🎯</div>
-            <p class="text-gray-600">No candidate photos yet</p>
-        </div>
-        {% endif %}
+    <div class="admin-stat-card">
+        <div class="stat-value">{{ all_photos|length }}</div>
+        <div class="stat-label">Total Photos</div>
     </div>
 </div>
 
-<!-- JavaScript for admin functionality -->
+<div class="admin-section-card">
+    <div class="admin-section-title">Automatic Candidate Management</div>
+    <div class="threshold-info">
+        <strong>Auto-Candidate System:</strong> Photos with {{ likes_threshold }} or more likes are automatically added as candidates for Photo of the Day.
+    </div>
+    <div class="threshold-controls">
+        <label class="admin-form-label">Likes Threshold:</label>
+        <input type="number" id="likes-threshold" class="threshold-input" value="{{ likes_threshold }}" min="1" max="50">
+        <button id="update-threshold-btn" class="admin-btn">Update Threshold</button>
+        <button id="add-auto-candidates-btn" class="admin-btn auto">Add Auto-Candidates Now</button>
+    </div>
+    <div class="admin-section-title" style="font-size:1.5rem;margin-bottom:1rem;">Photos Eligible for Auto-Candidates ({{ auto_candidate_photos|length }} found)</div>
+    {% if auto_candidate_photos %}
+    <div class="admin-photo-grid">
+        {% for photo in auto_candidate_photos %}
+        <div class="admin-photo-card">
+            <div style="position:relative;">
+                {% if photo.media_type == 'video' %}
+                <video controls>
+                    <source src="{{ url_for('static', filename='uploads/videos/' + photo.filename) }}" type="video/mp4">
+                </video>
+                {% else %}
+                <img src="{{ url_for('static', filename='uploads/' + photo.filename) }}" alt="Auto-Candidate Photo">
+                {% endif %}
+                <div class="admin-photo-auto-label">Auto</div>
+            </div>
+            <div class="admin-photo-info">
+                <div class="uploader">by {{ photo.uploader_name }}</div>
+                <div class="votes">
+                    <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20" style="width:18px;height:18px;"><path fill-rule="evenodd" d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z" clip-rule="evenodd"></path></svg>
+                    {{ photo.likes }} likes
+                </div>
+                <button onclick="addAsCandidate({{ photo.id }})" class="admin-btn candidate">Add as Candidate</button>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div style="text-align:center;padding:2rem 0;">
+        <p style="color:#6b5d54;">No photos meet the current threshold of {{ likes_threshold }} likes</p>
+    </div>
+    {% endif %}
+</div>
+
+<div class="admin-section-card">
+    <div class="admin-section-title">Select Photo of the Day</div>
+    <div style="display:flex;flex-wrap:wrap;gap:2.5rem;align-items:center;justify-content:center;">
+        <div style="flex:1 1 350px;min-width:320px;max-width:420px;">
+            <label class="admin-form-label">Select Photo</label>
+            <select id="photo-select" class="admin-form-select">
+                <option value="">Choose a photo...</option>
+                {% for photo in all_photos %}
+                <option value="{{ photo.id }}" data-uploader="{{ photo.uploader_name }}" data-date="{{ photo.upload_date.strftime('%Y-%m-%d') }}">
+                    {{ photo.original_filename }} (by {{ photo.uploader_name }})
+                </option>
+                {% endfor %}
+            </select>
+        </div>
+        <div style="flex:1 1 250px;min-width:220px;max-width:320px;">
+            <label class="admin-form-label">Select Date</label>
+            <input type="date" id="date-select" class="admin-form-input">
+        </div>
+    </div>
+    <div id="photo-preview" class="mt-4 hidden">
+        <img id="preview-image" src="" alt="Preview" class="admin-photo-preview">
+        <div><strong>Uploader:</strong> <span id="preview-uploader"></span></div>
+        <div><strong>Upload Date:</strong> <span id="preview-date"></span></div>
+        <div><strong>Selected Date:</strong> <span id="preview-selected-date"></span></div>
+    </div>
+    <div style="margin-top:1.5rem;">
+        <button id="select-photo-btn" class="admin-btn">Set as Photo of the Day</button>
+    </div>
+</div>
+
+<div class="admin-section-card">
+    <div class="admin-section-title">Current Photos of the Day</div>
+    {% if photos_of_day %}
+    <div class="admin-photo-grid">
+        {% for photo_of_day in photos_of_day %}
+        <div class="admin-photo-card">
+            <div style="position:relative;">
+                {% if photo_of_day.photo.media_type == 'video' %}
+                <video controls>
+                    <source src="{{ url_for('static', filename='uploads/videos/' + photo_of_day.photo.filename) }}" type="video/mp4">
+                </video>
+                {% else %}
+                <img src="{{ url_for('static', filename='uploads/' + photo_of_day.photo.filename) }}" alt="Photo of the Day">
+                {% endif %}
+                <div class="admin-photo-date">{{ photo_of_day.date.strftime('%b %d') }}</div>
+            </div>
+            <div class="admin-photo-info">
+                <div class="uploader">by {{ photo_of_day.photo.uploader_name }}</div>
+                <div class="votes">
+                    <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20" style="width:18px;height:18px;"><path fill-rule="evenodd" d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z" clip-rule="evenodd"></path></svg>
+                    {{ photo_of_day.vote_count }} votes
+                </div>
+                <button onclick="deletePhotoOfDay({{ photo_of_day.id }})" class="admin-btn delete">Delete</button>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div style="text-align:center;padding:3rem 0;">
+        <div style="font-size:4rem; margin-bottom:1rem;">📸</div>
+        <p style="color:#6b5d54;">No photos of the day selected yet</p>
+    </div>
+    {% endif %}
+</div>
+
+<div class="admin-section-card">
+    <div class="admin-section-title">Photo Candidates</div>
+    {% if candidate_photos %}
+    <div class="admin-photo-grid">
+        {% for candidate in candidate_photos %}
+        <div class="admin-photo-card">
+            <div style="position:relative;">
+                {% if candidate.photo.media_type == 'video' %}
+                <video controls>
+                    <source src="{{ url_for('static', filename='uploads/videos/' + candidate.photo.filename) }}" type="video/mp4">
+                </video>
+                {% else %}
+                <img src="{{ url_for('static', filename='uploads/' + candidate.photo.filename) }}" alt="Candidate Photo">
+                {% endif %}
+                <div class="admin-photo-candidate-label">Candidate</div>
+            </div>
+            <div class="admin-photo-info">
+                <div class="uploader">by {{ candidate.photo.uploader_name }}</div>
+                <div class="admin-photo-candidate-date">Added: {{ candidate.date_added.strftime('%b %d, %Y') }}</div>
+                <button onclick="addAsCandidate({{ candidate.photo.id }})" class="admin-btn candidate">Select as Photo of Day</button>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div style="text-align:center;padding:3rem 0;">
+        <div style="font-size:3rem; margin-bottom:1rem;">🎯</div>
+        <p style="color:#6b5d54;">No candidate photos yet</p>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block content_scripts %}{{ super() }}
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     const photoSelect = document.getElementById('photo-select');
@@ -181,12 +400,11 @@ document.addEventListener('DOMContentLoaded', function() {
     const previewDate = document.getElementById('preview-date');
     const previewSelectedDate = document.getElementById('preview-selected-date');
     const selectPhotoBtn = document.getElementById('select-photo-btn');
-    
-    // Set default date to today
+    const likesThreshold = document.getElementById('likes-threshold');
+    const updateThresholdBtn = document.getElementById('update-threshold-btn');
+    const addAutoCandidatesBtn = document.getElementById('add-auto-candidates-btn');
     const today = new Date().toISOString().split('T')[0];
     dateSelect.value = today;
-    
-    // Photo selection handler
     photoSelect.addEventListener('change', function() {
         const selectedOption = this.options[this.selectedIndex];
         if (this.value) {
@@ -194,39 +412,29 @@ document.addEventListener('DOMContentLoaded', function() {
             const uploader = selectedOption.getAttribute('data-uploader');
             const uploadDate = selectedOption.getAttribute('data-date');
             const selectedDate = dateSelect.value;
-            
-            // Show preview
-            previewImage.src = `/static/uploads/${getPhotoFilename(photoId)}`;
+            previewImage.src = `/static/uploads/${photoId}.jpg`;
             previewUploader.textContent = uploader;
             previewDate.textContent = uploadDate;
             previewSelectedDate.textContent = selectedDate;
             photoPreview.classList.remove('hidden');
-            
-            // Enable button
             selectPhotoBtn.disabled = false;
         } else {
             photoPreview.classList.add('hidden');
             selectPhotoBtn.disabled = true;
         }
     });
-    
-    // Date selection handler
     dateSelect.addEventListener('change', function() {
         if (photoSelect.value) {
             previewSelectedDate.textContent = this.value;
         }
     });
-    
-    // Select photo button handler
     selectPhotoBtn.addEventListener('click', function() {
         const photoId = photoSelect.value;
         const selectedDate = dateSelect.value;
-        
         if (!photoId || !selectedDate) {
             showNotification('Please select both a photo and a date', 'error');
             return;
         }
-        
         fetch(`/admin/photo-of-day/select?key=wedding2024`, {
             method: 'POST',
             headers: {
@@ -241,12 +449,10 @@ document.addEventListener('DOMContentLoaded', function() {
         .then(data => {
             if (data.success) {
                 showNotification(data.message, 'success');
-                // Reset form
                 photoSelect.value = '';
                 dateSelect.value = today;
                 photoPreview.classList.add('hidden');
                 selectPhotoBtn.disabled = true;
-                // Reload page after a short delay
                 setTimeout(() => location.reload(), 1500);
             } else {
                 showNotification(data.message, 'error');
@@ -257,19 +463,62 @@ document.addEventListener('DOMContentLoaded', function() {
             showNotification('An error occurred while selecting the photo', 'error');
         });
     });
-    
-    function getPhotoFilename(photoId) {
-        // This is a simplified version - in a real app, you'd get this from the server
-        // For now, we'll use a placeholder
-        return 'placeholder.jpg';
-    }
+    updateThresholdBtn.addEventListener('click', function() {
+        const threshold = likesThreshold.value;
+        if (!threshold || threshold < 1) {
+            showNotification('Please enter a valid threshold (minimum 1)', 'error');
+            return;
+        }
+        fetch('/admin/photo-of-day/update-threshold?key=wedding2024', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                threshold: threshold
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                showNotification(data.message, 'success');
+                setTimeout(() => location.reload(), 1500);
+            } else {
+                showNotification(data.message, 'error');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            showNotification('An error occurred while updating threshold', 'error');
+        });
+    });
+    addAutoCandidatesBtn.addEventListener('click', function() {
+        fetch('/admin/photo-of-day/add-auto-candidates?key=wedding2024', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({})
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                showNotification(data.message, 'success');
+                setTimeout(() => location.reload(), 1500);
+            } else {
+                showNotification(data.message, 'error');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            showNotification('An error occurred while adding auto-candidates', 'error');
+        });
+    });
 });
-
 function deletePhotoOfDay(photoOfDayId) {
     if (!confirm('Are you sure you want to delete this Photo of the Day?')) {
         return;
     }
-    
     fetch(`/admin/photo-of-day/delete/${photoOfDayId}?key=wedding2024`, {
         method: 'POST',
         headers: {
@@ -291,7 +540,6 @@ function deletePhotoOfDay(photoOfDayId) {
         showNotification('An error occurred while deleting the photo', 'error');
     });
 }
-
 function addAsCandidate(photoId) {
     fetch(`/admin/photo-of-day/add-candidate?key=wedding2024`, {
         method: 'POST',
@@ -316,18 +564,13 @@ function addAsCandidate(photoId) {
         showNotification('An error occurred while adding the candidate', 'error');
     });
 }
-
 function showNotification(message, type) {
-    // Create notification element
     const notification = document.createElement('div');
     notification.className = `fixed top-4 right-4 p-4 rounded-lg shadow-lg z-50 ${
         type === 'success' ? 'bg-green-500 text-white' : 'bg-red-500 text-white'
     }`;
     notification.textContent = message;
-    
     document.body.appendChild(notification);
-    
-    // Remove notification after 3 seconds
     setTimeout(() => {
         notification.remove();
     }, 3000);

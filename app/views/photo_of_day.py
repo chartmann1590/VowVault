@@ -1,10 +1,42 @@
 from flask import Blueprint, render_template, request, jsonify, redirect, url_for, flash
-from app.models import Photo, PhotoOfDay, PhotoOfDayVote, PhotoOfDayCandidate
+from app.models import Photo, PhotoOfDay, PhotoOfDayVote, PhotoOfDayCandidate, Settings
 from app import db
 from datetime import datetime, date, timedelta
 import json
 
 photo_of_day_bp = Blueprint('photo_of_day', __name__)
+
+def get_likes_threshold():
+    """Get the likes threshold for automatic candidate selection"""
+    threshold = Settings.get('photo_of_day_likes_threshold', '3')
+    return int(threshold)
+
+def add_automatic_candidates():
+    """Add photos with enough likes as candidates automatically"""
+    threshold = get_likes_threshold()
+    
+    # Find photos with enough likes that aren't already candidates
+    photos_to_add = Photo.query.filter(
+        Photo.likes >= threshold
+    ).all()
+    
+    added_count = 0
+    for photo in photos_to_add:
+        # Check if already a candidate
+        existing = PhotoOfDayCandidate.query.filter_by(photo_id=photo.id).first()
+        if not existing:
+            candidate = PhotoOfDayCandidate(
+                photo_id=photo.id,
+                date_added=date.today(),
+                is_selected=False
+            )
+            db.session.add(candidate)
+            added_count += 1
+    
+    if added_count > 0:
+        db.session.commit()
+    
+    return added_count
 
 @photo_of_day_bp.route('/photo-of-day')
 def photo_of_day():
@@ -128,10 +160,20 @@ def admin_photo_of_day():
     # Get all photos for selection
     all_photos = Photo.query.order_by(Photo.upload_date.desc()).limit(100).all()
     
+    # Get current settings
+    likes_threshold = get_likes_threshold()
+    
+    # Get photos that would be auto-candidates based on current threshold
+    auto_candidate_photos = Photo.query.filter(
+        Photo.likes >= likes_threshold
+    ).order_by(Photo.likes.desc()).limit(20).all()
+    
     return render_template('admin_photo_of_day.html',
                          photos_of_day=photos_of_day,
                          candidate_photos=candidate_photos,
-                         all_photos=all_photos)
+                         all_photos=all_photos,
+                         likes_threshold=likes_threshold,
+                         auto_candidate_photos=auto_candidate_photos)
 
 @photo_of_day_bp.route('/admin/photo-of-day/select', methods=['POST'])
 def select_photo_of_day():
@@ -223,6 +265,42 @@ def add_photo_candidate():
     db.session.commit()
     
     return jsonify({'success': True, 'message': 'Photo added as candidate successfully!'})
+
+@photo_of_day_bp.route('/admin/photo-of-day/update-threshold', methods=['POST'])
+def update_likes_threshold():
+    """Update the likes threshold for automatic candidates"""
+    admin_key = request.args.get('key')
+    if admin_key != 'wedding2024':
+        return jsonify({'success': False, 'message': 'Unauthorized'}), 403
+    
+    data = request.get_json()
+    threshold = data.get('threshold')
+    
+    if not threshold or not threshold.isdigit():
+        return jsonify({'success': False, 'message': 'Valid threshold required'}), 400
+    
+    threshold = int(threshold)
+    if threshold < 1:
+        return jsonify({'success': False, 'message': 'Threshold must be at least 1'}), 400
+    
+    # Update the setting
+    Settings.set('photo_of_day_likes_threshold', str(threshold))
+    
+    return jsonify({'success': True, 'message': f'Likes threshold updated to {threshold}'})
+
+@photo_of_day_bp.route('/admin/photo-of-day/add-auto-candidates', methods=['POST'])
+def add_automatic_candidates_route():
+    """Manually trigger adding automatic candidates"""
+    admin_key = request.args.get('key')
+    if admin_key != 'wedding2024':
+        return jsonify({'success': False, 'message': 'Unauthorized'}), 403
+    
+    added_count = add_automatic_candidates()
+    
+    return jsonify({
+        'success': True, 
+        'message': f'Added {added_count} photos as automatic candidates'
+    })
 
 @photo_of_day_bp.route('/api/photo-of-day/stats')
 def photo_of_day_stats():
