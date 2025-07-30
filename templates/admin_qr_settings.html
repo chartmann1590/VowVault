@@ -489,12 +489,14 @@
             custom_text: document.getElementById('qrText').value
         };
         
-        fetch(`/admin/save-qr-settings?key=${key}`, {
+        fetch(`/admin/save-settings?key=${key}`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
             },
-            body: JSON.stringify(formData)
+            body: JSON.stringify({
+                qr_settings: formData
+            })
         })
         .then(response => response.json())
         .then(data => {

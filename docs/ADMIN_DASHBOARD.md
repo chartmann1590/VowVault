@@ -1,5 +1,7 @@
 # Admin Dashboard Guide
 
+> **Update (2024):** All admin templates are now linked to the admin dashboard and their SQL database counterparts. The `/dashboard` route is now available as an alias for the main admin dashboard (`/admin`). All navigation and database integration is up to date.
+
 The Wedding Gallery features a comprehensive admin dashboard that provides complete control over all aspects of the application. This guide covers the admin interface, navigation, and all available admin pages.
 
 ## 🚀 Accessing the Admin Dashboard

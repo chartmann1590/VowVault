@@ -90,6 +90,68 @@ def admin():
                          email_settings=email_settings,
                          immich_settings=immich_settings)
 
+@admin_bp.route('/dashboard')
+def admin_dashboard():
+    # Check for SSO session first
+    sso_user_email = session.get('sso_user_email')
+    sso_user_domain = session.get('sso_user_domain')
+    admin_key = request.args.get('key', '')
+    
+    # Verify admin access
+    if not verify_admin_access(admin_key, sso_user_email, sso_user_domain):
+        # If SSO is enabled, redirect to SSO login
+        sso_settings = get_sso_settings()
+        if sso_settings['enabled']:
+            return redirect(url_for('auth.sso_login'))
+        else:
+            return "Unauthorized", 401
+    
+    photos = Photo.query.order_by(Photo.upload_date.desc()).all()
+    total_likes = sum(photo.likes for photo in photos)
+    total_comments = Comment.query.count()
+    guestbook_entries = GuestbookEntry.query.order_by(GuestbookEntry.created_at.desc()).all()
+    
+    # Get messages for admin
+    all_messages = Message.query.order_by(Message.created_at.desc()).all()
+    visible_messages = [m for m in all_messages if not m.is_hidden]
+    hidden_messages = [m for m in all_messages if m.is_hidden]
+    total_message_comments = MessageComment.query.count()
+    
+    # Count photobooth photos
+    photobooth_count = Photo.query.filter_by(is_photobooth=True).count()
+    
+    # Get email settings
+    email_settings = {
+        'enabled': Settings.get('email_enabled', 'false').lower() == 'true',
+        'smtp_server': Settings.get('email_smtp_server', 'smtp.gmail.com'),
+        'smtp_port': Settings.get('email_smtp_port', '587'),
+        'smtp_username': Settings.get('email_smtp_username', ''),
+        'smtp_password': Settings.get('email_smtp_password', ''),
+        'imap_server': Settings.get('email_imap_server', 'imap.gmail.com'),
+        'imap_port': Settings.get('email_imap_port', '993'),
+        'imap_username': Settings.get('email_imap_username', ''),
+        'imap_password': Settings.get('email_imap_password', ''),
+        'monitor_email': Settings.get('email_monitor_email', '')
+    }
+    
+    # Get Immich settings
+    immich_settings = get_immich_settings()
+    
+    return render_template('admin_dashboard.html',
+                         photos=photos,
+                         total_photos=len(photos),
+                         total_likes=total_likes,
+                         total_comments=total_comments,
+                         guestbook_entries=guestbook_entries,
+                         total_guestbook=len(guestbook_entries),
+                         visible_messages=visible_messages,
+                         hidden_messages=hidden_messages,
+                         total_messages=len(all_messages),
+                         total_message_comments=total_message_comments,
+                         photobooth_count=photobooth_count,
+                         email_settings=email_settings,
+                         immich_settings=immich_settings)
+
 @admin_bp.route('/photos')
 def admin_photos():
     # Check for SSO session first
@@ -270,20 +332,69 @@ def admin_qr_settings():
     if not verify_admin_access(admin_key, sso_user_email, sso_user_domain):
         return "Unauthorized", 401
     
-    # Get QR settings
-    qr_settings = {
-        'enabled': Settings.get('qr_enabled', 'true').lower() == 'true',
-        'size': Settings.get('qr_size', 'medium'),
-        'color': Settings.get('qr_color', 'black'),
-        'custom_text': Settings.get('qr_custom_text', '')
-    }
+    # Get QR settings as JSON object
+    qr_settings = Settings.get('qr_settings', '{}')
+    qr_settings = json.loads(qr_settings) if qr_settings else {}
+    
+    # Default values if not set
+    if not qr_settings:
+        qr_settings = {
+            'enabled': True,
+            'size': 'medium',
+            'color': 'black',
+            'custom_text': '',
+            'title': 'Scan to View Our Wedding Gallery',
+            'subtitle': 'Share your photos and memories with us',
+            'message': 'Thank you for celebrating with us!',
+            'couple_names': ''
+        }
     
     # Generate QR code URL
-    qr_code_url = url_for('admin.qr_preview', key=admin_key, color=qr_settings['color'])
+    qr_code_url = url_for('admin.qr_preview', key=admin_key, color=qr_settings.get('color', 'black'))
     
     return render_template('admin_qr_settings.html',
                          qr_settings=qr_settings,
                          qr_code_url=qr_code_url)
+
+@admin_bp.route('/photo-of-day')
+def admin_photo_of_day():
+    # Check for SSO session first
+    sso_user_email = session.get('sso_user_email')
+    sso_user_domain = session.get('sso_user_domain')
+    admin_key = request.args.get('key', '')
+    
+    # Verify admin access
+    if not verify_admin_access(admin_key, sso_user_email, sso_user_domain):
+        return "Unauthorized", 401
+    
+    # Import photo of day models
+    from app.models.photo_of_day import PhotoOfDay, PhotoOfDayCandidate, PhotoOfDayVote
+    from app.models.photo import Photo
+    from datetime import datetime, timedelta
+    
+    # Get all photos of the day
+    photos_of_day = PhotoOfDay.query.order_by(PhotoOfDay.date.desc()).all()
+    
+    # Get candidate photos (photos that could be selected)
+    candidate_photos = PhotoOfDayCandidate.query.order_by(PhotoOfDayCandidate.date_added.desc()).all()
+    
+    # Get all photos for selection
+    all_photos = Photo.query.order_by(Photo.upload_date.desc()).limit(100).all()
+    
+    # Get current settings
+    likes_threshold = int(Settings.get('photo_of_day_likes_threshold', '3'))
+    
+    # Get photos that would be auto-candidates based on current threshold
+    auto_candidate_photos = Photo.query.filter(
+        Photo.likes >= likes_threshold
+    ).order_by(Photo.likes.desc()).limit(20).all()
+    
+    return render_template('admin_photo_of_day.html',
+                         photos_of_day=photos_of_day,
+                         candidate_photos=candidate_photos,
+                         all_photos=all_photos,
+                         likes_threshold=likes_threshold,
+                         auto_candidate_photos=auto_candidate_photos)
 
 @admin_bp.route('/welcome-modal')
 def admin_welcome_modal():
@@ -296,16 +407,29 @@ def admin_welcome_modal():
     if not verify_admin_access(admin_key, sso_user_email, sso_user_domain):
         return "Unauthorized", 401
     
-    # Get welcome modal settings
-    welcome_settings = {
-        'enabled': Settings.get('welcome_modal_enabled', 'true').lower() == 'true',
-        'title': Settings.get('welcome_modal_title', 'Welcome to Our Wedding Gallery!'),
-        'message': Settings.get('welcome_modal_message', ''),
-        'button_text': Settings.get('welcome_modal_button_text', 'Get Started'),
-        'background_color': Settings.get('welcome_modal_bg_color', '#8b7355'),
-        'text_color': Settings.get('welcome_modal_text_color', '#ffffff'),
-        'show_on_every_visit': Settings.get('welcome_modal_show_every_visit', 'false').lower() == 'true'
-    }
+    # Get welcome modal settings as JSON object
+    welcome_settings = Settings.get('welcome_modal', '{}')
+    welcome_settings = json.loads(welcome_settings) if welcome_settings else {}
+    
+    # Default values if not set
+    if not welcome_settings:
+        welcome_settings = {
+            'enabled': True,
+            'title': 'Welcome to Our Wedding Gallery!',
+            'message': 'Thank you so much for celebrating with us! We\'d love to see the wedding through your eyes. Feel free to upload your photos and browse the gallery.',
+            'instructions': [
+                'Click "Upload Photo/Video" to share your pictures or short videos',
+                'Browse the gallery to see all photos and videos',
+                'Click on any photo or video to like or comment',
+                'No login required - just add your name when uploading or commenting'
+            ],
+            'couple_photo': '',
+            'show_once': True,
+            'button_text': 'Get Started',
+            'background_color': '#8b7355',
+            'text_color': '#ffffff',
+            'show_on_every_visit': False
+        }
     
     return render_template('admin_welcome_modal.html',
                          welcome_settings=welcome_settings)
@@ -861,6 +985,18 @@ def save_settings():
         Settings.set('captcha_upload_enabled', str(captcha_data.get('upload_enabled', True)).lower())
         Settings.set('captcha_guestbook_enabled', str(captcha_data.get('guestbook_enabled', True)).lower())
         Settings.set('captcha_message_enabled', str(captcha_data.get('message_enabled', True)).lower())
+    
+    # Save slideshow settings
+    if 'slideshow_settings' in data:
+        slideshow_data = data['slideshow_settings']
+        Settings.set('slideshow_enabled', str(slideshow_data.get('enabled', True)).lower())
+        Settings.set('slideshow_speed', str(slideshow_data.get('speed', 3)))
+        Settings.set('slideshow_effect', slideshow_data.get('effect', 'fade'))
+        Settings.set('slideshow_order', slideshow_data.get('order', 'random'))
+        Settings.set('slideshow_max_photos', str(slideshow_data.get('max_photos', 20)))
+        Settings.set('slideshow_autoplay', str(slideshow_data.get('autoplay', True)).lower())
+        Settings.set('slideshow_loop', str(slideshow_data.get('loop', True)).lower())
+        Settings.set('slideshow_show_controls', str(slideshow_data.get('show_controls', True)).lower())
     
     return jsonify({'success': True})
 

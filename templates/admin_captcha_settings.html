@@ -720,12 +720,14 @@
             uploads_enabled: document.getElementById('captchaUploads').checked
         };
         
-        fetch(`/admin/save-captcha-settings?key=${key}`, {
+        fetch(`/admin/save-settings?key=${key}`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
             },
-            body: JSON.stringify(formData)
+            body: JSON.stringify({
+                captcha_settings: formData
+            })
         })
         .then(response => response.json())
         .then(data => {
