@@ -931,27 +931,80 @@
     // Register Service Worker
     if ('serviceWorker' in navigator) {
         window.addEventListener('load', () => {
-            navigator.serviceWorker.register('/static/sw.js')
+            // Check if we're on HTTPS or localhost
+            const isSecure = window.location.protocol === 'https:' || 
+                           window.location.hostname === 'localhost' || 
+                           window.location.hostname === '127.0.0.1' ||
+                           window.location.hostname.includes('10.0.0.');
+            
+            if (!isSecure) {
+                console.warn('PWA Debug: Service Worker may not work properly on HTTP. Push notifications require HTTPS.');
+                console.warn('PWA Debug: Current protocol:', window.location.protocol);
+                console.warn('PWA Debug: Current hostname:', window.location.hostname);
+            }
+            
+            // Try to register Service Worker
+            navigator.serviceWorker.register('/static/sw.js', {
+                scope: '/'
+            })
                 .then((registration) => {
-                    console.log('SW registered: ', registration);
-                    
-                    // Check if we're on HTTPS
-                    if (window.location.protocol !== 'https:' && window.location.hostname !== 'localhost') {
-                        console.warn('PWA Debug: Push notifications require HTTPS (except on localhost)');
-                        console.warn('PWA Debug: Current protocol:', window.location.protocol);
-                    }
+                    console.log('SW registered successfully: ', registration);
                     
                     // Check notification permission
                     if ('Notification' in window) {
                         console.log('PWA Debug: Notification permission:', Notification.permission);
                     }
+                    
+                    // Check push manager support
+                    if ('PushManager' in window) {
+                        console.log('PWA Debug: Push Manager supported');
+                    } else {
+                        console.warn('PWA Debug: Push Manager not supported');
+                    }
                 })
                 .catch((registrationError) => {
-                    console.log('SW registration failed: ', registrationError);
+                    console.error('SW registration failed: ', registrationError);
+                    
+                    // Provide helpful error message
+                    if (registrationError.name === 'SecurityError') {
+                        console.error('PWA Debug: Security error - this usually means HTTPS is required for Service Workers');
+                        console.error('PWA Debug: Try accessing the site via HTTPS or localhost');
+                        console.error('PWA Debug: For development, you can use HTTP on localhost or 10.0.0.x addresses');
+                    } else if (registrationError.name === 'NetworkError') {
+                        console.error('PWA Debug: Network error - check if the Service Worker file exists');
+                    } else if (registrationError.name === 'TypeError') {
+                        console.error('PWA Debug: TypeError - check if the Service Worker file is valid JavaScript');
+                    }
+                    
+                    // Fallback: Try to initialize push notifications without Service Worker
+                    console.log('PWA Debug: Attempting to initialize notifications without Service Worker...');
+                    initializeNotificationsWithoutSW();
                 });
         });
     } else {
         console.log('PWA Debug: Service Worker not supported');
+        // Fallback for browsers without Service Worker support
+        initializeNotificationsWithoutSW();
+    }
+
+    // Fallback function for when Service Worker fails
+    function initializeNotificationsWithoutSW() {
+        console.log('PWA Debug: Initializing notifications without Service Worker');
+        
+        // Check notification permission
+        if ('Notification' in window) {
+            console.log('PWA Debug: Notification permission:', Notification.permission);
+            
+            // Request permission if not already granted
+            if (Notification.permission === 'default') {
+                console.log('PWA Debug: Requesting notification permission...');
+                Notification.requestPermission().then(permission => {
+                    console.log('PWA Debug: Notification permission result:', permission);
+                });
+            }
+        } else {
+            console.warn('PWA Debug: Notifications not supported in this browser');
+        }
     }
 
     // Listen for beforeinstallprompt event
