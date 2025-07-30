@@ -2,84 +2,6 @@
 
 {% block title %}Admin - Photo of the Day Management{% endblock %}
 
-{% block head %}
-<script>
-// Define functions immediately in head to ensure they're available
-window.addAsCandidate = function(photoId) {
-    console.log('addAsCandidate called with photoId:', photoId);
-    fetch('/admin/photo-of-day/add-candidate?key=wedding2024', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-            photo_id: photoId
-        })
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            showNotification(data.message, 'success');
-            setTimeout(() => location.reload(), 1500);
-        } else {
-            showNotification(data.message, 'error');
-        }
-    })
-    .catch(error => {
-        console.error('Error:', error);
-        showNotification('An error occurred while adding the candidate', 'error');
-    });
-};
-
-window.deletePhotoOfDay = function(photoOfDayId) {
-    if (!confirm('Are you sure you want to delete this Photo of the Day?')) {
-        return;
-    }
-    fetch(`/admin/photo-of-day/delete/${photoOfDayId}?key=wedding2024`, {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({})
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            showNotification(data.message, 'success');
-            setTimeout(() => location.reload(), 1500);
-        } else {
-            showNotification(data.message, 'error');
-        }
-    })
-    .catch(error => {
-        console.error('Error:', error);
-        showNotification('An error occurred while deleting the photo', 'error');
-    });
-};
-
-window.showNotification = function(message, type) {
-    const notification = document.createElement('div');
-    notification.className = `fixed top-4 right-4 p-4 rounded-lg shadow-lg z-50 ${
-        type === 'success' ? 'bg-green-500 text-white' : 'bg-red-500 text-white'
-    }`;
-    notification.textContent = message;
-    document.body.appendChild(notification);
-    setTimeout(() => {
-        notification.remove();
-    }, 3000);
-};
-
-// Fallback for onclick handlers
-window.addEventListener('load', function() {
-    console.log('Window loaded. Functions available:', {
-        addAsCandidate: typeof window.addAsCandidate,
-        deletePhotoOfDay: typeof window.deletePhotoOfDay,
-        showNotification: typeof window.showNotification
-    });
-});
-</script>
-{% endblock %}
-
 {% block extra_styles %}
 <style>
     .photo-of-day-admin-header {
@@ -467,8 +389,82 @@ window.addEventListener('load', function() {
 </div>
 {% endblock %}
 
-{% block content_scripts %}{{ super() }}
+{% block scripts %}
 <script>
+// Define functions immediately to ensure they're available
+window.addAsCandidate = function(photoId) {
+    console.log('addAsCandidate called with photoId:', photoId);
+    fetch('/admin/photo-of-day/add-candidate?key=wedding2024', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+            photo_id: photoId
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showNotification(data.message, 'success');
+            setTimeout(() => location.reload(), 1500);
+        } else {
+            showNotification(data.message, 'error');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showNotification('An error occurred while adding the candidate', 'error');
+    });
+};
+
+window.deletePhotoOfDay = function(photoOfDayId) {
+    if (!confirm('Are you sure you want to delete this Photo of the Day?')) {
+        return;
+    }
+    fetch(`/admin/photo-of-day/delete/${photoOfDayId}?key=wedding2024`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({})
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showNotification(data.message, 'success');
+            setTimeout(() => location.reload(), 1500);
+        } else {
+            showNotification(data.message, 'error');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showNotification('An error occurred while deleting the photo', 'error');
+    });
+};
+
+window.showNotification = function(message, type) {
+    const notification = document.createElement('div');
+    notification.className = `fixed top-4 right-4 p-4 rounded-lg shadow-lg z-50 ${
+        type === 'success' ? 'bg-green-500 text-white' : 'bg-red-500 text-white'
+    }`;
+    notification.textContent = message;
+    document.body.appendChild(notification);
+    setTimeout(() => {
+        notification.remove();
+    }, 3000);
+};
+
+// Fallback for onclick handlers
+window.addEventListener('load', function() {
+    console.log('Window loaded. Functions available:', {
+        addAsCandidate: typeof window.addAsCandidate,
+        deletePhotoOfDay: typeof window.deletePhotoOfDay,
+        showNotification: typeof window.showNotification
+    });
+});
+
 console.log('Photo of Day admin script loading...');
 
 document.addEventListener('DOMContentLoaded', function() {
