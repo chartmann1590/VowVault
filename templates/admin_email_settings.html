@@ -1,0 +1,673 @@
+{% extends "base.html" %}
+
+{% block title %}Email Settings - Admin{% endblock %}
+
+{% block extra_styles %}
+<style>
+    .admin-header {
+        background: linear-gradient(135deg, #2c2c2c 0%, #4a4a4a 100%);
+        color: white;
+        padding: 2rem 0;
+        margin: -3rem -20px 2rem -20px;
+        text-align: center;
+    }
+
+    .admin-header h2 {
+        font-family: 'Playfair Display', serif;
+        font-size: 2rem;
+        margin-bottom: 0.5rem;
+    }
+
+    .back-link {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        color: white;
+        text-decoration: none;
+        margin-bottom: 1rem;
+        opacity: 0.8;
+        transition: opacity 0.3s ease;
+    }
+
+    .back-link:hover {
+        opacity: 1;
+        color: white;
+        text-decoration: none;
+    }
+
+    .section-card {
+        background: white;
+        border-radius: 15px;
+        overflow: hidden;
+        box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+        margin-bottom: 2rem;
+    }
+
+    .section-header {
+        background: #f9f5f0;
+        padding: 1.5rem 2rem;
+        border-bottom: 1px solid #e8ddd3;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .section-header h3 {
+        color: #8b7355;
+        font-family: 'Playfair Display', serif;
+        font-size: 1.5rem;
+        margin: 0;
+    }
+
+    .status-indicator {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.5rem 1rem;
+        border-radius: 20px;
+        font-size: 0.9rem;
+        font-weight: 500;
+    }
+
+    .status-indicator.active {
+        background: linear-gradient(135deg, #d4edda 0%, #c3e6cb 100%);
+        color: #155724;
+        border: 1px solid #c3e6cb;
+    }
+
+    .status-indicator.inactive {
+        background: linear-gradient(135deg, #f8d7da 0%, #f5c6cb 100%);
+        color: #721c24;
+        border: 1px solid #f5c6cb;
+    }
+
+    .status-dot {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        display: inline-block;
+        animation: pulse 2s infinite;
+    }
+
+    .status-indicator.active .status-dot {
+        background: #28a745;
+        box-shadow: 0 0 0 0 rgba(40, 167, 69, 0.7);
+    }
+
+    .status-indicator.inactive .status-dot {
+        background: #dc3545;
+        box-shadow: 0 0 0 0 rgba(220, 53, 69, 0.7);
+    }
+
+    @keyframes pulse {
+        0% {
+            box-shadow: 0 0 0 0 rgba(40, 167, 69, 0.7);
+        }
+        70% {
+            box-shadow: 0 0 0 10px rgba(40, 167, 69, 0);
+        }
+        100% {
+            box-shadow: 0 0 0 0 rgba(40, 167, 69, 0);
+        }
+    }
+
+    .section-content {
+        padding: 2rem;
+    }
+
+    .settings-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 2rem;
+        margin-bottom: 2rem;
+    }
+
+    .settings-form {
+        background: #f9f5f0;
+        padding: 1.5rem;
+        border-radius: 10px;
+    }
+
+    .info-panel {
+        background: #faf9f7;
+        padding: 1.5rem;
+        border-radius: 10px;
+        border: 2px dashed #e8ddd3;
+    }
+
+    .form-group {
+        margin-bottom: 1.5rem;
+    }
+
+    .form-group label {
+        display: block;
+        margin-bottom: 0.5rem;
+        font-weight: 600;
+        color: #6b5d54;
+    }
+
+    .form-control {
+        width: 100%;
+        padding: 0.75rem;
+        border: 2px solid #e8ddd3;
+        border-radius: 8px;
+        font-size: 1rem;
+        transition: border-color 0.3s ease;
+    }
+
+    .form-control:focus {
+        outline: none;
+        border-color: #8b7355;
+    }
+
+    .checkbox-group {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .checkbox-group input[type="checkbox"] {
+        width: auto;
+        margin: 0;
+    }
+
+    .button-group {
+        display: flex;
+        gap: 1rem;
+        margin-top: 2rem;
+    }
+
+    .btn {
+        padding: 0.75rem 1.5rem;
+        border: none;
+        border-radius: 25px;
+        cursor: pointer;
+        font-size: 1rem;
+        transition: all 0.3s ease;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .btn-primary {
+        background: #8b7355;
+        color: white;
+    }
+
+    .btn-primary:hover {
+        background: #6b5d54;
+        transform: translateY(-2px);
+    }
+
+    .btn-secondary {
+        background: #6c757d;
+        color: white;
+    }
+
+    .btn-secondary:hover {
+        background: #5a6268;
+        transform: translateY(-2px);
+    }
+
+    .btn-success {
+        background: #28a745;
+        color: white;
+    }
+
+    .btn-success:hover {
+        background: #218838;
+        transform: translateY(-2px);
+    }
+
+    .logs-table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 1rem;
+    }
+
+    .logs-table th {
+        background: #f9f5f0;
+        padding: 1rem;
+        text-align: left;
+        color: #6b5d54;
+        font-weight: 600;
+        border-bottom: 2px solid #e8ddd3;
+    }
+
+    .logs-table td {
+        padding: 1rem;
+        border-bottom: 1px solid #f0f0f0;
+    }
+
+    .logs-table tr:hover {
+        background: #faf9f7;
+    }
+
+    .status-success {
+        color: #28a745;
+        font-weight: bold;
+    }
+
+    .status-rejected {
+        color: #dc3545;
+        font-weight: bold;
+    }
+
+    .status-error {
+        color: #ffc107;
+        font-weight: bold;
+    }
+
+    .copy-email-btn {
+        background: #8b7355;
+        color: white;
+        border: none;
+        border-radius: 5px;
+        padding: 0.5rem 0.75rem;
+        cursor: pointer;
+        font-size: 0.9rem;
+        transition: background-color 0.3s ease;
+    }
+
+    .copy-email-btn:hover {
+        background: #6b5d54;
+    }
+
+    .success-message {
+        background: #d4edda;
+        color: #155724;
+        padding: 1rem;
+        border-radius: 10px;
+        margin-bottom: 1rem;
+        display: none;
+    }
+
+    @media (max-width: 768px) {
+        .admin-header {
+            margin: -3rem -1.5rem 2rem -1.5rem;
+        }
+
+        .settings-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .logs-table {
+            font-size: 0.9rem;
+        }
+
+        .logs-table th,
+        .logs-table td {
+            padding: 0.75rem 0.5rem;
+        }
+
+        .button-group {
+            flex-direction: column;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="admin-header">
+    <a href="/admin?key=wedding2024" class="back-link">
+        <svg viewBox="0 0 24 24" width="20" height="20">
+            <path d="M20,11V13H8L13.5,18.5L12.08,19.92L4.16,12L12.08,4.08L13.5,5.5L8,11H20Z" fill="currentColor"/>
+        </svg>
+        Back to Dashboard
+    </a>
+    <h2>Email Settings</h2>
+    <p>Configure email photo upload and view processing logs</p>
+</div>
+
+<div class="container">
+    <!-- Email Configuration Section -->
+    <div class="section-card">
+        <div class="section-header">
+            <h3>Email Configuration</h3>
+            <div class="status-indicator {% if email_settings.get('enabled', False) and email_settings.get('smtp_username') %}active{% else %}inactive{% endif %}">
+                <span class="status-dot"></span>
+                <span class="status-text">
+                    {% if email_settings.get('enabled', False) and email_settings.get('smtp_username') %}
+                        📧 Monitoring Active
+                    {% else %}
+                        ⏸️ Monitoring Inactive
+                    {% endif %}
+                </span>
+            </div>
+        </div>
+        <div class="section-content">
+            <div class="success-message" id="successMessage">
+                Settings saved successfully!
+            </div>
+
+            <div class="settings-grid">
+                <div class="settings-form">
+                    <h4 style="color: #8b7355; margin-bottom: 1.5rem;">Email Configuration</h4>
+                    
+                    <div class="form-group">
+                        <label class="checkbox-group">
+                            <input type="checkbox" 
+                                   id="email_enabled" 
+                                   {% if email_settings.get('enabled', False) %}checked{% endif %}>
+                            Enable Email Photo Upload
+                        </label>
+                        <small style="color: #666; display: block; margin-top: 0.5rem;">
+                            When enabled, users can email photos to the configured email address
+                        </small>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="email_monitor_email">Monitor Email Address</label>
+                        <div style="display: flex; align-items: center; gap: 0.5rem;">
+                            <input type="email" 
+                                   id="email_monitor_email" 
+                                   placeholder="photos@yourdomain.com"
+                                   value="{{ email_settings.get('monitor_email', '') }}"
+                                   class="form-control">
+                            <button type="button" 
+                                    class="copy-email-btn" 
+                                    onclick="copyMonitorEmail()" 
+                                    title="Copy email address">
+                                📋
+                            </button>
+                        </div>
+                        <small style="color: #666; display: block; margin-top: 0.5rem;">
+                            Email address to monitor for incoming photo uploads
+                        </small>
+                    </div>
+
+                    <h5 style="color: #8b7355; margin: 2rem 0 1rem 0;">SMTP Settings (for sending emails)</h5>
+                    
+                    <div class="form-group">
+                        <label for="email_smtp_server">SMTP Server</label>
+                        <input type="text" 
+                               id="email_smtp_server" 
+                               placeholder="smtp.gmail.com"
+                               value="{{ email_settings.get('smtp_server', 'smtp.gmail.com') }}"
+                               class="form-control">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="email_smtp_port">SMTP Port</label>
+                        <input type="number" 
+                               id="email_smtp_port" 
+                               placeholder="587"
+                               value="{{ email_settings.get('smtp_port', '587') }}"
+                               class="form-control">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="email_smtp_username">SMTP Username</label>
+                        <input type="email" 
+                               id="email_smtp_username" 
+                               placeholder="your-email@gmail.com"
+                               value="{{ email_settings.get('smtp_username', '') }}"
+                               class="form-control">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="email_smtp_password">SMTP Password</label>
+                        <input type="password" 
+                               id="email_smtp_password" 
+                               placeholder="App password or regular password"
+                               value="{{ email_settings.get('smtp_password', '') }}"
+                               class="form-control">
+                        <small style="color: #666; display: block; margin-top: 0.5rem;">
+                            For Gmail, use an App Password. For other providers, use your regular password.
+                        </small>
+                    </div>
+
+                    <h5 style="color: #8b7355; margin: 2rem 0 1rem 0;">IMAP Settings (for receiving emails)</h5>
+                    
+                    <div class="form-group">
+                        <label for="email_imap_server">IMAP Server</label>
+                        <input type="text" 
+                               id="email_imap_server" 
+                               placeholder="imap.gmail.com"
+                               value="{{ email_settings.get('imap_server', 'imap.gmail.com') }}"
+                               class="form-control">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="email_imap_port">IMAP Port</label>
+                        <input type="number" 
+                               id="email_imap_port" 
+                               placeholder="993"
+                               value="{{ email_settings.get('imap_port', '993') }}"
+                               class="form-control">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="email_imap_username">IMAP Username</label>
+                        <input type="email" 
+                               id="email_imap_username" 
+                               placeholder="your-email@gmail.com"
+                               value="{{ email_settings.get('imap_username', '') }}"
+                               class="form-control">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="email_imap_password">IMAP Password</label>
+                        <input type="password" 
+                               id="email_imap_password" 
+                               placeholder="App password or regular password"
+                               value="{{ email_settings.get('imap_password', '') }}"
+                               class="form-control">
+                        <small style="color: #666; display: block; margin-top: 0.5rem;">
+                            For Gmail, use an App Password. For other providers, use your regular password.
+                        </small>
+                    </div>
+                </div>
+
+                <div class="info-panel">
+                    <h4>How It Works</h4>
+                    <div style="text-align: left;">
+                        <div style="background: #f9f5f0; padding: 1.5rem; border-radius: 8px; margin-bottom: 1rem;">
+                            <strong style="color: #8b7355;">Email Upload Process:</strong>
+                            <ol style="margin: 0.5rem 0 0 1rem; padding-left: 1rem; color: #666;">
+                                <li>Users email photos to the monitor address</li>
+                                <li>System checks for photo attachments</li>
+                                <li>Photos are automatically added to gallery</li>
+                                <li>Confirmation email sent to user</li>
+                                <li>Non-photo emails get rejection notice</li>
+                            </ol>
+                        </div>
+                        
+                        <div style="background: #e8f5e8; padding: 1rem; border-radius: 8px; margin-bottom: 1rem;">
+                            <strong style="color: #28a745;">Accepted Formats:</strong>
+                            <ul style="margin: 0.5rem 0 0 1rem; padding-left: 1rem; color: #666;">
+                                <li>JPG / JPEG</li>
+                                <li>PNG</li>
+                                <li>GIF</li>
+                                <li>WebP</li>
+                            </ul>
+                        </div>
+                        
+                        <div style="background: #fff3cd; padding: 1rem; border-radius: 8px;">
+                            <strong style="color: #856404;">Setup Notes:</strong>
+                            <ul style="margin: 0.5rem 0 0 1rem; padding-left: 1rem; color: #666;">
+                                <li>Gmail requires App Passwords</li>
+                                <li>Enable "Less secure app access" for some providers</li>
+                                <li>Check your email provider's IMAP settings</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="button-group">
+                <button class="btn btn-primary" onclick="saveEmailSettings()">
+                    <svg viewBox="0 0 24 24" width="20" height="20">
+                        <path d="M15,9H5V5H15M12,19A3,3 0 0,1 9,16A3,3 0 0,1 12,13A3,3 0 0,1 15,16A3,3 0 0,1 12,19M17,3H5C3.89,3 3,3.9 3,5V19A2,2 0 0,0 5,21H19A2,2 0 0,0 21,19V7L17,3Z" fill="currentColor"/>
+                    </svg>
+                    Save Email Settings
+                </button>
+                <button class="btn btn-success" onclick="startEmailMonitor()">
+                    <svg viewBox="0 0 24 24" width="20" height="20">
+                        <path d="M12,2A10,10 0 0,0 2,12A10,10 0 0,0 12,22A10,10 0 0,0 22,12A10,10 0 0,0 12,2M16.2,16.2L11,13V7H12.5V12.2L17,14.9L16.2,16.2Z" fill="currentColor"/>
+                    </svg>
+                    Start Email Monitor
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Email Processing Log Section -->
+    <div class="section-card">
+        <div class="section-header">
+            <h3>Email Processing Log</h3>
+        </div>
+        <div class="section-content">
+            <div class="table-responsive">
+                <table class="logs-table">
+                    <thead>
+                        <tr>
+                            <th>Sender</th>
+                            <th>Subject</th>
+                            <th>Received</th>
+                            <th>Status</th>
+                            <th>Photos</th>
+                            <th>Response</th>
+                            <th>Error</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for log in email_logs %}
+                        <tr>
+                            <td>{{ log.sender_email }}</td>
+                            <td>{{ log.subject[:50] }}{% if log.subject|length > 50 %}...{% endif %}</td>
+                            <td>{{ log.received_at.strftime('%b %d, %Y %H:%M') }}</td>
+                            <td>
+                                {% if log.status == 'success' %}
+                                    <span class="status-success">✓ Success</span>
+                                {% elif log.status == 'rejected' %}
+                                    <span class="status-rejected">✗ Rejected</span>
+                                {% elif log.status == 'error' %}
+                                    <span class="status-error">⚠ Error</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if log.photo_count > 0 %}
+                                    <span style="color: #28a745;">{{ log.photo_count }} photo(s)</span>
+                                {% else %}
+                                    -
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if log.response_sent %}
+                                    <span style="color: #28a745;">✓ {{ log.response_type|title }}</span>
+                                {% else %}
+                                    <span style="color: #dc3545;">✗ Not sent</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if log.error_message %}
+                                    <span style="color: #dc3545;" title="{{ log.error_message }}">Error</span>
+                                {% else %}
+                                    -
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+                {% if not email_logs %}
+                <div style="text-align: center; padding: 2rem; color: #666;">
+                    <p>No email processing logs yet.</p>
+                    <p>Emails will appear here once the email monitor is running and processes incoming emails.</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    function copyMonitorEmail() {
+        const email = document.getElementById('email_monitor_email').value;
+        if (email) {
+            navigator.clipboard.writeText(email).then(() => {
+                alert('Email address copied to clipboard!');
+            }).catch(() => {
+                // Fallback for older browsers
+                const textArea = document.createElement('textarea');
+                textArea.value = email;
+                document.body.appendChild(textArea);
+                textArea.select();
+                document.execCommand('copy');
+                document.body.removeChild(textArea);
+                alert('Email address copied to clipboard!');
+            });
+        }
+    }
+
+    function saveEmailSettings() {
+        const urlParams = new URLSearchParams(window.location.search);
+        const key = urlParams.get('key');
+        
+        const settings = {
+            email_settings: {
+                enabled: document.getElementById('email_enabled').checked,
+                monitor_email: document.getElementById('email_monitor_email').value,
+                smtp_server: document.getElementById('email_smtp_server').value,
+                smtp_port: document.getElementById('email_smtp_port').value,
+                smtp_username: document.getElementById('email_smtp_username').value,
+                smtp_password: document.getElementById('email_smtp_password').value,
+                imap_server: document.getElementById('email_imap_server').value,
+                imap_port: document.getElementById('email_imap_port').value,
+                imap_username: document.getElementById('email_imap_username').value,
+                imap_password: document.getElementById('email_imap_password').value
+            }
+        };
+
+        fetch(`/admin/save-settings?key=${key}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(settings)
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                const successMessage = document.getElementById('successMessage');
+                successMessage.style.display = 'block';
+                setTimeout(() => {
+                    successMessage.style.display = 'none';
+                }, 3000);
+            } else {
+                alert('Error saving settings: ' + (data.error || 'Unknown error'));
+            }
+        })
+        .catch(error => {
+            alert('Error saving settings: ' + error.message);
+        });
+    }
+
+    function startEmailMonitor() {
+        const urlParams = new URLSearchParams(window.location.search);
+        const key = urlParams.get('key');
+        
+        fetch(`/admin/start-email-monitor?key=${key}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert('Email monitor started successfully!');
+            } else {
+                alert('Error starting email monitor: ' + (data.error || 'Unknown error'));
+            }
+        })
+        .catch(error => {
+            alert('Error starting email monitor: ' + error.message);
+        });
+    }
+</script>
+{% endblock %} 

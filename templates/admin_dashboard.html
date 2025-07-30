@@ -1,0 +1,666 @@
+{% extends "base.html" %}
+
+{% block title %}Admin Dashboard - Wedding Gallery{% endblock %}
+
+{% block extra_styles %}
+<style>
+    .admin-header {
+        background: linear-gradient(135deg, #2c2c2c 0%, #4a4a4a 100%);
+        color: white;
+        padding: 3rem 0;
+        margin: -3rem -20px 3rem -20px;
+        text-align: center;
+    }
+
+    .admin-header h2 {
+        font-family: 'Playfair Display', serif;
+        font-size: 2.5rem;
+        margin-bottom: 1rem;
+    }
+
+    .admin-notice {
+        background: #fff3cd;
+        border: 1px solid #ffeaa7;
+        color: #856404;
+        padding: 1rem;
+        border-radius: 10px;
+        margin-bottom: 2rem;
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+    }
+
+    .admin-notice svg {
+        width: 24px;
+        height: 24px;
+        fill: currentColor;
+        flex-shrink: 0;
+    }
+
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 2rem;
+        margin-bottom: 3rem;
+    }
+
+    .stat-card {
+        background: white;
+        padding: 2rem;
+        border-radius: 15px;
+        box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+        text-align: center;
+        transition: transform 0.3s ease;
+    }
+
+    .stat-card:hover {
+        transform: translateY(-5px);
+    }
+
+    .stat-value {
+        font-size: 3rem;
+        font-weight: 700;
+        color: #8b7355;
+        margin-bottom: 0.5rem;
+    }
+
+    .stat-label {
+        color: #6b5d54;
+        font-size: 1.1rem;
+    }
+
+    .admin-sections {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        gap: 2rem;
+        margin-bottom: 3rem;
+    }
+
+    .section-card {
+        background: white;
+        border-radius: 15px;
+        overflow: hidden;
+        box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+        transition: transform 0.3s ease;
+    }
+
+    .section-card:hover {
+        transform: translateY(-5px);
+    }
+
+    .section-header {
+        background: #f9f5f0;
+        padding: 1.5rem 2rem;
+        border-bottom: 1px solid #e8ddd3;
+    }
+
+    .section-header h3 {
+        color: #8b7355;
+        font-family: 'Playfair Display', serif;
+        font-size: 1.8rem;
+        margin: 0;
+    }
+
+    .section-content {
+        padding: 2rem;
+    }
+
+    .admin-nav-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 1.5rem;
+    }
+
+    .nav-item {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        padding: 1.5rem;
+        background: #f9f5f0;
+        border-radius: 10px;
+        text-decoration: none;
+        color: #6b5d54;
+        transition: all 0.3s ease;
+        border: 2px solid transparent;
+    }
+
+    .nav-item:hover {
+        background: #e8ddd3;
+        color: #8b7355;
+        text-decoration: none;
+        transform: translateY(-2px);
+        border-color: #8b7355;
+    }
+
+    .nav-item svg {
+        width: 32px;
+        height: 32px;
+        fill: currentColor;
+        flex-shrink: 0;
+    }
+
+    .nav-item-content {
+        flex: 1;
+    }
+
+    .nav-item-title {
+        font-weight: 600;
+        font-size: 1.1rem;
+        margin-bottom: 0.25rem;
+    }
+
+    .nav-item-description {
+        font-size: 0.9rem;
+        opacity: 0.8;
+    }
+
+    .status-indicator {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.5rem 1rem;
+        border-radius: 20px;
+        font-size: 0.9rem;
+        font-weight: 500;
+        margin-top: 0.5rem;
+    }
+
+    .status-indicator.active {
+        background: linear-gradient(135deg, #d4edda 0%, #c3e6cb 100%);
+        color: #155724;
+        border: 1px solid #c3e6cb;
+    }
+
+    .status-indicator.inactive {
+        background: linear-gradient(135deg, #f8d7da 0%, #f5c6cb 100%);
+        color: #721c24;
+        border: 1px solid #f5c6cb;
+    }
+
+    .status-dot {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        display: inline-block;
+        animation: pulse 2s infinite;
+    }
+
+    .status-indicator.active .status-dot {
+        background: #28a745;
+        box-shadow: 0 0 0 0 rgba(40, 167, 69, 0.7);
+    }
+
+    .status-indicator.inactive .status-dot {
+        background: #dc3545;
+        box-shadow: 0 0 0 0 rgba(220, 53, 69, 0.7);
+    }
+
+    @keyframes pulse {
+        0% {
+            box-shadow: 0 0 0 0 rgba(40, 167, 69, 0.7);
+        }
+        70% {
+            box-shadow: 0 0 0 10px rgba(40, 167, 69, 0);
+        }
+        100% {
+            box-shadow: 0 0 0 0 rgba(40, 167, 69, 0);
+        }
+    }
+
+    .quick-actions {
+        display: flex;
+        gap: 1rem;
+        margin-bottom: 2rem;
+        flex-wrap: wrap;
+    }
+
+    .quick-action-btn {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.75rem 1.5rem;
+        border: none;
+        border-radius: 25px;
+        cursor: pointer;
+        font-size: 1rem;
+        transition: all 0.3s ease;
+        text-decoration: none;
+        color: white;
+    }
+
+    .quick-action-btn:hover {
+        transform: translateY(-2px);
+        text-decoration: none;
+        color: white;
+    }
+
+    .download-btn {
+        background: #28a745;
+    }
+
+    .download-btn:hover {
+        background: #218838;
+    }
+
+    .reset-btn {
+        background: #dc3545;
+    }
+
+    .reset-btn:hover {
+        background: #c82333;
+    }
+
+    .debug-btn {
+        background: #17a2b8;
+    }
+
+    .debug-btn:hover {
+        background: #138496;
+    }
+
+    @media (max-width: 768px) {
+        .admin-header {
+            margin: -3rem -1.5rem 3rem -1.5rem;
+        }
+
+        .admin-nav-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .quick-actions {
+            flex-direction: column;
+        }
+
+        .quick-action-btn {
+            width: 100%;
+            justify-content: center;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="admin-header">
+    <h2>Admin Dashboard</h2>
+    <p>Manage your wedding gallery and settings</p>
+</div>
+
+<div class="container">
+    <div class="admin-notice">
+        <svg viewBox="0 0 24 24">
+            <path d="M12,2L1,21H23M12,6L19.53,19H4.47M11,10V14H13V10M11,16V18H13V16"/>
+        </svg>
+        <div>
+            <strong>Security Notice:</strong> This admin panel is protected by a simple key. For production use, implement proper authentication.
+        </div>
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="quick-actions">
+        <button class="quick-action-btn download-btn" onclick="batchDownload()">
+            <svg viewBox="0 0 24 24" width="20" height="20">
+                <path d="M5,20H19V18H5M19,9H15V3H9V9H5L12,16L19,9Z" fill="currentColor"/>
+            </svg>
+            Download All Content
+        </button>
+        <button class="quick-action-btn reset-btn" onclick="showResetModal()">
+            <svg viewBox="0 0 24 24" width="20" height="20">
+                <path d="M12,4C14.1,4 16.1,4.8 17.6,6.3C20.7,9.4 20.7,14.5 17.6,17.6C16.1,19.1 14.1,19.9 12,19.9C9.9,19.9 7.9,19.1 6.4,17.6C5.6,16.8 5,15.9 4.6,14.9C4.2,13.9 4,12.9 4,11.9C4,10.9 4.2,9.9 4.6,8.9L6.1,9.6C5.8,10.4 5.6,11.2 5.6,11.9C5.6,12.6 5.7,13.3 6,14C6.2,14.6 6.6,15.2 7,15.7C8.2,16.9 9.9,17.5 11.7,17.5C13.5,17.5 15.2,16.9 16.4,15.7C18.8,13.3 18.8,9.4 16.4,7C15.2,5.8 13.5,5.2 11.7,5.2C10.7,5.2 9.7,5.4 8.8,5.9L10.4,4.3L9,2.9L5.1,6.8L9,10.7L10.4,9.3L8.8,7.7C9.4,7.4 10.1,7.2 10.8,7.2C11.9,7.2 12.9,7.6 13.7,8.4C15.3,10 15.3,12.7 13.7,14.3C12.9,15.1 11.9,15.5 10.8,15.5C9.7,15.5 8.7,15.1 7.9,14.3C7.5,13.9 7.2,13.4 7.1,12.8C7,12.2 7,11.6 7.1,11L5.6,10.3C5.2,11.1 5,12 5,12.9C5,14.1 5.4,15.2 6.1,16.1C7.3,18.1 9.5,19.3 12,19.3C14.5,19.3 16.7,18.1 17.9,16.1C19.1,14.1 19.1,11.6 17.9,9.6C16.7,7.6 14.5,6.4 12,6.4V4Z" fill="currentColor"/>
+            </svg>
+            System Reset
+        </button>
+        <a href="/admin/pwa-debug?key=wedding2024" class="quick-action-btn debug-btn">
+            <svg viewBox="0 0 24 24" width="20" height="20">
+                <path d="M12,2A10,10 0 0,0 2,12A10,10 0 0,0 12,22A10,10 0 0,0 22,12A10,10 0 0,0 12,2M13,17H11V15H13V17M13,13H11V7H13V13Z" fill="currentColor"/>
+            </svg>
+            PWA Debug
+        </a>
+    </div>
+
+    <!-- Statistics -->
+    <div class="stats-grid">
+        <div class="stat-card">
+            <div class="stat-value">{{ total_photos }}</div>
+            <div class="stat-label">Total Photos</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-value">{{ total_likes }}</div>
+            <div class="stat-label">Total Likes</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-value">{{ total_comments }}</div>
+            <div class="stat-label">Photo Comments</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-value">{{ total_guestbook }}</div>
+            <div class="stat-label">Guestbook Entries</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-value">{{ total_messages }}</div>
+            <div class="stat-label">Message Board Posts</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-value">{{ photobooth_count }}</div>
+            <div class="stat-label">Photobooth Photos</div>
+        </div>
+    </div>
+
+    <!-- Admin Navigation -->
+    <div class="admin-sections">
+        <!-- Content Management -->
+        <div class="section-card">
+            <div class="section-header">
+                <h3>Content Management</h3>
+            </div>
+            <div class="section-content">
+                <div class="admin-nav-grid">
+                    <a href="/admin/photos?key=wedding2024" class="nav-item">
+                        <svg viewBox="0 0 24 24">
+                            <path d="M8.5,13.5L11,16.5L14.5,12L19,18H5M21,19V5C21,3.89 20.1,3 19,3H5A2,2 0 0,0 3,5V19A2,2 0 0,0 5,21H19A2,2 0 0,0 21,19Z"/>
+                        </svg>
+                        <div class="nav-item-content">
+                            <div class="nav-item-title">Photos & Videos</div>
+                            <div class="nav-item-description">Manage uploaded photos and videos</div>
+                        </div>
+                    </a>
+                    <a href="/admin/guestbook?key=wedding2024" class="nav-item">
+                        <svg viewBox="0 0 24 24">
+                            <path d="M19,3H5C3.89,3 3,3.89 3,5V19A2,2 0 0,0 5,21H19A2,2 0 0,0 21,19V5C21,3.89 20.1,3 19,3M19,5V19H5V5H19Z"/>
+                        </svg>
+                        <div class="nav-item-content">
+                            <div class="nav-item-title">Guestbook</div>
+                            <div class="nav-item-description">Manage guestbook entries</div>
+                        </div>
+                    </a>
+                    <a href="/admin/messages?key=wedding2024" class="nav-item">
+                        <svg viewBox="0 0 24 24">
+                            <path d="M20,2H4A2,2 0 0,0 2,4V22L6,18H20A2,2 0 0,0 22,16V4A2,2 0 0,0 20,2M20,16H6L4,18V4H20V16Z"/>
+                        </svg>
+                        <div class="nav-item-content">
+                            <div class="nav-item-title">Message Board</div>
+                            <div class="nav-item-description">Manage message board posts</div>
+                        </div>
+                    </a>
+                    <a href="/admin/photo-of-day?key=wedding2024" class="nav-item">
+                        <svg viewBox="0 0 24 24">
+                            <path d="M12,2A10,10 0 0,0 2,12A10,10 0 0,0 12,22A10,10 0 0,0 22,12A10,10 0 0,0 12,2M12,4A8,8 0 0,1 20,12A8,8 0 0,1 12,20A8,8 0 0,1 4,12A8,8 0 0,1 12,4M12,6A6,6 0 0,0 6,12A6,6 0 0,0 12,18A6,6 0 0,0 18,12A6,6 0 0,0 12,6M12,8A4,4 0 0,1 16,12A4,4 0 0,1 12,16A4,4 0 0,1 8,12A4,4 0 0,1 12,8Z"/>
+                        </svg>
+                        <div class="nav-item-content">
+                            <div class="nav-item-title">Photo of the Day</div>
+                            <div class="nav-item-description">Set featured photos</div>
+                        </div>
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Settings & Configuration -->
+        <div class="section-card">
+            <div class="section-header">
+                <h3>Settings & Configuration</h3>
+            </div>
+            <div class="section-content">
+                <div class="admin-nav-grid">
+                    <a href="/admin/photobooth?key=wedding2024" class="nav-item">
+                        <svg viewBox="0 0 24 24">
+                            <path d="M12,2A10,10 0 0,0 2,12A10,10 0 0,0 12,22A10,10 0 0,0 22,12A10,10 0 0,0 12,2M12,4A8,8 0 0,1 20,12A8,8 0 0,1 12,20A8,8 0 0,1 4,12A8,8 0 0,1 12,4M12,6A6,6 0 0,0 6,12A6,6 0 0,0 12,18A6,6 0 0,0 18,12A6,6 0 0,0 12,6M12,8A4,4 0 0,1 16,12A4,4 0 0,1 12,16A4,4 0 0,1 8,12A4,4 0 0,1 12,8Z"/>
+                        </svg>
+                        <div class="nav-item-content">
+                            <div class="nav-item-title">Photobooth Settings</div>
+                            <div class="nav-item-description">Configure virtual photobooth</div>
+                        </div>
+                    </a>
+                    <a href="/admin/qr-settings?key=wedding2024" class="nav-item">
+                        <svg viewBox="0 0 24 24">
+                            <path d="M3,11H5V13H3V11M7,5H9V7H7V5M11,5H13V7H11V5M15,5H17V7H15V5M19,5H21V7H19V5M7,9H9V11H7V9M11,9H13V11H11V9M15,9H17V11H15V9M19,9H21V11H19V9M7,13H9V15H7V13M11,13H13V15H11V13M15,13H17V15H15V13M19,13H21V15H19V13M7,17H9V19H7V17M11,17H13V19H11V17M15,17H17V19H15V17M19,17H21V19H19V17Z"/>
+                        </svg>
+                        <div class="nav-item-content">
+                            <div class="nav-item-title">QR Code Settings</div>
+                            <div class="nav-item-description">Generate QR codes for sharing</div>
+                        </div>
+                    </a>
+                    <a href="/admin/welcome-settings?key=wedding2024" class="nav-item">
+                        <svg viewBox="0 0 24 24">
+                            <path d="M12,2A10,10 0 0,0 2,12A10,10 0 0,0 12,22A10,10 0 0,0 22,12A10,10 0 0,0 12,2M12,4A8,8 0 0,1 20,12A8,8 0 0,1 12,20A8,8 0 0,1 4,12A8,8 0 0,1 12,4M12,6A6,6 0 0,0 6,12A6,6 0 0,0 12,18A6,6 0 0,0 18,12A6,6 0 0,0 12,6M12,8A4,4 0 0,1 16,12A4,4 0 0,1 12,16A4,4 0 0,1 8,12A4,4 0 0,1 12,8Z"/>
+                        </svg>
+                        <div class="nav-item-content">
+                            <div class="nav-item-title">Welcome Modal</div>
+                            <div class="nav-item-description">Configure welcome message</div>
+                        </div>
+                    </a>
+                    <a href="/admin/security?key=wedding2024" class="nav-item">
+                        <svg viewBox="0 0 24 24">
+                            <path d="M12,1L3,5V11C3,16.55 6.84,21.74 12,23C17.16,21.74 21,16.55 21,11V5L12,1M12,7C13.4,7 14.8,8.6 14.8,10V11.5C15.4,11.5 16,12.1 16,12.7V15.2C16,15.8 15.4,16.4 14.8,16.4H9.2C8.6,16.4 8,15.8 8,15.2V12.7C8,12.1 8.6,11.5 9.2,11.5V10C9.2,8.6 10.6,7 12,7M12,8.2C11.2,8.2 10.5,8.7 10.5,9.5V11.5H13.5V9.5C13.5,8.7 12.8,8.2 12,8.2Z"/>
+                        </svg>
+                        <div class="nav-item-content">
+                            <div class="nav-item-title">Security Settings</div>
+                            <div class="nav-item-description">SSO and CAPTCHA configuration</div>
+                        </div>
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Integrations & Services -->
+        <div class="section-card">
+            <div class="section-header">
+                <h3>Integrations & Services</h3>
+            </div>
+            <div class="section-content">
+                <div class="admin-nav-grid">
+                    <a href="/admin/email-settings?key=wedding2024" class="nav-item">
+                        <svg viewBox="0 0 24 24">
+                            <path d="M20,8L12,13L4,8V6L12,11L20,6M20,4H4C2.89,4 2,4.89 2,6V18A2,2 0 0,0 4,20H20A2,2 0 0,0 22,18V6C22,4.89 21.1,4 20,4Z"/>
+                        </svg>
+                        <div class="nav-item-content">
+                            <div class="nav-item-title">Email Settings</div>
+                            <div class="nav-item-description">Configure email photo upload</div>
+                            <div class="status-indicator {% if email_settings.get('enabled', False) and email_settings.get('smtp_username') %}active{% else %}inactive{% endif %}">
+                                <span class="status-dot"></span>
+                                <span class="status-text">
+                                    {% if email_settings.get('enabled', False) and email_settings.get('smtp_username') %}
+                                        📧 Active
+                                    {% else %}
+                                        ⏸️ Inactive
+                                    {% endif %}
+                                </span>
+                            </div>
+                        </div>
+                    </a>
+                    <a href="/admin/immich-settings?key=wedding2024" class="nav-item">
+                        <svg viewBox="0 0 24 24">
+                            <path d="M12,2A10,10 0 0,0 2,12A10,10 0 0,0 12,22A10,10 0 0,0 22,12A10,10 0 0,0 12,2M12,4A8,8 0 0,1 20,12A8,8 0 0,1 12,20A8,8 0 0,1 4,12A8,8 0 0,1 12,4M12,6A6,6 0 0,0 6,12A6,6 0 0,0 12,18A6,6 0 0,0 18,12A6,6 0 0,0 12,6M12,8A4,4 0 0,1 16,12A4,4 0 0,1 12,16A4,4 0 0,1 8,12A4,4 0 0,1 12,8Z"/>
+                        </svg>
+                        <div class="nav-item-content">
+                            <div class="nav-item-title">Immich Sync</div>
+                            <div class="nav-item-description">Sync photos to Immich server</div>
+                            <div class="status-indicator {% if immich_settings.get('enabled', False) and immich_settings.get('server_url') and immich_settings.get('api_key') %}active{% else %}inactive{% endif %}">
+                                <span class="status-dot"></span>
+                                <span class="status-text">
+                                    {% if immich_settings.get('enabled', False) and immich_settings.get('server_url') and immich_settings.get('api_key') %}
+                                        🔄 Active
+                                    {% else %}
+                                        ⏸️ Inactive
+                                    {% endif %}
+                                </span>
+                            </div>
+                        </div>
+                    </a>
+                    <a href="/admin/notifications?key=wedding2024" class="nav-item">
+                        <svg viewBox="0 0 24 24">
+                            <path d="M21,19V20H3V19L5,17V11C5,7.9 7.03,5.17 10,4.29C10,4.19 10,4.1 10,4A2,2 0 0,1 12,2A2,2 0 0,1 14,4C14,4.1 14,4.19 14,4.29C16.97,5.17 19,7.9 19,11V17L21,19M14,21A2,2 0 0,1 12,23A2,2 0 0,1 10,21M19.75,3.19L18.33,4.61L20.04,6.3L21.45,4.88L19.75,3.19M18.33,4.61L19.75,3.19L18.33,4.61Z"/>
+                        </svg>
+                        <div class="nav-item-content">
+                            <div class="nav-item-title">Push Notifications</div>
+                            <div class="nav-item-description">Manage notification users</div>
+                        </div>
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- System & Maintenance -->
+        <div class="section-card">
+            <div class="section-header">
+                <h3>System & Maintenance</h3>
+            </div>
+            <div class="section-content">
+                <div class="admin-nav-grid">
+                    <a href="/admin/logs?key=wedding2024" class="nav-item">
+                        <svg viewBox="0 0 24 24">
+                            <path d="M14,2H6A2,2 0 0,0 4,4V20A2,2 0 0,0 6,22H18A2,2 0 0,0 20,20V8L14,2M18,20H6V4H13V9H18V20Z"/>
+                        </svg>
+                        <div class="nav-item-content">
+                            <div class="nav-item-title">System Logs</div>
+                            <div class="nav-item-description">View email and sync logs</div>
+                        </div>
+                    </a>
+                    <a href="/admin/database?key=wedding2024" class="nav-item">
+                        <svg viewBox="0 0 24 24">
+                            <path d="M4,6H8V18H4V6M10,6H14V18H10V6M16,6H20V18H16V6Z"/>
+                        </svg>
+                        <div class="nav-item-content">
+                            <div class="nav-item-title">Database Maintenance</div>
+                            <div class="nav-item-description">Optimize and maintain database</div>
+                        </div>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- System Reset Modal -->
+<div class="modal-overlay" id="resetModal" style="display: none;">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3>System Reset</h3>
+        </div>
+        <div class="warning-text">
+            <strong>⚠️ WARNING:</strong> This will permanently delete ALL data including:
+            <ul style="margin: 0.5rem 0; padding-left: 1rem;">
+                <li>All uploaded photos and videos</li>
+                <li>All guestbook entries</li>
+                <li>All message board posts</li>
+                <li>All comments and likes</li>
+                <li>All photobooth photos</li>
+                <li>All settings and configurations</li>
+            </ul>
+            This action CANNOT be undone!
+        </div>
+        <p>To confirm this destructive action, please type <strong>"RESET EVERYTHING"</strong> in the box below:</p>
+        <input type="text" 
+               id="resetConfirmation" 
+               class="confirmation-input"
+               placeholder="Type: RESET EVERYTHING">
+        <div class="modal-buttons">
+            <button class="btn system-reset-btn" onclick="confirmSystemReset()" id="confirmResetBtn" disabled>
+                Reset System
+            </button>
+            <button class="btn btn-secondary" onclick="closeResetModal()">Cancel</button>
+        </div>
+    </div>
+</div>
+
+<!-- Loading Overlay -->
+<div class="loading-overlay" id="loadingOverlay" style="display: none;">
+    <div class="loading-content">
+        <div class="spinner"></div>
+        <p id="loadingMessage">Processing...</p>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // Batch download functionality
+    function batchDownload() {
+        const urlParams = new URLSearchParams(window.location.search);
+        const key = urlParams.get('key');
+        
+        // Show loading overlay
+        showLoading('Preparing download...');
+        
+        // Create a temporary link and click it
+        const link = document.createElement('a');
+        link.href = `/admin/batch-download?key=${key}`;
+        link.download = '';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        
+        // Hide loading after a delay
+        setTimeout(() => {
+            hideLoading();
+        }, 2000);
+    }
+
+    // System reset functionality
+    function showResetModal() {
+        document.getElementById('resetModal').style.display = 'block';
+        document.getElementById('resetConfirmation').value = '';
+        document.getElementById('confirmResetBtn').disabled = true;
+    }
+
+    function closeResetModal() {
+        document.getElementById('resetModal').style.display = 'none';
+    }
+
+    // Enable/disable reset button based on confirmation text
+    document.getElementById('resetConfirmation').addEventListener('input', function(e) {
+        const confirmBtn = document.getElementById('confirmResetBtn');
+        confirmBtn.disabled = e.target.value !== 'RESET EVERYTHING';
+    });
+
+    async function confirmSystemReset() {
+        const confirmation = document.getElementById('resetConfirmation').value;
+        
+        if (confirmation !== 'RESET EVERYTHING') {
+            alert('Please type "RESET EVERYTHING" to confirm.');
+            return;
+        }
+
+        const urlParams = new URLSearchParams(window.location.search);
+        const key = urlParams.get('key');
+        
+        showLoading('Resetting system...');
+        closeResetModal();
+        
+        try {
+            const response = await fetch(`/admin/system-reset?key=${key}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    confirmation: confirmation
+                })
+            });
+            
+            const data = await response.json();
+            
+            if (data.success) {
+                hideLoading();
+                alert('System reset completed successfully! The page will now reload.');
+                window.location.reload();
+            } else {
+                hideLoading();
+                alert('Error during reset: ' + (data.error || 'Unknown error'));
+            }
+        } catch (error) {
+            hideLoading();
+            alert('Error during reset: ' + error.message);
+        }
+    }
+
+    // Loading overlay functions
+    function showLoading(message = 'Loading...') {
+        document.getElementById('loadingMessage').textContent = message;
+        document.getElementById('loadingOverlay').style.display = 'flex';
+    }
+
+    function hideLoading() {
+        document.getElementById('loadingOverlay').style.display = 'none';
+    }
+</script>
+{% endblock %} 

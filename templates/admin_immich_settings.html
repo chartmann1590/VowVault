@@ -1,0 +1,627 @@
+{% extends "base.html" %}
+
+{% block title %}Immich Settings - Admin{% endblock %}
+
+{% block extra_styles %}
+<style>
+    .admin-header {
+        background: linear-gradient(135deg, #2c2c2c 0%, #4a4a4a 100%);
+        color: white;
+        padding: 2rem 0;
+        margin: -3rem -20px 2rem -20px;
+        text-align: center;
+    }
+
+    .admin-header h2 {
+        font-family: 'Playfair Display', serif;
+        font-size: 2rem;
+        margin-bottom: 0.5rem;
+    }
+
+    .back-link {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        color: white;
+        text-decoration: none;
+        margin-bottom: 1rem;
+        opacity: 0.8;
+        transition: opacity 0.3s ease;
+    }
+
+    .back-link:hover {
+        opacity: 1;
+        color: white;
+        text-decoration: none;
+    }
+
+    .section-card {
+        background: white;
+        border-radius: 15px;
+        overflow: hidden;
+        box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+        margin-bottom: 2rem;
+    }
+
+    .section-header {
+        background: #f9f5f0;
+        padding: 1.5rem 2rem;
+        border-bottom: 1px solid #e8ddd3;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .section-header h3 {
+        color: #8b7355;
+        font-family: 'Playfair Display', serif;
+        font-size: 1.5rem;
+        margin: 0;
+    }
+
+    .status-indicator {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.5rem 1rem;
+        border-radius: 20px;
+        font-size: 0.9rem;
+        font-weight: 500;
+    }
+
+    .status-indicator.active {
+        background: linear-gradient(135deg, #d4edda 0%, #c3e6cb 100%);
+        color: #155724;
+        border: 1px solid #c3e6cb;
+    }
+
+    .status-indicator.inactive {
+        background: linear-gradient(135deg, #f8d7da 0%, #f5c6cb 100%);
+        color: #721c24;
+        border: 1px solid #f5c6cb;
+    }
+
+    .status-dot {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        display: inline-block;
+        animation: pulse 2s infinite;
+    }
+
+    .status-indicator.active .status-dot {
+        background: #28a745;
+        box-shadow: 0 0 0 0 rgba(40, 167, 69, 0.7);
+    }
+
+    .status-indicator.inactive .status-dot {
+        background: #dc3545;
+        box-shadow: 0 0 0 0 rgba(220, 53, 69, 0.7);
+    }
+
+    @keyframes pulse {
+        0% {
+            box-shadow: 0 0 0 0 rgba(40, 167, 69, 0.7);
+        }
+        70% {
+            box-shadow: 0 0 0 10px rgba(40, 167, 69, 0);
+        }
+        100% {
+            box-shadow: 0 0 0 0 rgba(40, 167, 69, 0);
+        }
+    }
+
+    .section-content {
+        padding: 2rem;
+    }
+
+    .settings-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 2rem;
+        margin-bottom: 2rem;
+    }
+
+    .settings-form {
+        background: #f9f5f0;
+        padding: 1.5rem;
+        border-radius: 10px;
+    }
+
+    .info-panel {
+        background: #faf9f7;
+        padding: 1.5rem;
+        border-radius: 10px;
+        border: 2px dashed #e8ddd3;
+    }
+
+    .form-group {
+        margin-bottom: 1.5rem;
+    }
+
+    .form-group label {
+        display: block;
+        margin-bottom: 0.5rem;
+        font-weight: 600;
+        color: #6b5d54;
+    }
+
+    .form-control {
+        width: 100%;
+        padding: 0.75rem;
+        border: 2px solid #e8ddd3;
+        border-radius: 8px;
+        font-size: 1rem;
+        transition: border-color 0.3s ease;
+    }
+
+    .form-control:focus {
+        outline: none;
+        border-color: #8b7355;
+    }
+
+    .checkbox-group {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .checkbox-group input[type="checkbox"] {
+        width: auto;
+        margin: 0;
+    }
+
+    .button-group {
+        display: flex;
+        gap: 1rem;
+        margin-top: 2rem;
+    }
+
+    .btn {
+        padding: 0.75rem 1.5rem;
+        border: none;
+        border-radius: 25px;
+        cursor: pointer;
+        font-size: 1rem;
+        transition: all 0.3s ease;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .btn-primary {
+        background: #8b7355;
+        color: white;
+    }
+
+    .btn-primary:hover {
+        background: #6b5d54;
+        transform: translateY(-2px);
+    }
+
+    .btn-secondary {
+        background: #6c757d;
+        color: white;
+    }
+
+    .btn-secondary:hover {
+        background: #5a6268;
+        transform: translateY(-2px);
+    }
+
+    .btn-success {
+        background: #28a745;
+        color: white;
+    }
+
+    .btn-success:hover {
+        background: #218838;
+        transform: translateY(-2px);
+    }
+
+    .logs-table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 1rem;
+    }
+
+    .logs-table th {
+        background: #f9f5f0;
+        padding: 1rem;
+        text-align: left;
+        color: #6b5d54;
+        font-weight: 600;
+        border-bottom: 2px solid #e8ddd3;
+    }
+
+    .logs-table td {
+        padding: 1rem;
+        border-bottom: 1px solid #f0f0f0;
+    }
+
+    .logs-table tr:hover {
+        background: #faf9f7;
+    }
+
+    .status-success {
+        color: #28a745;
+        font-weight: bold;
+    }
+
+    .status-error {
+        color: #dc3545;
+        font-weight: bold;
+    }
+
+    .status-pending {
+        color: #ffc107;
+        font-weight: bold;
+    }
+
+    .success-message {
+        background: #d4edda;
+        color: #155724;
+        padding: 1rem;
+        border-radius: 10px;
+        margin-bottom: 1rem;
+        display: none;
+    }
+
+    @media (max-width: 768px) {
+        .admin-header {
+            margin: -3rem -1.5rem 2rem -1.5rem;
+        }
+
+        .settings-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .logs-table {
+            font-size: 0.9rem;
+        }
+
+        .logs-table th,
+        .logs-table td {
+            padding: 0.75rem 0.5rem;
+        }
+
+        .button-group {
+            flex-direction: column;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="admin-header">
+    <a href="/admin?key=wedding2024" class="back-link">
+        <svg viewBox="0 0 24 24" width="20" height="20">
+            <path d="M20,11V13H8L13.5,18.5L12.08,19.92L4.16,12L12.08,4.08L13.5,5.5L8,11H20Z" fill="currentColor"/>
+        </svg>
+        Back to Dashboard
+    </a>
+    <h2>Immich Sync Settings</h2>
+    <p>Configure Immich server sync and view sync logs</p>
+</div>
+
+<div class="container">
+    <!-- Immich Configuration Section -->
+    <div class="section-card">
+        <div class="section-header">
+            <h3>Immich Configuration</h3>
+            <div class="status-indicator {% if immich_settings.get('enabled', False) and immich_settings.get('server_url') and immich_settings.get('api_key') %}active{% else %}inactive{% endif %}">
+                <span class="status-dot"></span>
+                <span class="status-text">
+                    {% if immich_settings.get('enabled', False) and immich_settings.get('server_url') and immich_settings.get('api_key') %}
+                        🔄 Sync Active
+                    {% else %}
+                        ⏸️ Sync Inactive
+                    {% endif %}
+                </span>
+            </div>
+        </div>
+        <div class="section-content">
+            <div class="success-message" id="successMessage">
+                Settings saved successfully!
+            </div>
+
+            <div class="settings-grid">
+                <div class="settings-form">
+                    <h4 style="color: #8b7355; margin-bottom: 1.5rem;">Immich Configuration</h4>
+                    
+                    <div class="form-group">
+                        <label class="checkbox-group">
+                            <input type="checkbox" 
+                                   id="immich_enabled" 
+                                   {% if immich_settings.get('enabled', False) %}checked{% endif %}>
+                            Enable Immich Sync
+                        </label>
+                        <small style="color: #666; display: block; margin-top: 0.5rem;">
+                            When enabled, all uploads will be synced to your Immich server
+                        </small>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="immich_server_url">Immich Server URL</label>
+                        <input type="url" 
+                               id="immich_server_url" 
+                               placeholder="https://your-immich-server.com"
+                               value="{{ immich_settings.get('server_url', '') }}"
+                               class="form-control">
+                        <small style="color: #666; display: block; margin-top: 0.5rem;">
+                            Your Immich server URL (e.g., https://immich.yourdomain.com)
+                        </small>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="immich_api_key">API Key</label>
+                        <input type="password" 
+                               id="immich_api_key" 
+                               placeholder="Your Immich API key"
+                               value="{{ immich_settings.get('api_key', '') }}"
+                               class="form-control">
+                        <small style="color: #666; display: block; margin-top: 0.5rem;">
+                            API key from your Immich server (Admin → Settings → API Keys)
+                        </small>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="immich_user_id">User ID (Optional)</label>
+                        <input type="text" 
+                               id="immich_user_id" 
+                               placeholder="Your Immich user ID"
+                               value="{{ immich_settings.get('user_id', '') }}"
+                               class="form-control">
+                        <small style="color: #666; display: block; margin-top: 0.5rem;">
+                            Your Immich user ID (optional, will use API key owner if not specified)
+                        </small>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="immich_album_name">Album Name</label>
+                        <input type="text" 
+                               id="immich_album_name" 
+                               placeholder="Wedding Gallery"
+                               value="{{ immich_settings.get('album_name', 'Wedding Gallery') }}"
+                               class="form-control">
+                        <small style="color: #666; display: block; margin-top: 0.5rem;">
+                            Name of the album to sync photos to (will be created if it doesn't exist)
+                        </small>
+                    </div>
+
+                    <h5 style="color: #8b7355; margin: 2rem 0 1rem 0;">Sync Options</h5>
+                    
+                    <div class="form-group">
+                        <label class="checkbox-group">
+                            <input type="checkbox" 
+                                   id="immich_sync_photos" 
+                                   {% if immich_settings.get('sync_photos', True) %}checked{% endif %}>
+                            Sync Photos
+                        </label>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="checkbox-group">
+                            <input type="checkbox" 
+                                   id="immich_sync_videos" 
+                                   {% if immich_settings.get('sync_videos', True) %}checked{% endif %}>
+                            Sync Videos
+                        </label>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="checkbox-group">
+                            <input type="checkbox" 
+                                   id="immich_sync_guestbook" 
+                                   {% if immich_settings.get('sync_guestbook', True) %}checked{% endif %}>
+                            Sync Guestbook Photos
+                        </label>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="checkbox-group">
+                            <input type="checkbox" 
+                                   id="immich_sync_messages" 
+                                   {% if immich_settings.get('sync_messages', True) %}checked{% endif %}>
+                            Sync Message Photos
+                        </label>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="checkbox-group">
+                            <input type="checkbox" 
+                                   id="immich_sync_photobooth" 
+                                   {% if immich_settings.get('sync_photobooth', True) %}checked{% endif %}>
+                            Sync Photobooth Photos
+                        </label>
+                    </div>
+                </div>
+
+                <div class="info-panel">
+                    <h4>How It Works</h4>
+                    <div style="text-align: left;">
+                        <div style="background: #f9f5f0; padding: 1.5rem; border-radius: 8px; margin-bottom: 1rem;">
+                            <strong style="color: #8b7355;">Immich Sync Process:</strong>
+                            <ol style="margin: 0.5rem 0 0 1rem; padding-left: 1rem; color: #666;">
+                                <li>Photos/videos are uploaded to the wedding gallery</li>
+                                <li>System automatically syncs to your Immich server</li>
+                                <li>Files are added to the specified album</li>
+                                <li>Descriptions include uploader name and details</li>
+                                <li>Sync status is logged for troubleshooting</li>
+                            </ol>
+                        </div>
+                        
+                        <div style="background: #e8f5e8; padding: 1rem; border-radius: 8px; margin-bottom: 1rem;">
+                            <strong style="color: #28a745;">What Gets Synced:</strong>
+                            <ul style="margin: 0.5rem 0 0 1rem; padding-left: 1rem; color: #666;">
+                                <li>All uploaded photos and videos</li>
+                                <li>Guestbook photo attachments</li>
+                                <li>Message board photo attachments</li>
+                                <li>Photobooth photos</li>
+                                <li>Original file names preserved</li>
+                            </ul>
+                        </div>
+                        
+                        <div style="background: #fff3cd; padding: 1rem; border-radius: 8px;">
+                            <strong style="color: #856404;">Setup Notes:</strong>
+                            <ul style="margin: 0.5rem 0 0 1rem; padding-left: 1rem; color: #666;">
+                                <li>Ensure your Immich server is accessible</li>
+                                <li>Generate an API key in Immich admin settings</li>
+                                <li>Test the connection before enabling sync</li>
+                                <li>Monitor sync logs for any issues</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="button-group">
+                <button class="btn btn-primary" onclick="saveImmichSettings()">
+                    <svg viewBox="0 0 24 24" width="20" height="20">
+                        <path d="M15,9H5V5H15M12,19A3,3 0 0,1 9,16A3,3 0 0,1 12,13A3,3 0 0,1 15,16A3,3 0 0,1 12,19M17,3H5C3.89,3 3,3.9 3,5V19A2,2 0 0,0 5,21H19A2,2 0 0,0 21,19V7L17,3Z" fill="currentColor"/>
+                    </svg>
+                    Save Immich Settings
+                </button>
+                <button class="btn btn-success" onclick="syncImmich()">
+                    <svg viewBox="0 0 24 24" width="20" height="20">
+                        <path d="M12,2A10,10 0 0,0 2,12A10,10 0 0,0 12,22A10,10 0 0,0 22,12A10,10 0 0,0 12,2M16.2,16.2L11,13V7H12.5V12.2L17,14.9L16.2,16.2Z" fill="currentColor"/>
+                    </svg>
+                    Sync Now
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Immich Sync Log Section -->
+    <div class="section-card">
+        <div class="section-header">
+            <h3>Immich Sync Log</h3>
+        </div>
+        <div class="section-content">
+            <div class="table-responsive">
+                <table class="logs-table">
+                    <thead>
+                        <tr>
+                            <th>Filename</th>
+                            <th>Sync Date</th>
+                            <th>Status</th>
+                            <th>Asset ID</th>
+                            <th>Error</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for log in immich_sync_logs %}
+                        <tr>
+                            <td>{{ log.filename }}</td>
+                            <td>{{ log.sync_date.strftime('%b %d, %Y %H:%M') }}</td>
+                            <td>
+                                {% if log.status == 'success' %}
+                                    <span class="status-success">✓ Success</span>
+                                {% elif log.status == 'error' %}
+                                    <span class="status-error">✗ Error</span>
+                                {% elif log.status == 'pending' %}
+                                    <span class="status-pending">⏳ Pending</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if log.immich_asset_id %}
+                                    <span style="color: #28a745;">{{ log.immich_asset_id[:20] }}...</span>
+                                {% else %}
+                                    -
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if log.error_message %}
+                                    <span style="color: #dc3545;" title="{{ log.error_message }}">Error</span>
+                                {% else %}
+                                    -
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+                {% if not immich_sync_logs %}
+                <div style="text-align: center; padding: 2rem; color: #666;">
+                    <p>No Immich sync logs yet.</p>
+                    <p>Sync logs will appear here once you enable Immich sync and files are synced.</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    function saveImmichSettings() {
+        const urlParams = new URLSearchParams(window.location.search);
+        const key = urlParams.get('key');
+        
+        const settings = {
+            immich_settings: {
+                enabled: document.getElementById('immich_enabled').checked,
+                server_url: document.getElementById('immich_server_url').value,
+                api_key: document.getElementById('immich_api_key').value,
+                user_id: document.getElementById('immich_user_id').value,
+                album_name: document.getElementById('immich_album_name').value,
+                sync_photos: document.getElementById('immich_sync_photos').checked,
+                sync_videos: document.getElementById('immich_sync_videos').checked,
+                sync_guestbook: document.getElementById('immich_sync_guestbook').checked,
+                sync_messages: document.getElementById('immich_sync_messages').checked,
+                sync_photobooth: document.getElementById('immich_sync_photobooth').checked
+            }
+        };
+
+        fetch(`/admin/save-settings?key=${key}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(settings)
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                const successMessage = document.getElementById('successMessage');
+                successMessage.style.display = 'block';
+                setTimeout(() => {
+                    successMessage.style.display = 'none';
+                }, 3000);
+            } else {
+                alert('Error saving settings: ' + (data.error || 'Unknown error'));
+            }
+        })
+        .catch(error => {
+            alert('Error saving settings: ' + error.message);
+        });
+    }
+
+    function syncImmich() {
+        const urlParams = new URLSearchParams(window.location.search);
+        const key = urlParams.get('key');
+        
+        fetch(`/admin/sync-immich?key=${key}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert('Immich sync completed successfully!');
+                // Reload the page to show updated logs
+                window.location.reload();
+            } else {
+                alert('Error during sync: ' + (data.error || 'Unknown error'));
+            }
+        })
+        .catch(error => {
+            alert('Error during sync: ' + error.message);
+        });
+    }
+</script>
+{% endblock %} 

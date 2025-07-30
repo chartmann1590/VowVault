@@ -55,16 +55,8 @@ def admin():
     hidden_messages = [m for m in all_messages if m.is_hidden]
     total_message_comments = MessageComment.query.count()
     
-    # Get saved settings
-    public_url = Settings.get('public_url', '')
-    qr_settings = Settings.get('qr_settings', '{}')
-    qr_settings = json.loads(qr_settings) if qr_settings else {}
-    
-    welcome_settings = Settings.get('welcome_modal', '{}')
-    welcome_settings = json.loads(welcome_settings) if welcome_settings else {}
-    
-    border_settings = Settings.get('photobooth_border', '{}')
-    border_settings = json.loads(border_settings) if border_settings else {}
+    # Count photobooth photos
+    photobooth_count = Photo.query.filter_by(is_photobooth=True).count()
     
     # Get email settings
     email_settings = {
@@ -80,45 +72,11 @@ def admin():
         'monitor_email': Settings.get('email_monitor_email', '')
     }
     
-    # Count photobooth photos
-    photobooth_count = Photo.query.filter_by(is_photobooth=True).count()
-    
-    # Get email logs
-    email_logs = EmailLog.query.order_by(EmailLog.received_at.desc()).limit(50).all()
-    
     # Get Immich settings
     immich_settings = get_immich_settings()
     
-    # Get Immich sync logs
-    immich_sync_logs = ImmichSyncLog.query.order_by(ImmichSyncLog.sync_date.desc()).limit(50).all()
-    
-    # Get SSO settings
-    sso_settings = get_sso_settings()
-    
-    # Get CAPTCHA settings
-    captcha_settings = {
-        'enabled': Settings.get('captcha_enabled', 'false').lower() == 'true',
-        'upload_enabled': Settings.get('captcha_upload_enabled', 'true').lower() == 'true',
-        'guestbook_enabled': Settings.get('captcha_guestbook_enabled', 'true').lower() == 'true',
-        'message_enabled': Settings.get('captcha_message_enabled', 'true').lower() == 'true'
-    }
-    
-    # Get current user info if SSO is active
-    current_user = None
-    if session.get('sso_user_email'):
-        current_user = {
-            'email': session.get('sso_user_email'),
-            'name': session.get('sso_user_name'),
-            'domain': session.get('sso_user_domain')
-        }
-    
-    # Get database optimization stats
-    db_stats = get_photo_stats()
-    cache_stats = db_optimizer.get_cache_stats()
-    db_analysis = db_optimizer.analyze_database()
-    
-    return render_template('admin.html', 
-                         photos=photos, 
+    return render_template('admin_dashboard.html',
+                         photos=photos,
                          total_photos=len(photos),
                          total_likes=total_likes,
                          total_comments=total_comments,
@@ -126,23 +84,89 @@ def admin():
                          total_guestbook=len(guestbook_entries),
                          visible_messages=visible_messages,
                          hidden_messages=hidden_messages,
-                         total_messages=len(visible_messages),
+                         total_messages=len(all_messages),
                          total_message_comments=total_message_comments,
                          photobooth_count=photobooth_count,
-                         public_url=public_url,
-                         qr_settings=qr_settings,
-                         welcome_settings=welcome_settings,
-                         border_settings=border_settings,
                          email_settings=email_settings,
-                         email_logs=email_logs,
-                         captcha_settings=captcha_settings,
+                         immich_settings=immich_settings)
+
+@admin_bp.route('/photos')
+def admin_photos():
+    # Check for SSO session first
+    sso_user_email = session.get('sso_user_email')
+    sso_user_domain = session.get('sso_user_domain')
+    admin_key = request.args.get('key', '')
+    
+    # Verify admin access
+    if not verify_admin_access(admin_key, sso_user_email, sso_user_domain):
+        return "Unauthorized", 401
+    
+    photos = Photo.query.order_by(Photo.upload_date.desc()).all()
+    total_likes = sum(photo.likes for photo in photos)
+    total_comments = Comment.query.count()
+    photobooth_count = Photo.query.filter_by(is_photobooth=True).count()
+    total_videos = Photo.query.filter_by(media_type='video').count()
+    
+    return render_template('admin_photos.html',
+                         photos=photos,
+                         total_photos=len(photos),
+                         total_videos=total_videos,
+                         total_likes=total_likes,
+                         total_comments=total_comments,
+                         photobooth_count=photobooth_count)
+
+@admin_bp.route('/email-settings')
+def admin_email_settings():
+    # Check for SSO session first
+    sso_user_email = session.get('sso_user_email')
+    sso_user_domain = session.get('sso_user_domain')
+    admin_key = request.args.get('key', '')
+    
+    # Verify admin access
+    if not verify_admin_access(admin_key, sso_user_email, sso_user_domain):
+        return "Unauthorized", 401
+    
+    # Get email settings
+    email_settings = {
+        'enabled': Settings.get('email_enabled', 'false').lower() == 'true',
+        'smtp_server': Settings.get('email_smtp_server', 'smtp.gmail.com'),
+        'smtp_port': Settings.get('email_smtp_port', '587'),
+        'smtp_username': Settings.get('email_smtp_username', ''),
+        'smtp_password': Settings.get('email_smtp_password', ''),
+        'imap_server': Settings.get('email_imap_server', 'imap.gmail.com'),
+        'imap_port': Settings.get('email_imap_port', '993'),
+        'imap_username': Settings.get('email_imap_username', ''),
+        'imap_password': Settings.get('email_imap_password', ''),
+        'monitor_email': Settings.get('email_monitor_email', '')
+    }
+    
+    # Get email logs
+    email_logs = EmailLog.query.order_by(EmailLog.received_at.desc()).limit(50).all()
+    
+    return render_template('admin_email_settings.html',
+                         email_settings=email_settings,
+                         email_logs=email_logs)
+
+@admin_bp.route('/immich-settings')
+def admin_immich_settings():
+    # Check for SSO session first
+    sso_user_email = session.get('sso_user_email')
+    sso_user_domain = session.get('sso_user_domain')
+    admin_key = request.args.get('key', '')
+    
+    # Verify admin access
+    if not verify_admin_access(admin_key, sso_user_email, sso_user_domain):
+        return "Unauthorized", 401
+    
+    # Get Immich settings
+    immich_settings = get_immich_settings()
+    
+    # Get Immich sync logs
+    immich_sync_logs = ImmichSyncLog.query.order_by(ImmichSyncLog.sync_date.desc()).limit(50).all()
+    
+    return render_template('admin_immich_settings.html',
                          immich_settings=immich_settings,
-                         immich_sync_logs=immich_sync_logs,
-                         sso_settings=sso_settings,
-                         current_user=current_user,
-                         db_stats=db_stats,
-                         cache_stats=cache_stats,
-                         db_analysis=db_analysis)
+                         immich_sync_logs=immich_sync_logs)
 
 @admin_bp.route('/batch-download')
 def batch_download():
