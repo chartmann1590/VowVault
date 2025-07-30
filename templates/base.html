@@ -784,11 +784,11 @@
                 </button>
                 <nav class="desktop-nav">
                     <ul>
-                        <li><a href="{{ url_for('index') }}">Gallery</a></li>
-                        <li><a href="{{ url_for('upload') }}">Upload Photo</a></li>
-                        <li><a href="{{ url_for('photobooth') }}">Virtual Photobooth</a></li>
-                        <li><a href="{{ url_for('message_board') }}">Message Board</a></li>
-                        <li><a href="{{ url_for('guestbook') }}">Guestbook</a></li>
+                        <li><a href="{{ url_for('main.index') }}">Gallery</a></li>
+                        <li><a href="{{ url_for('upload.index') }}">Upload Photo</a></li>
+                        <li><a href="{{ url_for('photobooth.photobooth') }}">Virtual Photobooth</a></li>
+                        <li><a href="{{ url_for('messages.message_board') }}">Message Board</a></li>
+                        <li><a href="{{ url_for('guestbook.guestbook') }}">Guestbook</a></li>
                     </ul>
                 </nav>
             </div>
@@ -797,11 +797,11 @@
 
 <nav id="mobileNav">
     <ul>
-        <li><a href="{{ url_for('index') }}">Gallery</a></li>
-        <li><a href="{{ url_for('upload') }}">Upload Photo</a></li>
-        <li><a href="{{ url_for('photobooth') }}">Virtual Photobooth</a></li>
-        <li><a href="{{ url_for('message_board') }}">Message Board</a></li>
-        <li><a href="{{ url_for('guestbook') }}">Guestbook</a></li>
+        <li><a href="{{ url_for('main.index') }}">Gallery</a></li>
+        <li><a href="{{ url_for('upload.index') }}">Upload Photo</a></li>
+        <li><a href="{{ url_for('photobooth.photobooth') }}">Virtual Photobooth</a></li>
+        <li><a href="{{ url_for('messages.message_board') }}">Message Board</a></li>
+        <li><a href="{{ url_for('guestbook.guestbook') }}">Guestbook</a></li>
         <li><a href="{{ url_for('notifications_page') }}" style="position: relative;">
             🔔 Notifications
             <span id="mobileNotificationBadge" style="
@@ -876,9 +876,9 @@
             <p>Made with ❤️ for our special day</p>
             <p class="footer-credit">Created by <a href="https://github.com/chartmann1590" target="_blank">Charles Hartmann</a></p>
             <div class="footer-links">
-                <a href="{{ url_for('privacy_policy') }}">Privacy Policy</a>
+                <a href="{{ url_for('main.privacy_policy') }}">Privacy Policy</a>
                 <span>•</span>
-                <a href="{{ url_for('terms_of_use') }}">Terms of Use</a>
+                <a href="{{ url_for('main.terms_of_use') }}">Terms of Use</a>
             </div>
         </div>
     </div>

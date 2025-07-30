@@ -774,7 +774,7 @@
         </div>
         <div class="modal-footer">
             <div class="modal-actions">
-                <a href="{{ url_for('sign_guestbook') }}" class="guestbook-modal-btn">Sign Our Guestbook</a>
+                <a href="{{ url_for('guestbook.sign_guestbook') }}" class="guestbook-modal-btn">Sign Our Guestbook</a>
                 <button class="close-modal-btn" onclick="closeWelcomeModal()">Enter Gallery</button>
             </div>
         </div>
@@ -789,7 +789,7 @@
 
 <!-- Search and Filter Controls -->
 <div class="search-filter-container">
-    <form method="GET" action="{{ url_for('index') }}" class="search-filter-form">
+                    <form method="GET" action="{{ url_for('main.index') }}" class="search-filter-form">
         <div class="search-row">
             <div class="search-input-group">
                 <input type="text" 
@@ -828,7 +828,7 @@
             
             <div class="filter-actions">
                 <button type="submit" class="filter-btn">Apply Filters</button>
-                <a href="{{ url_for('index') }}" class="clear-btn">Clear All</a>
+                <a href="{{ url_for('main.index') }}" class="clear-btn">Clear All</a>
             </div>
         </div>
     </form>
@@ -837,7 +837,7 @@
 {% if photos %}
     <div class="photo-grid">
         {% for photo in photos %}
-        <div class="photo-card" onclick="window.location.href='{{ url_for('view_photo', photo_id=photo.id) }}'">
+                    <div class="photo-card" onclick="window.location.href='{{ url_for('main.view_photo', photo_id=photo.id) }}'">
             <div class="photo-wrapper">
                 {% if photo.media_type == 'video' %}
                     {% if photo.thumbnail_filename %}
@@ -912,7 +912,7 @@
         </div>
         <div class="pagination-controls">
             {% if photos.has_prev %}
-                <a href="{{ url_for('index', page=photos.prev_num) }}" class="pagination-btn">Previous</a>
+                <a href="{{ url_for('main.index', page=photos.prev_num) }}" class="pagination-btn">Previous</a>
             {% else %}
                 <button class="pagination-btn" disabled>Previous</button>
             {% endif %}
@@ -920,7 +920,7 @@
             {% for page_num in photos.iter_pages(left_edge=2, left_current=2, right_current=3, right_edge=2) %}
                 {% if page_num %}
                     {% if page_num != photos.page %}
-                        <a href="{{ url_for('index', page=page_num) }}" class="pagination-btn">{{ page_num }}</a>
+                        <a href="{{ url_for('main.index', page=page_num) }}" class="pagination-btn">{{ page_num }}</a>
                     {% else %}
                         <button class="pagination-btn current" disabled>{{ page_num }}</button>
                     {% endif %}
@@ -930,7 +930,7 @@
             {% endfor %}
             
             {% if photos.has_next %}
-                <a href="{{ url_for('index', page=photos.next_num) }}" class="pagination-btn">Next</a>
+                <a href="{{ url_for('main.index', page=photos.next_num) }}" class="pagination-btn">Next</a>
             {% else %}
                 <button class="pagination-btn" disabled>Next</button>
             {% endif %}
@@ -941,7 +941,7 @@
     <div class="empty-state">
         <h3>No photos or videos yet!</h3>
         <p>Be the first to share a memory from our special day</p>
-        <a href="{{ url_for('upload') }}" class="btn">Upload First Photo/Video</a>
+                        <a href="{{ url_for('upload.index') }}" class="btn">Upload First Photo/Video</a>
     </div>
 {% endif %}
 {% endblock %}

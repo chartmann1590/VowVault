@@ -308,7 +308,7 @@
 <div class="message-board-header">
     <h2>Wedding Message Board</h2>
     <p>Share your thoughts, wishes, and memories with everyone</p>
-    <a href="{{ url_for('new_message') }}" class="new-message-btn">Leave a Message</a>
+                    <a href="{{ url_for('messages.new_message') }}" class="new-message-btn">Leave a Message</a>
 </div>
 
 <div class="messages-container">
@@ -379,7 +379,7 @@
         <div class="empty-state">
             <h3>No messages yet!</h3>
             <p>Be the first to leave a message for the happy couple</p>
-            <a href="{{ url_for('new_message') }}" class="btn">Leave First Message</a>
+                            <a href="{{ url_for('messages.new_message') }}" class="btn">Leave First Message</a>
         </div>
     {% endif %}
 </div>

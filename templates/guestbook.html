@@ -227,7 +227,7 @@
 <div class="guestbook-header">
     <h2>Our Wedding Guestbook</h2>
     <p>Thank you for your warm wishes and memories</p>
-    <a href="{{ url_for('sign_guestbook') }}" class="sign-guestbook-btn">Sign the Guestbook</a>
+                    <a href="{{ url_for('guestbook.sign_guestbook') }}" class="sign-guestbook-btn">Sign the Guestbook</a>
 </div>
 
 <div class="entries-container">
@@ -262,7 +262,7 @@
         <div class="empty-state">
             <h3>Be the first to sign!</h3>
             <p>Leave your wishes for the happy couple</p>
-            <a href="{{ url_for('sign_guestbook') }}" class="btn">Sign the Guestbook</a>
+                            <a href="{{ url_for('guestbook.sign_guestbook') }}" class="btn">Sign the Guestbook</a>
         </div>
     {% endif %}
 </div>
