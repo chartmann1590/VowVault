@@ -1,7 +1,7 @@
 from flask import Flask, render_template, request, redirect, url_for, jsonify, make_response, send_file, send_from_directory, session
 from flask_sqlalchemy import SQLAlchemy
 from flask_mail import Mail, Message
-from datetime import datetime
+from datetime import datetime, date
 import os
 from werkzeug.utils import secure_filename
 import secrets
@@ -35,6 +35,9 @@ import time
 import requests
 from pathlib import Path
 import sqlite3
+
+# Import PhotoOfDayCandidate for automatic candidate functionality
+from app.models.photo_of_day import PhotoOfDayCandidate
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', secrets.token_hex(16))
@@ -1408,6 +1411,20 @@ def toggle_like(photo_id):
         liked = True
     
     db.session.commit()
+    
+    # Check if photo should be added as a candidate for Photo of the Day
+    if liked and photo.likes >= 3:
+        # Check if already a candidate
+        existing_candidate = PhotoOfDayCandidate.query.filter_by(photo_id=photo_id).first()
+        if not existing_candidate:
+            # Add as candidate
+            candidate = PhotoOfDayCandidate(
+                photo_id=photo_id,
+                date_added=date.today(),
+                is_selected=False
+            )
+            db.session.add(candidate)
+            db.session.commit()
     
     # Create database notification for the photo uploader if someone else liked it
     if liked and photo.uploader_identifier and photo.uploader_identifier != user_identifier:
