@@ -154,4 +154,10 @@ def terms_of_use():
 @main_bp.route('/static/manifest.json')
 def serve_manifest():
     from flask import send_from_directory
-    return send_from_directory('static', 'manifest.json', mimetype='application/manifest+json') 
+    return send_from_directory('static', 'manifest.json', mimetype='application/manifest+json')
+
+@main_bp.route('/notifications')
+def notifications_page():
+    user_name = request.cookies.get('user_name', '')
+    user_identifier = request.cookies.get('user_identifier', '')
+    return render_template('notifications.html', user_name=user_name, user_identifier=user_identifier) 
