@@ -100,9 +100,11 @@ def process_email_photos():
     try:
         email_settings = get_email_settings()
         if not email_settings['enabled'] or not email_settings['imap_username']:
+            print("Email processing skipped - not enabled or IMAP username not configured")
             return
             
         # Connect to IMAP server
+        print(f"Connecting to IMAP server: {email_settings['imap_server']}:{email_settings['imap_port']}")
         mail = imaplib.IMAP4_SSL(email_settings['imap_server'], int(email_settings['imap_port']))
         mail.login(email_settings['imap_username'], email_settings['imap_password'])
         mail.select('INBOX')
@@ -111,7 +113,14 @@ def process_email_photos():
         status, messages = mail.search(None, 'UNSEEN')
         
         if status != 'OK':
+            print(f"IMAP search failed with status: {status}")
             return
+            
+        if not messages[0]:
+            print("No unread emails found")
+            return
+            
+        print(f"Found {len(messages[0].split())} unread email(s)")
             
         for num in messages[0].split():
             try:
@@ -226,25 +235,27 @@ def process_email_photos():
                     )
                     db.session.add(email_log)
                     db.session.commit()
-                except:
-                    pass
+                except Exception as log_error:
+                    print(f"Error logging email error: {log_error}")
                 continue
         
         mail.close()
         mail.logout()
+        print("Email processing completed")
         
     except Exception as e:
         print(f"Error in email processing: {e}")
         # Ensure we don't leave any uncommitted database changes
         try:
             db.session.rollback()
-        except:
-            pass
+        except Exception as rollback_error:
+            print(f"Error during rollback: {rollback_error}")
 
 def start_email_monitor():
     """Start the email monitoring thread"""
     def monitor_emails():
         with current_app.app_context():
+            print("Email monitoring thread started")
             while True:
                 try:
                     process_email_photos()
@@ -254,4 +265,5 @@ def start_email_monitor():
                     time.sleep(600)  # Wait 10 minutes on error
     
     thread = threading.Thread(target=monitor_emails, daemon=True)
-    thread.start() 
+    thread.start()
+    print("Email monitoring thread created") 

@@ -643,9 +643,11 @@ def process_email_photos():
     try:
         email_settings = get_email_settings()
         if not email_settings['enabled'] or not email_settings['imap_username']:
+            print("Email processing skipped - not enabled or IMAP username not configured")
             return
             
         # Connect to IMAP server
+        print(f"Connecting to IMAP server: {email_settings['imap_server']}:{email_settings['imap_port']}")
         mail = imaplib.IMAP4_SSL(email_settings['imap_server'], int(email_settings['imap_port']))
         mail.login(email_settings['imap_username'], email_settings['imap_password'])
         mail.select('INBOX')
@@ -654,7 +656,14 @@ def process_email_photos():
         status, messages = mail.search(None, 'UNSEEN')
         
         if status != 'OK':
+            print(f"IMAP search failed with status: {status}")
             return
+            
+        if not messages[0]:
+            print("No unread emails found")
+            return
+            
+        print(f"Found {len(messages[0].split())} unread email(s)")
             
         for num in messages[0].split():
             try:
@@ -768,25 +777,27 @@ def process_email_photos():
                     )
                     db.session.add(email_log)
                     db.session.commit()
-                except:
-                    pass
+                except Exception as log_error:
+                    print(f"Error logging email error: {log_error}")
                 continue
         
         mail.close()
         mail.logout()
+        print("Email processing completed")
         
     except Exception as e:
         print(f"Error in email processing: {e}")
         # Ensure we don't leave any uncommitted database changes
         try:
             db.session.rollback()
-        except:
-            pass
+        except Exception as rollback_error:
+            print(f"Error during rollback: {rollback_error}")
 
 def start_email_monitor():
     """Start the email monitoring thread"""
     def monitor_emails():
         with app.app_context():
+            print("Email monitoring thread started")
             while True:
                 try:
                     process_email_photos()
@@ -797,6 +808,7 @@ def start_email_monitor():
     
     thread = threading.Thread(target=monitor_emails, daemon=True)
     thread.start()
+    print("Email monitoring thread created")
 
 @app.route('/')
 def index():
@@ -2113,10 +2125,65 @@ def start_email_monitor_route():
         return "Unauthorized", 401
     
     try:
+        email_settings = get_email_settings()
+        if not email_settings['enabled']:
+            return jsonify({'success': False, 'message': 'Email monitoring is disabled'})
+        if not email_settings['imap_username']:
+            return jsonify({'success': False, 'message': 'IMAP username not configured'})
+        if not email_settings['imap_password']:
+            return jsonify({'success': False, 'message': 'IMAP password not configured'})
+            
         start_email_monitor()
         return jsonify({'success': True, 'message': 'Email monitor started successfully'})
     except Exception as e:
         return jsonify({'success': False, 'message': f'Error starting email monitor: {str(e)}'})
+
+@app.route('/admin/check-email-settings', methods=['GET'])
+def check_email_settings_route():
+    # Check for SSO session first
+    sso_user_email = session.get('sso_user_email')
+    sso_user_domain = session.get('sso_user_domain')
+    admin_key = request.args.get('key', '')
+    
+    # Verify admin access
+    if not verify_admin_access(admin_key, sso_user_email, sso_user_domain):
+        return jsonify({'success': False, 'message': 'Unauthorized'}), 401
+    
+    try:
+        email_settings = get_email_settings()
+        return jsonify({
+            'success': True,
+            'settings': {
+                'enabled': email_settings['enabled'],
+                'imap_server': email_settings['imap_server'],
+                'imap_port': email_settings['imap_port'],
+                'imap_username': email_settings['imap_username'],
+                'imap_password_set': bool(email_settings['imap_password']),
+                'smtp_server': email_settings['smtp_server'],
+                'smtp_port': email_settings['smtp_port'],
+                'smtp_username': email_settings['smtp_username'],
+                'smtp_password_set': bool(email_settings['smtp_password'])
+            }
+        })
+    except Exception as e:
+        return jsonify({'success': False, 'message': f'Error checking email settings: {str(e)}'})
+
+@app.route('/admin/process-emails', methods=['POST'])
+def process_emails_route():
+    # Check for SSO session first
+    sso_user_email = session.get('sso_user_email')
+    sso_user_domain = session.get('sso_user_domain')
+    admin_key = request.args.get('key', '')
+    
+    # Verify admin access
+    if not verify_admin_access(admin_key, sso_user_email, sso_user_domain):
+        return jsonify({'success': False, 'message': 'Unauthorized'}), 401
+    
+    try:
+        process_email_photos()
+        return jsonify({'success': True, 'message': 'Email processing completed'})
+    except Exception as e:
+        return jsonify({'success': False, 'message': f'Error processing emails: {str(e)}'})
 
 @app.route('/admin/sync-immich', methods=['POST'])
 def sync_immich_route():
@@ -2890,11 +2957,19 @@ if __name__ == '__main__':
         # Start email monitor if enabled
         try:
             email_settings = get_email_settings()
-            if email_settings['enabled'] and email_settings['smtp_username']:
+            print(f"Email settings - Enabled: {email_settings['enabled']}, IMAP Username: {email_settings['imap_username']}, IMAP Password: {'*' * len(email_settings['imap_password']) if email_settings['imap_password'] else 'Not set'}")
+            
+            if email_settings['enabled'] and email_settings['imap_username'] and email_settings['imap_password']:
                 start_email_monitor()
                 print("Email monitor started successfully")
             else:
                 print("Email monitor not started - not enabled or not configured")
+                if not email_settings['enabled']:
+                    print("  - Email monitoring is disabled")
+                if not email_settings['imap_username']:
+                    print("  - IMAP username not configured")
+                if not email_settings['imap_password']:
+                    print("  - IMAP password not configured")
         except Exception as e:
             print(f"Email monitor not started: {e}")
     app.run(debug=True, host='0.0.0.0')
