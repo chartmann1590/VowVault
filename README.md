@@ -9,11 +9,49 @@ A beautiful, self-hosted wedding photo gallery application that allows wedding g
 
 ## 📋 Table of Contents
 
+### 🚀 Getting Started
 - [✨ Features](docs/features.md) - Complete feature overview for guests and admins
 - [🚀 Installation Guide](docs/installation.md) - Quick start and production deployment
 - [📱 Usage Guide](docs/usage.md) - Step-by-step instructions for guests and admins
 - [📱 Progressive Web App](docs/pwa.md) - PWA installation and troubleshooting
+
+### 🔧 Technical Documentation
+- [🏗️ Modular Architecture](docs/MODULAR_STRUCTURE.md) - Application structure and organization
+- [🔄 Refactoring Summary](docs/REFACTORING_SUMMARY.md) - Recent code refactoring details
+- [🐳 Docker Setup](docs/DOCKER_SETUP.md) - Docker configuration and deployment
+- [🔧 Docker Compatibility](docs/DOCKER_COMPATIBILITY.md) - Docker-specific fixes and improvements
+- [📧 Email Setup](docs/EMAIL_SETUP.md) - Email configuration for photo uploads
+- [🔄 Immich Integration](docs/IMMICH_SETUP.md) - Immich server synchronization
+- [🔐 SSO Setup](docs/sso_setup.md) - Single Sign-On authentication configuration
+
+### 🛠️ Development & Debugging
+- [🔧 PWA Debug Tools](docs/pwa.md#debugging) - PWA troubleshooting and testing
+- [📱 Template Fixes](docs/TEMPLATE_FIXES.md) - Template routing and URL fixes
+- [🐳 Docker Template Fix](docs/DOCKER_TEMPLATE_FIX.md) - Docker-specific template issues
+- [📚 Documentation Organization](docs/ORGANIZATION_SUMMARY.md) - Documentation structure overview
+
+### 📸 Visual Documentation
 - [📸 Screenshots](#-screenshots) - Visual tour of the application
+
+## 🔄 Recent Updates
+
+### Major Refactoring (Latest)
+The application has been completely refactored from a monolithic structure to a modern, modular Flask application:
+
+- ✅ **Modular Architecture**: Converted from single `app.py` (3,000+ lines) to organized Blueprint structure
+- ✅ **Enhanced Features**: Added comprehensive push notification system with web interface + browser notifications
+- ✅ **Improved Performance**: Better code organization and maintainability
+- ✅ **Docker Optimization**: Enhanced Docker compatibility and deployment
+- ✅ **PWA Support**: Full Progressive Web App functionality with Service Worker
+- ✅ **Debug Tools**: Comprehensive debugging panel for PWA and notification testing
+
+**Key Improvements**:
+- **50 files changed** with **5,359+ lines** of improved code
+- **Flask Blueprints** for organized routing (`app/views/`, `app/models/`, `app/utils/`)
+- **Application Factory Pattern** for better configuration management
+- **Push Notification System** with dual web interface + browser notifications
+- **Service Worker** for offline functionality and PWA support
+- **Comprehensive Documentation** with detailed setup guides
 
 ## ✨ Quick Overview
 
@@ -87,7 +125,7 @@ python -m venv venv
 source venv/bin/activate  # On Windows: venv\Scripts\activate
 pip install -r requirements.txt
 python migration.py
-python app.py
+python run.py
 ```
 
 **Access:** 
