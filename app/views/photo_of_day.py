@@ -211,6 +211,15 @@ def admin_photo_of_day():
         db.session.execute('SELECT 1')
         print("DEBUG: Database connection successful")
         
+        # Check which database we're connected to
+        db_url = db.engine.url
+        print(f"DEBUG: Connected to database: {db_url}")
+        
+        # Check if we can see any tables
+        tables_result = db.session.execute("SELECT name FROM sqlite_master WHERE type='table'")
+        tables = [row[0] for row in tables_result.fetchall()]
+        print(f"DEBUG: Available tables: {tables}")
+        
         # Force a fresh query by clearing session
         db.session.expire_all()
         print("DEBUG: Cleared session cache")
@@ -234,6 +243,10 @@ def admin_photo_of_day():
         table_check = db.session.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='photo_of_day_contest'")
         table_exists = table_check.fetchone()
         print(f"DEBUG: photo_of_day_contest table exists: {table_exists is not None}")
+        
+        # Check what the actual table name should be
+        print(f"DEBUG: PhotoOfDayContest.__tablename__: {PhotoOfDayContest.__tablename__}")
+        print(f"DEBUG: PhotoOfDayContest.__table__.name: {PhotoOfDayContest.__table__.name}")
         
         # Check table schema
         if table_exists:
