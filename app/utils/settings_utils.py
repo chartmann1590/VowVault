@@ -83,13 +83,18 @@ def format_datetime_in_timezone(dt, format_str='%B %d, %Y at %I:%M %p'):
     """Format a datetime object in the admin's selected timezone"""
     try:
         import pytz
+        from datetime import datetime, date
         
         # Get timezone settings
         timezone_settings = get_timezone_settings()
         selected_timezone = timezone_settings.get('timezone', 'UTC')
         
+        # Handle date objects (convert to datetime at midnight)
+        if isinstance(dt, date) and not isinstance(dt, datetime):
+            dt = datetime.combine(dt, datetime.min.time())
+        
         # If no timezone info, assume UTC
-        if dt.tzinfo is None:
+        if hasattr(dt, 'tzinfo') and dt.tzinfo is None:
             utc = pytz.UTC
             dt = utc.localize(dt)
         
@@ -100,7 +105,4 @@ def format_datetime_in_timezone(dt, format_str='%B %d, %Y at %I:%M %p'):
         return converted_dt.strftime(format_str)
     except Exception as e:
         # Fallback to UTC formatting if timezone conversion fails
-        if dt.tzinfo is None:
-            # Assume UTC if no timezone info
-            pass
         return dt.strftime(format_str) 
