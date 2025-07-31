@@ -320,13 +320,17 @@ def add_photo_candidate():
     
     try:
         data = request.get_json()
+        print(f"DEBUG: Received data: {data}")  # Debug line
     except Exception as e:
-        return jsonify({'success': False, 'message': 'Invalid JSON data'}), 400
+        print(f"DEBUG: JSON error: {e}")  # Debug line
+        return jsonify({'success': False, 'message': f'Invalid JSON data: {str(e)}'}), 400
     
     if not data:
+        print("DEBUG: No data received")  # Debug line
         return jsonify({'success': False, 'message': 'No JSON data provided'}), 400
     
     photo_id = data.get('photo_id')
+    print(f"DEBUG: Photo ID: {photo_id}")  # Debug line
     
     if not photo_id:
         return jsonify({'success': False, 'message': 'Photo ID required'}), 400
@@ -334,14 +338,20 @@ def add_photo_candidate():
     # Check if photo exists
     photo = Photo.query.get(photo_id)
     if not photo:
+        print(f"DEBUG: Photo {photo_id} not found")  # Debug line
         return jsonify({'success': False, 'message': 'Photo not found'}), 404
+    
+    print(f"DEBUG: Photo found: {photo.filename}")  # Debug line
     
     # Get or create the main ongoing contest
     main_contest = PhotoOfDayContest.query.filter_by(is_active=True).first()
     if not main_contest:
+        print("DEBUG: Creating new main contest")  # Debug line
         main_contest = PhotoOfDayContest(contest_date=date.today(), is_active=True)
         db.session.add(main_contest)
         db.session.flush()  # Get the ID
+    
+    print(f"DEBUG: Using contest ID: {main_contest.id}")  # Debug line
     
     # Check if already a candidate
     existing = PhotoOfDayCandidate.query.filter_by(
@@ -350,6 +360,7 @@ def add_photo_candidate():
     ).first()
     
     if existing:
+        print("DEBUG: Photo already a candidate")  # Debug line
         return jsonify({'success': False, 'message': 'Photo is already a candidate'}), 400
     
     # Add as candidate
@@ -363,6 +374,7 @@ def add_photo_candidate():
     db.session.add(candidate)
     db.session.commit()
     
+    print("DEBUG: Successfully added candidate")  # Debug line
     return jsonify({'success': True, 'message': 'Photo added as candidate successfully!'})
 
 @photo_of_day_bp.route('/admin/photo-of-day/update-threshold', methods=['POST'])
