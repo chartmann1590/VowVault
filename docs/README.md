@@ -148,7 +148,16 @@ When contributing to the Wedding Gallery:
 
 ## 📄 License
 
-This project is licensed under the MIT License - see the LICENSE file for details.
+This project is licensed under the MIT License - see the [LICENSE](LICENSE.md) file for details.
+
+For complete license information, including:
+- What the MIT License allows
+- Third-party dependencies and their licenses
+- Attribution requirements
+- Commercial use guidelines
+- License compatibility
+
+See the comprehensive [License Documentation](LICENSE.md).
 
 ---
 

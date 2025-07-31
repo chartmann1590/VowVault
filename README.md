@@ -142,6 +142,14 @@ Copy `env.example` to `.env` and configure:
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
+The MIT License is a permissive license that allows for:
+- Commercial use
+- Modification
+- Distribution
+- Private use
+
+While providing liability protection for the authors. See the full license text for complete terms.
+
 ## 🙏 Acknowledgments
 
 - Built with [Flask](https://flask.palletsprojects.com/)
