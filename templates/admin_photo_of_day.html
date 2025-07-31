@@ -392,6 +392,7 @@
     <div class="admin-section-title">Create New Contest</div>
     <div class="contest-controls">
         <button id="create-contest-btn" class="admin-btn primary">Create Today's Contest</button>
+        <button id="close-current-contest-btn" class="admin-btn secondary">Close Current Contest</button>
         <button id="add-auto-candidates-btn" class="admin-btn secondary">Add Auto-Candidates</button>
         <button id="update-threshold-btn" class="admin-btn secondary">Update Threshold</button>
         <button id="force-cleanup-btn" class="admin-btn warning">Force Cleanup</button>
@@ -430,6 +431,10 @@
     <!-- DEBUG: main_contest = {{ main_contest }} -->
     <!-- DEBUG: main_candidates count = {{ main_candidates|length }} -->
     {% if main_contest %}
+    <div style="background: #e8f5e8; padding: 1rem; border-radius: 10px; margin-bottom: 1rem; border-left: 4px solid #4caf50;">
+        <strong>✅ Active Contest Found:</strong> Contest ID {{ main_contest.id }} from {{ main_contest.contest_date | timezone_format('%B %d, %Y') }}
+        <br><small>You must close this contest before creating a new one.</small>
+    </div>
     <div class="contest-card {% if main_contest.winner_photo_id %}winner{% endif %}">
         <div class="contest-header">
             <div class="contest-date">Main Contest - {{ main_contest.contest_date | timezone_format('%B %d, %Y') }}</div>
@@ -475,6 +480,9 @@
         </div>
     </div>
     {% else %}
+    <div style="background: #fff3e0; padding: 1rem; border-radius: 10px; margin-bottom: 1rem; border-left: 4px solid #ff9800;">
+        <strong>ℹ️ No Active Contest:</strong> You can create a new contest now.
+    </div>
     <p style="color:#6b5d54; text-align:center;">No active contest. Click "Create Today's Contest" to start one.</p>
     {% endif %}
 </div>
@@ -512,6 +520,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const cancelThresholdBtn = document.getElementById('cancel-threshold-btn');
     
     const addAutoCandidatesBtn = document.getElementById('add-auto-candidates-btn');
+    const closeCurrentContestBtn = document.getElementById('close-current-contest-btn');
     const forceCleanupBtn = document.getElementById('force-cleanup-btn');
     const debugDbBtn = document.getElementById('debug-db-btn');
     
@@ -574,6 +583,20 @@ document.addEventListener('DOMContentLoaded', function() {
         const form = document.createElement('form');
         form.method = 'POST';
         form.action = '/admin/photo-of-day/add-auto-candidates?key=wedding2024';
+        
+        document.body.appendChild(form);
+        form.submit();
+    });
+    
+    closeCurrentContestBtn.addEventListener('click', function() {
+        if (!confirm('Are you sure you want to close the current contest? This will allow you to create a new one.')) {
+            return;
+        }
+        
+        // Create a form and submit it
+        const form = document.createElement('form');
+        form.method = 'POST';
+        form.action = '/admin/photo-of-day/close-contest?key=wedding2024';
         
         document.body.appendChild(form);
         form.submit();

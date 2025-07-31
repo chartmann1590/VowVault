@@ -281,7 +281,7 @@ def create_contest():
     
     if existing_active:
         print(f"DEBUG: Found existing active contest ID: {existing_active.id}")  # Debug line
-        flash(f'An active contest already exists (ID: {existing_active.id}, Date: {existing_active.contest_date}). Please close the current contest first or use Force Cleanup.', 'warning')
+        flash(f'An active contest already exists (ID: {existing_active.id}, Date: {existing_active.contest_date}). Please use "Close Current Contest" to close it before creating a new one.', 'warning')
         return redirect(url_for('photo_of_day.admin_photo_of_day', key=admin_key))
     else:
         print("DEBUG: No existing active contest found")  # Debug line
@@ -567,7 +567,7 @@ def force_cleanup_contests():
             return redirect(url_for('photo_of_day.admin_photo_of_day', key=admin_key))
         
         if len(active_contests) == 1:
-            flash(f'Single active contest found (ID: {active_contests[0].id}). No cleanup needed.', 'info')
+            flash(f'Single active contest found (ID: {active_contests[0].id}). Use "Close Current Contest" to close it before creating a new one.', 'warning')
             return redirect(url_for('photo_of_day.admin_photo_of_day', key=admin_key))
         
         # Multiple active contests - close all but the most recent
