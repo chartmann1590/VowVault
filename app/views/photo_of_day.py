@@ -211,6 +211,10 @@ def admin_photo_of_day():
         db.session.execute('SELECT 1')
         print("DEBUG: Database connection successful")
         
+        # Force a fresh query by clearing session
+        db.session.expire_all()
+        print("DEBUG: Cleared session cache")
+        
         # Get the main active contest
         main_contest = PhotoOfDayContest.query.filter_by(is_active=True).first()
         print(f"DEBUG: Main contest found: {main_contest}")  # Debug line
@@ -218,6 +222,24 @@ def admin_photo_of_day():
         # Get all contests for history
         all_contests = PhotoOfDayContest.query.order_by(PhotoOfDayContest.contest_date.desc()).all()
         print(f"DEBUG: Total contests in database: {len(all_contests)}")  # Debug line
+        
+        # Direct SQL query to see what's actually in the database
+        result = db.session.execute('SELECT id, contest_date, is_active FROM photo_of_day_contest ORDER BY contest_date DESC')
+        raw_contests = result.fetchall()
+        print(f"DEBUG: Raw SQL query found {len(raw_contests)} contests:")
+        for row in raw_contests:
+            print(f"DEBUG: SQL Row - ID: {row[0]}, Date: {row[1]}, Active: {row[2]}")
+        
+        # Check if the table exists
+        table_check = db.session.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='photo_of_day_contest'")
+        table_exists = table_check.fetchone()
+        print(f"DEBUG: photo_of_day_contest table exists: {table_exists is not None}")
+        
+        # Check table schema
+        if table_exists:
+            schema_result = db.session.execute("PRAGMA table_info(photo_of_day_contest)")
+            schema = schema_result.fetchall()
+            print(f"DEBUG: Table schema: {schema}")
         
         # Debug: Check all contests and their active status
         for i, contest in enumerate(all_contests):
