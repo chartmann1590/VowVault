@@ -354,15 +354,15 @@
             <div class="info-grid">
                 <div class="info-item">
                     <div class="info-label">Cache Size</div>
-                    <div class="info-value">{{ optimization_status.cache_size }}</div>
+                    <div class="info-value">{{ optimization_status.cache_size or '0 MB' }}</div>
                 </div>
                 <div class="info-item">
                     <div class="info-label">Last Optimization</div>
-                    <div class="info-value">{{ optimization_status.last_optimization }}</div>
+                    <div class="info-value">{{ optimization_status.last_optimization or 'Never' }}</div>
                 </div>
                 <div class="info-item">
                     <div class="info-label">Database Size</div>
-                    <div class="info-value">{{ optimization_status.database_size }}</div>
+                    <div class="info-value">{{ optimization_status.database_size or 'Unknown' }}</div>
                 </div>
             </div>
         </div>
@@ -451,15 +451,25 @@
     }
 
     async function optimizeDatabase() {
+        const adminKey = '{{ admin_key }}';
+        if (!adminKey) {
+            showError('Admin key is missing. Please refresh the page.');
+            return;
+        }
+        
         showLoading('Optimizing database...');
         
         try {
-            const response = await fetch('/admin/database-optimize?key={{ admin_key }}', {
+            const response = await fetch(`/admin/database-optimize?key=${adminKey}`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
                 }
             });
+            
+            if (!response.ok) {
+                throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+            }
             
             const data = await response.json();
             hideLoading();
@@ -479,15 +489,25 @@
     }
 
     async function clearCache() {
+        const adminKey = '{{ admin_key }}';
+        if (!adminKey) {
+            showError('Admin key is missing. Please refresh the page.');
+            return;
+        }
+        
         showLoading('Clearing cache...');
         
         try {
-            const response = await fetch('/admin/clear-cache?key={{ admin_key }}', {
+            const response = await fetch(`/admin/clear-cache?key=${adminKey}`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
                 }
             });
+            
+            if (!response.ok) {
+                throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+            }
             
             const data = await response.json();
             hideLoading();
@@ -507,15 +527,25 @@
     }
 
     async function performMaintenance() {
+        const adminKey = '{{ admin_key }}';
+        if (!adminKey) {
+            showError('Admin key is missing. Please refresh the page.');
+            return;
+        }
+        
         showLoading('Performing database maintenance...');
         
         try {
-            const response = await fetch('/admin/database-maintenance?key={{ admin_key }}', {
+            const response = await fetch(`/admin/database-maintenance?key=${adminKey}`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
                 }
             });
+            
+            if (!response.ok) {
+                throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+            }
             
             const data = await response.json();
             hideLoading();

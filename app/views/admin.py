@@ -1780,9 +1780,10 @@ def admin_database():
     
     # Get database optimization status
     from app.utils.db_optimization import db_optimizer
+    cache_size = db_optimizer.get_cache_size()
     optimization_status = {
         'cache_enabled': db_optimizer.is_enabled(),
-        'cache_size': db_optimizer.get_cache_size(),
+        'cache_size': f"{cache_size} MB" if cache_size > 0 else "0 MB",
         'last_optimization': Settings.get('last_database_optimization', 'Never'),
         'database_size': 'Unknown'  # Could be implemented to get actual DB size
     }
