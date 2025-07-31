@@ -247,7 +247,29 @@
         if (timezoneDisplay) {
             timezoneDisplay.textContent = selectedTimezone;
         }
+        
+        // Update the current time preview
+        updateCurrentTimePreview(selectedTimezone);
     });
+    
+    function updateCurrentTimePreview(timezone) {
+        // Get current time in the selected timezone
+        const now = new Date();
+        const timeString = now.toLocaleString('en-US', {
+            timeZone: timezone,
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric',
+            hour: 'numeric',
+            minute: '2-digit',
+            hour12: true
+        });
+        
+        const timeDisplay = document.getElementById('currentTimePreview');
+        if (timeDisplay) {
+            timeDisplay.textContent = timeString;
+        }
+    }
 
     function saveTimezoneSettings() {
         const timezone = document.getElementById('timezone').value;
@@ -271,7 +293,9 @@
                 document.getElementById('successMessage').style.display = 'block';
                 setTimeout(() => {
                     document.getElementById('successMessage').style.display = 'none';
-                }, 3000);
+                    // Refresh the page to show updated timezone
+                    window.location.reload();
+                }, 1500);
             }
         })
         .catch(error => {
