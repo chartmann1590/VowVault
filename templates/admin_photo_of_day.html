@@ -389,9 +389,15 @@
     Main Contest: {{ main_contest }}<br>
     Main Contest ID: {{ main_contest.id if main_contest else 'None' }}<br>
     Main Contest Active: {{ main_contest.is_active if main_contest else 'None' }}<br>
+    Main Contest Date: {{ main_contest.contest_date if main_contest else 'None' }}<br>
     Main Candidates Count: {{ main_candidates|length }}<br>
     All Contests Count: {{ all_contests|length }}<br>
-    All Photos Count: {{ all_photos|length }}
+    All Photos Count: {{ all_photos|length }}<br>
+    <br>
+    <strong>ALL CONTESTS DETAILS:</strong><br>
+    {% for contest in all_contests %}
+        Contest {{ loop.index }}: ID={{ contest.id }}, Date={{ contest.contest_date }}, Active={{ contest.is_active }}<br>
+    {% endfor %}
 </div>
 
 <div class="admin-stats-grid">
@@ -454,12 +460,12 @@
     <!-- DEBUG: main_candidates count = {{ main_candidates|length }} -->
     {% if main_contest %}
     <div style="background: #e8f5e8; padding: 1rem; border-radius: 10px; margin-bottom: 1rem; border-left: 4px solid #4caf50;">
-        <strong>✅ Active Contest Found:</strong> Contest ID {{ main_contest.id }} from {{ main_contest.contest_date | timezone_format('%B %d, %Y') }}
+        <strong>✅ Active Contest Found:</strong> Contest ID {{ main_contest.id }} from {{ main_contest.contest_date.strftime('%B %d, %Y') if main_contest.contest_date else 'Unknown' }}
         <br><small>You must close this contest before creating a new one.</small>
     </div>
     <div class="contest-card {% if main_contest.winner_photo_id %}winner{% endif %}">
         <div class="contest-header">
-            <div class="contest-date">Main Contest - {{ main_contest.contest_date | timezone_format('%B %d, %Y') }}</div>
+            <div class="contest-date">Main Contest - {{ main_contest.contest_date.strftime('%B %d, %Y') if main_contest.contest_date else 'Unknown' }}</div>
             <div class="contest-status {% if main_contest.is_voting_open %}status-open{% else %}status-closed{% endif %}">
                 {% if main_contest.is_voting_open %}
                     🗳️ Voting Open
@@ -515,7 +521,7 @@
         {% for contest in all_contests %}
         <div class="contest-card {% if contest.is_active %}active{% else %}inactive{% endif %}">
             <div class="contest-header">
-                <div class="contest-date">Contest {{ contest.id }} - {{ contest.contest_date | timezone_format('%B %d, %Y') }}</div>
+                <div class="contest-date">Contest {{ contest.id }} - {{ contest.contest_date.strftime('%B %d, %Y') if contest.contest_date else 'Unknown' }}</div>
                 <div class="contest-status {% if contest.is_active %}status-active{% else %}status-inactive{% endif %}">
                     {% if contest.is_active %}
                         🟢 Active
