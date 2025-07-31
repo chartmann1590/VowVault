@@ -267,6 +267,30 @@ def migrate_database():
             conn.commit()
             print("✅ candidate_id column added to photo_of_day_vote table")
 
+        # --- Cleanup orphaned contests ---
+        print("Checking for orphaned active contests...")
+        cursor.execute("SELECT COUNT(*) FROM photo_of_day_contest WHERE is_active = 1")
+        active_count = cursor.fetchone()[0]
+        
+        if active_count > 1:
+            print(f"Found {active_count} active contests. Cleaning up orphaned contests...")
+            cursor.execute("""
+                UPDATE photo_of_day_contest 
+                SET is_active = 0 
+                WHERE id NOT IN (
+                    SELECT id FROM photo_of_day_contest 
+                    WHERE is_active = 1 
+                    ORDER BY contest_date DESC 
+                    LIMIT 1
+                )
+            """)
+            conn.commit()
+            print("✅ Orphaned contests cleaned up successfully!")
+        elif active_count == 1:
+            print("✅ Single active contest found - no cleanup needed")
+        else:
+            print("✅ No active contests found - no cleanup needed")
+
         # --- Security Audit Log Table ---
         cursor.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='security_audit_log'")
         if not cursor.fetchone():

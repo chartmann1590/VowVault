@@ -304,6 +304,7 @@
         <button id="create-contest-btn" class="admin-btn primary">Create Today's Contest</button>
         <button id="add-auto-candidates-btn" class="admin-btn secondary">Add Auto-Candidates</button>
         <button id="update-threshold-btn" class="admin-btn secondary">Update Threshold</button>
+        <button id="force-cleanup-btn" class="admin-btn warning">Force Cleanup</button>
         <button id="debug-db-btn" class="admin-btn secondary">Debug Database</button>
     </div>
     
@@ -421,6 +422,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const cancelThresholdBtn = document.getElementById('cancel-threshold-btn');
     
     const addAutoCandidatesBtn = document.getElementById('add-auto-candidates-btn');
+    const forceCleanupBtn = document.getElementById('force-cleanup-btn');
     const debugDbBtn = document.getElementById('debug-db-btn');
     
     createContestBtn.addEventListener('click', function() {
@@ -448,6 +450,10 @@ document.addEventListener('DOMContentLoaded', function() {
             console.log('Create contest response status:', response.status);  // Debug line
             if (!response.ok) {
                 return response.json().then(data => {
+                    // Check if this is an active contest error
+                    if (data.contest_id) {
+                        throw new Error(`${data.message} Click 'Force Cleanup' to fix this issue.`);
+                    }
                     throw new Error(data.message || `HTTP ${response.status}`);
                 });
             }
@@ -523,6 +529,32 @@ document.addEventListener('DOMContentLoaded', function() {
         .catch(error => {
             console.error('Error:', error);
             showNotification('An error occurred', 'error');
+        });
+    });
+    
+    forceCleanupBtn.addEventListener('click', function() {
+        if (!confirm('Are you sure you want to force cleanup orphaned contests? This will close all but the most recent active contest.')) {
+            return;
+        }
+        
+        fetch('/admin/photo-of-day/force-cleanup?key=wedding2024', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                showNotification(data.message, 'success');
+                setTimeout(() => location.reload(), 1000);
+            } else {
+                showNotification(data.message, 'error');
+            }
+        })
+        .catch(error => {
+            console.error('Force cleanup error:', error);
+            showNotification('An error occurred during cleanup', 'error');
         });
     });
     

@@ -48,6 +48,35 @@ def add_automatic_candidates():
     
     return added_count
 
+def cleanup_orphaned_contests():
+    """Clean up any orphaned active contests that might be causing issues"""
+    try:
+        # Find all active contests
+        active_contests = PhotoOfDayContest.query.filter_by(is_active=True).all()
+        
+        if len(active_contests) > 1:
+            # If multiple active contests, keep the most recent one and close others
+            sorted_contests = sorted(active_contests, key=lambda x: x.contest_date, reverse=True)
+            contest_to_keep = sorted_contests[0]
+            
+            for contest in sorted_contests[1:]:
+                contest.is_active = False
+                print(f"DEBUG: Closed orphaned contest {contest.id} from {contest.contest_date}")
+            
+            db.session.commit()
+            print(f"DEBUG: Kept contest {contest_to_keep.id} as active, closed {len(sorted_contests)-1} others")
+            return True
+        elif len(active_contests) == 1:
+            print(f"DEBUG: Found single active contest {active_contests[0].id}")
+            return True
+        else:
+            print("DEBUG: No active contests found")
+            return True
+            
+    except Exception as e:
+        print(f"DEBUG: Error in cleanup_orphaned_contests: {e}")
+        return False
+
 @photo_of_day_bp.route('/photo-of-day')
 def photo_of_day():
     """Main Photo of the Day page"""
@@ -235,13 +264,21 @@ def create_contest():
         data = {}
         print("DEBUG: Create contest - using empty data for main contest")  # Debug line
     
+    # First, try to cleanup any orphaned contests
+    cleanup_orphaned_contests()
+    
     # Check if there's already an active contest
     existing_active = PhotoOfDayContest.query.filter_by(is_active=True).first()
     print(f"DEBUG: Existing active contest check: {existing_active}")  # Debug line
     
     if existing_active:
         print(f"DEBUG: Found existing active contest ID: {existing_active.id}")  # Debug line
-        return jsonify({'success': False, 'message': 'An active contest already exists. Please close the current contest first.'}), 400
+        return jsonify({
+            'success': False, 
+            'message': f'An active contest already exists (ID: {existing_active.id}, Date: {existing_active.contest_date}). Please close the current contest first.',
+            'contest_id': existing_active.id,
+            'contest_date': existing_active.contest_date.isoformat()
+        }), 400
     else:
         print("DEBUG: No existing active contest found")  # Debug line
     
@@ -469,13 +506,69 @@ def debug_database():
             'date_added': candidate.date_added.isoformat()
         })
     
+    # Check for orphaned contests
+    active_contests = PhotoOfDayContest.query.filter_by(is_active=True).all()
+    orphaned_issue = len(active_contests) > 1
+    
     return jsonify({
         'success': True,
         'contests': contests_data,
         'candidates': candidates_data,
         'total_contests': len(contests_data),
-        'total_candidates': len(candidates_data)
+        'total_candidates': len(candidates_data),
+        'active_contests': len(active_contests),
+        'orphaned_issue': orphaned_issue,
+        'orphaned_message': f'Found {len(active_contests)} active contests (should be 0 or 1)' if orphaned_issue else 'No orphaned contests found'
     })
+
+@photo_of_day_bp.route('/admin/photo-of-day/force-cleanup', methods=['POST'])
+def force_cleanup_contests():
+    """Force cleanup of orphaned contests"""
+    admin_key = request.args.get('key')
+    if admin_key != 'wedding2024':
+        return jsonify({'success': False, 'message': 'Unauthorized'}), 403
+    
+    try:
+        # Get all active contests
+        active_contests = PhotoOfDayContest.query.filter_by(is_active=True).all()
+        
+        if len(active_contests) == 0:
+            return jsonify({
+                'success': True, 
+                'message': 'No active contests found. No cleanup needed.',
+                'contests_closed': 0
+            })
+        
+        if len(active_contests) == 1:
+            return jsonify({
+                'success': True, 
+                'message': f'Single active contest found (ID: {active_contests[0].id}). No cleanup needed.',
+                'contests_closed': 0
+            })
+        
+        # Multiple active contests - close all but the most recent
+        sorted_contests = sorted(active_contests, key=lambda x: x.contest_date, reverse=True)
+        contest_to_keep = sorted_contests[0]
+        contests_to_close = sorted_contests[1:]
+        
+        for contest in contests_to_close:
+            contest.is_active = False
+        
+        db.session.commit()
+        
+        return jsonify({
+            'success': True,
+            'message': f'Cleanup completed. Kept contest {contest_to_keep.id} active, closed {len(contests_to_close)} orphaned contests.',
+            'contests_closed': len(contests_to_close),
+            'kept_contest_id': contest_to_keep.id
+        })
+        
+    except Exception as e:
+        print(f"DEBUG: Error in force cleanup: {e}")
+        return jsonify({
+            'success': False,
+            'message': f'Error during cleanup: {str(e)}'
+        }), 500
 
 @photo_of_day_bp.route('/api/photo-of-day/stats')
 def photo_of_day_stats():

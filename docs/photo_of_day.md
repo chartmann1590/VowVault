@@ -23,6 +23,8 @@ The Photo of the Day Contest feature allows wedding guests to vote on multiple d
 - **Contest Management**: View, edit, or delete contests
 - **Vote Statistics**: View voting statistics and engagement metrics
 - **Easy Management**: Simple admin interface for managing all contest content
+- **Database Cleanup Tools**: Force cleanup of orphaned contests to resolve creation issues
+- **Debug Tools**: Comprehensive database debugging and troubleshooting features
 
 ## 🚀 Getting Started
 
@@ -31,6 +33,8 @@ The Photo of the Day Contest tables are automatically created during the main mi
 - `photo_of_day_contest` table for daily contests
 - `photo_of_day_candidate` table for contest candidates
 - `photo_of_day_vote` table for voting records
+
+The migration script now includes automatic cleanup of orphaned active contests to prevent creation issues.
 
 ### 2. Access the Feature
 - **For Guests**: Navigate to "📸 Photo of the Day Contest" in the main navigation
@@ -55,6 +59,7 @@ The Photo of the Day Contest tables are automatically created during the main mi
 5. **Monitor Voting**: Watch real-time voting progress
 6. **Select Winner**: Choose the winning photo when voting closes
 7. **Manage Contests**: View, edit, or delete existing contests
+8. **Troubleshoot Issues**: Use "Force Cleanup" and "Debug Database" tools if needed
 
 ## 🛠️ Technical Details
 
@@ -125,6 +130,8 @@ CREATE TABLE photo_of_day_vote (
 - `POST /admin/photo-of-day/add-candidate` - Add a photo as a candidate
 - `POST /admin/photo-of-day/update-threshold` - Update likes threshold for auto-candidates
 - `POST /admin/photo-of-day/add-auto-candidates` - Manually trigger adding auto-candidates
+- `POST /admin/photo-of-day/force-cleanup` - Force cleanup of orphaned contests
+- `GET /admin/photo-of-day/debug-db` - Get database debug information
 
 ## 🎨 Customization
 
@@ -186,6 +193,16 @@ The feature works with the existing database configuration:
 
 ### Common Issues
 
+#### Contest Creation Issues
+**Problem**: "An active contest already exists. Please close the current contest first."
+
+**Solution**: 
+1. Click the "Force Cleanup" button in the admin panel
+2. This will automatically close all but the most recent active contest
+3. Try creating a new contest again
+
+**Prevention**: The system now includes automatic cleanup during migration and contest creation.
+
 #### Migration Errors
 ```bash
 # If migration fails, check database permissions
@@ -210,11 +227,33 @@ chmod 644 instance/wedding_photos.db
 - **"Invalid candidate"**: Ensure candidate belongs to the contest
 
 ### Debug Steps
-1. **Check Database**: Verify tables exist with `sqlite3 instance/wedding_photos.db`
+1. **Check Database**: Use "Debug Database" button in admin panel
 2. **Check Settings**: Verify threshold setting: `SELECT * FROM settings WHERE key='photo_of_day_likes_threshold'`
 3. **Check Logs**: Review application logs for errors
 4. **Test Migration**: Run `python migration.py` to ensure all tables exist
 5. **Verify Routes**: Check that blueprints are registered correctly
+6. **Force Cleanup**: Use "Force Cleanup" button to resolve orphaned contests
+
+### Admin Tools
+
+#### Force Cleanup
+- **Purpose**: Resolves orphaned active contests that prevent new contest creation
+- **Action**: Closes all but the most recent active contest
+- **When to use**: When you get "active contest already exists" error
+- **Safety**: Confirms before taking action
+
+#### Debug Database
+- **Purpose**: Shows current database state and identifies issues
+- **Information**: Total contests, candidates, active contests, orphaned issues
+- **When to use**: When troubleshooting contest creation or voting issues
+- **Output**: Detailed JSON response with database statistics
+
+### Database Integrity
+The system now includes several safeguards:
+- **Automatic Cleanup**: During migration and contest creation
+- **Orphaned Contest Detection**: Identifies multiple active contests
+- **Force Cleanup Tool**: Manual resolution of database issues
+- **Debug Information**: Comprehensive database state reporting
 
 ## 🔮 Future Enhancements
 
