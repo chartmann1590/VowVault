@@ -3,18 +3,22 @@ from datetime import datetime, date
 from sqlalchemy import UniqueConstraint
 
 class PhotoOfDay(db.Model):
-    """Simple Photo of the Day model - one photo per day"""
+    """Photo of the Day model - supports up to 3 photos per day"""
     id = db.Column(db.Integer, primary_key=True)
     photo_id = db.Column(db.Integer, db.ForeignKey('photo.id'), nullable=False)
-    date = db.Column(db.Date, nullable=False, unique=True)
+    date = db.Column(db.Date, nullable=False)
+    position = db.Column(db.Integer, default=1)  # 1, 2, or 3 for ordering
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     is_active = db.Column(db.Boolean, default=True)
     
     # Relationship to the photo
     photo = db.relationship('Photo', backref='photo_of_day_entries')
     
+    # Ensure only one photo per position per day
+    __table_args__ = (UniqueConstraint('date', 'position', name='unique_date_position'),)
+    
     def __repr__(self):
-        return f'<PhotoOfDay {self.date}: Photo {self.photo_id}>'
+        return f'<PhotoOfDay {self.date} position {self.position}: Photo {self.photo_id}>'
 
 class PhotoOfDayVote(db.Model):
     """Votes for Photo of the Day"""

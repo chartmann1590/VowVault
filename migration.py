@@ -45,7 +45,8 @@ def migrate_database():
             CREATE TABLE photo_of_day (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 photo_id INTEGER NOT NULL,
-                date DATE NOT NULL UNIQUE,
+                date DATE NOT NULL,
+                position INTEGER DEFAULT 1,
                 created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
                 is_active BOOLEAN DEFAULT TRUE,
                 FOREIGN KEY (photo_id) REFERENCES photo (id)
@@ -54,6 +55,15 @@ def migrate_database():
         print("✅ photo_of_day table created successfully!")
     else:
         print("✅ photo_of_day table already exists")
+        # Check if position column exists
+        cursor.execute("PRAGMA table_info(photo_of_day)")
+        columns = [column[1] for column in cursor.fetchall()]
+        if 'position' not in columns:
+            print("Adding position column to photo_of_day table...")
+            cursor.execute("ALTER TABLE photo_of_day ADD COLUMN position INTEGER DEFAULT 1")
+            print("✅ position column added successfully!")
+        else:
+            print("✅ position column already exists")
     
     cursor.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='photo_of_day_vote'")
     if not cursor.fetchone():
@@ -113,6 +123,7 @@ def migrate_database():
     
     # Create indexes for better performance
     cursor.execute("CREATE INDEX IF NOT EXISTS idx_photo_of_day_date ON photo_of_day(date)")
+    cursor.execute("CREATE INDEX IF NOT EXISTS idx_photo_of_day_position ON photo_of_day(position)")
     cursor.execute("CREATE INDEX IF NOT EXISTS idx_photo_of_day_vote_user ON photo_of_day_vote(user_identifier)")
     cursor.execute("CREATE INDEX IF NOT EXISTS idx_photo_of_day_contest_date ON photo_of_day_contest(contest_date)")
     cursor.execute("CREATE INDEX IF NOT EXISTS idx_photo_of_day_candidate_date ON photo_of_day_candidate(date_added)")

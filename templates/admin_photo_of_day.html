@@ -110,23 +110,48 @@
     .admin-btn.warning:hover {
         background: #f57c00;
     }
-    .todays-photo-display {
+    .todays-photos-display {
         background: #f9f5f0;
         border-radius: 15px;
         padding: 2rem;
         margin-bottom: 2rem;
-        text-align: center;
     }
-    .todays-photo-display img,
-    .todays-photo-display video {
-        max-width: 100%;
-        max-height: 400px;
+    .todays-photos-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        gap: 2rem;
+        margin-top: 1rem;
+    }
+    .todays-photo-card {
+        background: white;
         border-radius: 10px;
-        box-shadow: 0 4px 24px rgba(0,0,0,0.1);
+        padding: 1rem;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        position: relative;
+    }
+    .todays-photo-card img,
+    .todays-photo-card video {
+        max-width: 100%;
+        max-height: 200px;
+        border-radius: 8px;
+        display: block;
+        margin: 0 auto;
     }
     .todays-photo-info {
         margin-top: 1rem;
         color: #8b7355;
+        text-align: center;
+    }
+    .position-badge {
+        position: absolute;
+        top: 8px;
+        left: 8px;
+        background: #e91e63;
+        color: #fff;
+        padding: 0.2rem 0.6rem;
+        border-radius: 6px;
+        font-size: 0.8rem;
+        font-weight: 600;
     }
     .photo-selection-grid {
         display: grid;
@@ -174,6 +199,27 @@
         justify-content: space-between;
         color: #6b5d54;
         font-size: 0.8rem;
+    }
+    .position-selector {
+        display: flex;
+        gap: 0.5rem;
+        margin-top: 0.5rem;
+    }
+    .position-btn {
+        padding: 0.3rem 0.8rem;
+        border: 2px solid #e91e63;
+        background: transparent;
+        color: #e91e63;
+        border-radius: 6px;
+        font-size: 0.8rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+    .position-btn:hover,
+    .position-btn.active {
+        background: #e91e63;
+        color: #fff;
     }
     .recent-photos-grid {
         display: grid;
@@ -239,7 +285,7 @@
 {% block content %}
 <div class="photo-of-day-admin-header">
     <h1>📸 Photo of the Day Management</h1>
-    <p>Manage today's featured photo and view recent selections</p>
+    <p>Manage today's featured photos and view recent selections</p>
 </div>
 
 <div class="admin-stats-grid">
@@ -252,51 +298,58 @@
         <div class="stat-label">Available Photos</div>
     </div>
     <div class="admin-stat-card">
-        <div class="stat-value">{{ top_photos|length }}</div>
-        <div class="stat-label">Top Photos</div>
+        <div class="stat-value">{{ todays_photos|length }}</div>
+        <div class="stat-label">Today's Photos</div>
     </div>
 </div>
 
 <div class="admin-section-card">
-    <div class="admin-section-title">Today's Photo of the Day</div>
+    <div class="admin-section-title">Today's Photos of the Day</div>
     
-    {% if todays_photo %}
-    <div class="todays-photo-display">
-        {% if todays_photo.photo.media_type == 'video' %}
-        <video controls>
-            <source src="{{ url_for('static', filename='uploads/videos/' + todays_photo.photo.filename) }}" type="video/mp4">
-        </video>
-        {% elif todays_photo.photo.is_photobooth %}
-        <img src="{{ url_for('static', filename='uploads/photobooth/' + todays_photo.photo.filename) }}" alt="Today's Photo">
-        {% else %}
-        <img src="{{ url_for('static', filename='uploads/' + todays_photo.photo.filename) }}" alt="Today's Photo">
-        {% endif %}
-        <div class="todays-photo-info">
-            <strong>{{ todays_photo.photo.original_filename }}</strong><br>
-            by {{ todays_photo.photo.uploader_name }}<br>
-            {{ todays_photo.votes|length }} votes
+    {% if todays_photos %}
+    <div class="todays-photos-display">
+        <div class="todays-photos-grid">
+            {% for photo_of_day in todays_photos %}
+            <div class="todays-photo-card">
+                <div class="position-badge">Position {{ photo_of_day.position }}</div>
+                {% if photo_of_day.photo.media_type == 'video' %}
+                <video controls>
+                    <source src="{{ url_for('static', filename='uploads/videos/' + photo_of_day.photo.filename) }}" type="video/mp4">
+                </video>
+                {% elif photo_of_day.photo.is_photobooth %}
+                <img src="{{ url_for('static', filename='uploads/photobooth/' + photo_of_day.photo.filename) }}" alt="Today's Photo">
+                {% else %}
+                <img src="{{ url_for('static', filename='uploads/' + photo_of_day.photo.filename) }}" alt="Today's Photo">
+                {% endif %}
+                <div class="todays-photo-info">
+                    <strong>{{ photo_of_day.photo.original_filename }}</strong><br>
+                    by {{ photo_of_day.photo.uploader_name }}<br>
+                    {{ photo_of_day.votes|length }} votes
+                </div>
+            </div>
+            {% endfor %}
         </div>
     </div>
     
     <div class="admin-controls">
         <form method="POST" action="{{ url_for('photo_of_day.clear_photo_of_day', key='wedding2024') }}" style="display: inline;">
-            <button type="submit" class="admin-btn danger" onclick="return confirm('Are you sure you want to clear today\'s Photo of the Day?')">
-                🗑️ Clear Today's Photo
+            <button type="submit" class="admin-btn danger" onclick="return confirm('Are you sure you want to clear all today\'s Photos of the Day?')">
+                🗑️ Clear All Today's Photos
             </button>
         </form>
     </div>
     {% else %}
     <div class="no-photo-message">
         <div class="icon">📸</div>
-        <h3 style="font-family:'Playfair Display',serif;font-size:1.5rem;color:#8b7355;margin-bottom:0.5rem;">No Photo of the Day Set</h3>
-        <p>Select a photo below to set as today's Photo of the Day</p>
+        <h3 style="font-family:'Playfair Display',serif;font-size:1.5rem;color:#8b7355;margin-bottom:0.5rem;">No Photos of the Day Set</h3>
+        <p>Select photos below to set as today's Photos of the Day</p>
     </div>
     {% endif %}
 </div>
 
 <div class="admin-section-card">
     <div class="admin-section-title">Select Photo of the Day</div>
-    <p style="color: #6b5d54; margin-bottom: 2rem;">Click on a photo below to set it as today's Photo of the Day</p>
+    <p style="color: #6b5d54; margin-bottom: 2rem;">Click on a photo below to set it as today's Photo of the Day. Choose position 1, 2, or 3.</p>
     
     <div class="photo-selection-grid">
         {% for photo in all_photos %}
@@ -317,6 +370,11 @@
                 <div class="photo-selection-stats">
                     <span>❤️ {{ photo.likes }}</span>
                     <span>{{ photo.upload_date | timezone_format('%b %d') }}</span>
+                </div>
+                <div class="position-selector">
+                    <button type="button" class="position-btn" onclick="event.stopPropagation(); setPosition(1)">Position 1</button>
+                    <button type="button" class="position-btn" onclick="event.stopPropagation(); setPosition(2)">Position 2</button>
+                    <button type="button" class="position-btn" onclick="event.stopPropagation(); setPosition(3)">Position 3</button>
                 </div>
             </div>
         </div>
@@ -356,8 +414,20 @@
 {% endif %}
 
 <script>
+let selectedPosition = 1;
+
+function setPosition(position) {
+    selectedPosition = position;
+    
+    // Update button styles
+    document.querySelectorAll('.position-btn').forEach(btn => {
+        btn.classList.remove('active');
+    });
+    event.target.classList.add('active');
+}
+
 function selectPhoto(photoId, photoName) {
-    if (confirm(`Set "${photoName}" as today's Photo of the Day?`)) {
+    if (confirm(`Set "${photoName}" as today's Photo of the Day in position ${selectedPosition}?`)) {
         const form = document.createElement('form');
         form.method = 'POST';
         form.action = '{{ url_for("photo_of_day.set_photo_of_day", key="wedding2024") }}';
@@ -367,16 +437,22 @@ function selectPhoto(photoId, photoName) {
         photoIdInput.name = 'photo_id';
         photoIdInput.value = photoId;
         
+        const positionInput = document.createElement('input');
+        positionInput.type = 'hidden';
+        positionInput.name = 'position';
+        positionInput.value = selectedPosition;
+        
         form.appendChild(photoIdInput);
+        form.appendChild(positionInput);
         document.body.appendChild(form);
         form.submit();
     }
 }
 
-// Highlight selected photo if there's a current photo of the day
-{% if todays_photo %}
+// Highlight selected photos if there are current photos of the day
+{% if todays_photos %}
 document.addEventListener('DOMContentLoaded', function() {
-    const currentPhotoId = {{ todays_photo.photo.id }};
+    const currentPhotoIds = [{% for photo in todays_photos %}{{ photo.photo.id }}{% if not loop.last %}, {% endif %}{% endfor %}];
     const photoCards = document.querySelectorAll('.photo-selection-card');
     
     photoCards.forEach(card => {
@@ -384,12 +460,17 @@ document.addEventListener('DOMContentLoaded', function() {
         const match = onclickStr.match(/selectPhoto\((\d+)/);
         if (match && match[1]) {
             const photoId = parseInt(match[1]);
-            if (photoId === currentPhotoId) {
+            if (currentPhotoIds.includes(photoId)) {
                 card.classList.add('selected');
             }
         }
     });
 });
 {% endif %}
+
+// Set default position
+document.addEventListener('DOMContentLoaded', function() {
+    setPosition(1);
+});
 </script>
 {% endblock %} 
