@@ -421,31 +421,36 @@ document.addEventListener('DOMContentLoaded', function() {
     });
     
     submitContestBtn.addEventListener('click', function() {
-        const contestDate = document.getElementById('contest-date').value;
-        const votingEnds = document.getElementById('voting-ends').value;
+        console.log('Creating contest...');  // Debug line
         
         fetch('/admin/photo-of-day/create-contest?key=wedding2024', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
             },
-            body: JSON.stringify({
-                contest_date: contestDate,
-                voting_ends_at: votingEnds || null
-            })
+            body: JSON.stringify({})  // No data needed for main contest
         })
-        .then(response => response.json())
+        .then(response => {
+            console.log('Create contest response status:', response.status);  // Debug line
+            if (!response.ok) {
+                return response.json().then(data => {
+                    throw new Error(data.message || `HTTP ${response.status}`);
+                });
+            }
+            return response.json();
+        })
         .then(data => {
+            console.log('Create contest response data:', data);  // Debug line
             if (data.success) {
-                showNotification('Contest created successfully!', 'success');
+                showNotification('Main contest created successfully!', 'success');
                 setTimeout(() => location.reload(), 1000);
             } else {
-                showNotification(data.message, 'error');
+                showNotification(data.message || 'Unknown error occurred', 'error');
             }
         })
         .catch(error => {
-            console.error('Error:', error);
-            showNotification('An error occurred', 'error');
+            console.error('Create contest error:', error);
+            showNotification(`Error: ${error.message}`, 'error');
         });
     });
     
@@ -512,11 +517,20 @@ document.addEventListener('DOMContentLoaded', function() {
         notification.className = `fixed top-4 right-4 p-4 rounded-lg shadow-lg z-50 ${
             type === 'success' ? 'bg-green-500 text-white' : 'bg-red-500 text-white'
         }`;
+        notification.style.fontSize = '1rem';
+        notification.style.fontWeight = '600';
+        notification.style.minWidth = '300px';
+        notification.style.maxWidth = '500px';
+        notification.style.wordWrap = 'break-word';
         notification.textContent = message;
         document.body.appendChild(notification);
+        
+        // Auto-remove after 5 seconds for better visibility
         setTimeout(() => {
-            notification.remove();
-        }, 3000);
+            if (notification.parentNode) {
+                notification.remove();
+            }
+        }, 5000);
     }
 });
 
@@ -577,6 +591,8 @@ function deleteContest(contestId) {
 }
 
 function addAsCandidate(photoId) {
+    console.log('Adding photo as candidate:', photoId);  // Debug line
+    
     fetch('/admin/photo-of-day/add-candidate?key=wedding2024', {
         method: 'POST',
         headers: {
@@ -586,18 +602,27 @@ function addAsCandidate(photoId) {
             photo_id: photoId
         })
     })
-    .then(response => response.json())
+    .then(response => {
+        console.log('Response status:', response.status);  // Debug line
+        if (!response.ok) {
+            return response.json().then(data => {
+                throw new Error(data.message || `HTTP ${response.status}`);
+            });
+        }
+        return response.json();
+    })
     .then(data => {
+        console.log('Response data:', data);  // Debug line
         if (data.success) {
             showNotification('Photo added as candidate successfully!', 'success');
             setTimeout(() => location.reload(), 1000);
         } else {
-            showNotification(data.message, 'error');
+            showNotification(data.message || 'Unknown error occurred', 'error');
         }
     })
     .catch(error => {
         console.error('Error:', error);
-        showNotification('An error occurred', 'error');
+        showNotification(`Error: ${error.message}`, 'error');
     });
 }
 

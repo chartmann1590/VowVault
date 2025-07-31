@@ -210,47 +210,32 @@ def create_contest():
     
     try:
         data = request.get_json()
+        print(f"DEBUG: Create contest received data: {data}")  # Debug line
     except Exception as e:
+        print(f"DEBUG: Create contest JSON error: {e}")  # Debug line
         return jsonify({'success': False, 'message': f'Invalid JSON data: {str(e)}'}), 400
     
     if not data:
+        print("DEBUG: Create contest - no data received")  # Debug line
         return jsonify({'success': False, 'message': 'No JSON data provided'}), 400
     
-    contest_date = data.get('contest_date')
-    voting_ends_at = data.get('voting_ends_at')
+    # Check if there's already an active contest
+    existing_active = PhotoOfDayContest.query.filter_by(is_active=True).first()
+    if existing_active:
+        return jsonify({'success': False, 'message': 'An active contest already exists. Please close the current contest first.'}), 400
     
-    if not contest_date:
-        return jsonify({'success': False, 'message': 'Contest date required'}), 400
-    
-    try:
-        contest_date = datetime.strptime(contest_date, '%Y-%m-%d').date()
-    except ValueError:
-        return jsonify({'success': False, 'message': 'Invalid date format'}), 400
-    
-    # Check if contest already exists for this date
-    existing = PhotoOfDayContest.query.filter_by(contest_date=contest_date).first()
-    if existing:
-        return jsonify({'success': False, 'message': 'Contest already exists for this date'}), 400
-    
-    # Parse voting end time if provided
-    voting_end_datetime = None
-    if voting_ends_at:
-        try:
-            voting_end_datetime = datetime.strptime(voting_ends_at, '%Y-%m-%d %H:%M')
-        except ValueError:
-            return jsonify({'success': False, 'message': 'Invalid voting end time format'}), 400
-    
-    # Create new contest
+    # Create new main contest
     contest = PhotoOfDayContest(
-        contest_date=contest_date,
+        contest_date=date.today(),
         is_active=True,
-        voting_ends_at=voting_end_datetime
+        voting_ends_at=None  # No end time for ongoing contest
     )
     
     db.session.add(contest)
     db.session.commit()
     
-    return jsonify({'success': True, 'message': 'Contest created successfully!'})
+    print("DEBUG: Created new main contest successfully")  # Debug line
+    return jsonify({'success': True, 'message': 'Main contest created successfully!'})
 
 @photo_of_day_bp.route('/admin/photo-of-day/select-winner', methods=['POST'])
 def select_winner():
