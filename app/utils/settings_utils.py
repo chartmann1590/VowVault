@@ -5,7 +5,7 @@ from datetime import datetime
 
 def verify_admin_access(admin_key=None, user_email=None, user_domain=None):
     """Verify admin access using either admin key or SSO credentials"""
-    from app import app
+    import os
     
     # Check if SSO is enabled and user is authenticated
     if user_email and user_domain:
@@ -23,7 +23,8 @@ def verify_admin_access(admin_key=None, user_email=None, user_domain=None):
     
     # Fallback to admin key
     if admin_key:
-        return admin_key == app.config.get('ADMIN_KEY', 'wedding2024')
+        admin_key_from_env = os.environ.get('ADMIN_KEY', 'wedding2024')
+        return admin_key == admin_key_from_env
     
     return False
 
