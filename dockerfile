@@ -3,11 +3,12 @@ FROM python:3.11-slim
 # Set working directory
 WORKDIR /app
 
-# Install system dependencies including ffmpeg
+# Install system dependencies including ffmpeg and libmagic
 RUN apt-get update && apt-get install -y \
     gcc \
     ffmpeg \
     curl \
+    libmagic1 \
     && rm -rf /var/lib/apt/lists/*
 
 # Copy requirements first for better caching

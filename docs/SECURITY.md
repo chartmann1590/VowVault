@@ -255,6 +255,19 @@ python-magic==0.4.27    # File type detection
 cryptography==41.0.7     # Cryptographic functions
 ```
 
+**Note**: The `python-magic` library requires the `libmagic1` system library, which is included in the Docker container. For local development, you may need to install it separately:
+
+```bash
+# Ubuntu/Debian
+sudo apt-get install libmagic1
+
+# macOS
+brew install libmagic
+
+# CentOS/RHEL
+sudo yum install file-devel
+```
+
 ## 📋 Security Best Practices
 
 ### For Administrators

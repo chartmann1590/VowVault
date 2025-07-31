@@ -12,6 +12,7 @@ The Docker setup has been updated to work with the new modular structure. All th
 - Updated to copy the new `app/` directory structure
 - Changed entry point to use `run.py` instead of `app.py`
 - Added `curl` for health checks
+- Added `libmagic1` system dependency for file type detection
 - Updated to use new `docker-entrypoint.sh` script
 
 ### 2. **docker-compose.yml**
@@ -73,6 +74,17 @@ docker run -p 5000:5000 \
 ├── static/                      # Static files
 └── requirements.txt             # Python dependencies
 ```
+
+## System Dependencies
+
+The Docker container includes the following system dependencies:
+
+- **ffmpeg**: For video processing and thumbnail generation
+- **libmagic1**: For file type detection and security validation
+- **gcc**: For compiling Python extensions
+- **curl**: For health checks and external API calls
+
+These dependencies are automatically installed during the Docker build process.
 
 ## Environment Variables
 
