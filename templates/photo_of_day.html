@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 
-{% block title %}Photo of the Day Contest - VowVault{% endblock %}
+{% block title %}Photo of the Day - VowVault{% endblock %}
 
 {% block extra_styles %}
 <style>
@@ -18,7 +18,7 @@
         color: #6b5d54;
         font-size: 1.1rem;
     }
-    .contest-section {
+    .todays-photo-section {
         background: white;
         border-radius: 20px;
         box-shadow: 0 10px 40px rgba(0,0,0,0.08);
@@ -28,103 +28,65 @@
         margin-left: auto;
         margin-right: auto;
     }
-    .contest-header {
+    .todays-photo-header {
         text-align: center;
         margin-bottom: 2rem;
     }
-    .contest-header h2 {
+    .todays-photo-header h2 {
         font-family: 'Playfair Display', serif;
         font-size: 2rem;
         color: #8b7355;
         margin-bottom: 0.2rem;
     }
-    .contest-header p {
+    .todays-photo-header p {
         color: #6b5d54;
         font-size: 1.1rem;
     }
-    .voting-status {
-        display: inline-block;
-        padding: 0.5rem 1rem;
-        border-radius: 20px;
-        font-weight: 600;
-        font-size: 0.9rem;
-        margin-top: 0.5rem;
-    }
-    .voting-open {
-        background: #e8f5e8;
-        color: #2e7d32;
-    }
-    .voting-closed {
-        background: #ffebee;
-        color: #c62828;
-    }
-    .candidates-grid {
+    .todays-photo-content {
         display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+        grid-template-columns: 1fr 1fr;
         gap: 2rem;
-        margin-top: 2rem;
+        align-items: center;
     }
-    .candidate-card {
-        background: #f9f5f0;
+    .todays-photo-media {
+        position: relative;
         border-radius: 15px;
         overflow: hidden;
-        box-shadow: 0 4px 24px rgba(0,0,0,0.07);
-        transition: box-shadow 0.2s;
-        position: relative;
+        box-shadow: 0 8px 32px rgba(0,0,0,0.15);
     }
-    .candidate-card:hover {
-        box-shadow: 0 8px 32px rgba(233, 30, 99, 0.13);
-    }
-    .candidate-card.winner {
-        border: 3px solid #4caf50;
-        box-shadow: 0 8px 32px rgba(76, 175, 80, 0.2);
-    }
-    .winner-badge {
-        position: absolute;
-        top: 12px;
-        right: 12px;
-        background: #4caf50;
-        color: #fff;
-        padding: 0.3rem 0.9rem;
-        border-radius: 8px;
-        font-size: 0.9rem;
-        font-weight: 600;
-        box-shadow: 0 2px 8px rgba(76, 175, 80, 0.3);
-        z-index: 10;
-    }
-    .candidate-media {
-        position: relative;
-        height: 250px;
-        overflow: hidden;
-    }
-    .candidate-media img,
-    .candidate-media video {
+    .todays-photo-media img,
+    .todays-photo-media video {
         width: 100%;
-        height: 100%;
-        object-fit: cover;
+        height: auto;
         display: block;
     }
-    .candidate-info {
-        padding: 1.5rem;
+    .todays-photo-info {
+        padding: 1rem;
     }
-    .candidate-uploader {
+    .todays-photo-uploader {
         color: #8b7355;
-        font-size: 1rem;
-        margin-bottom: 0.5rem;
+        font-size: 1.1rem;
+        margin-bottom: 1rem;
     }
-    .candidate-votes {
+    .todays-photo-description {
+        color: #6b5d54;
+        font-size: 1rem;
+        margin-bottom: 1.5rem;
+        line-height: 1.6;
+    }
+    .todays-photo-votes {
         display: flex;
         align-items: center;
         justify-content: space-between;
-        margin-bottom: 1rem;
+        margin-bottom: 1.5rem;
     }
     .vote-count {
         display: flex;
         align-items: center;
         color: #e91e63;
         font-weight: 600;
-        font-size: 1.1rem;
-        gap: 0.4rem;
+        font-size: 1.2rem;
+        gap: 0.5rem;
     }
     .vote-btn, .unvote-btn {
         display: flex;
@@ -135,10 +97,10 @@
         font-weight: 600;
         border: none;
         border-radius: 8px;
-        padding: 0.7rem 1.5rem;
+        padding: 0.8rem 1.5rem;
         cursor: pointer;
         transition: background 0.2s;
-        width: 100%;
+        min-width: 120px;
     }
     .vote-btn {
         background: #e91e63;
@@ -158,16 +120,11 @@
     .unvote-btn:hover {
         background: #7f1010;
     }
-    .candidate-description {
-        color: #6b5d54;
-        font-size: 0.95rem;
-        margin-top: 0.5rem;
-    }
-    .no-contest-section {
+    .no-photo-section {
         text-align: center;
         padding: 3rem 2rem;
     }
-    .no-contest-section .icon {
+    .no-photo-section .icon {
         font-size: 4rem;
         margin-bottom: 1rem;
     }
@@ -188,12 +145,12 @@
         margin-bottom: 2rem;
         text-align: left;
     }
-    .recent-contest-grid {
+    .recent-photos-grid {
         display: grid;
         grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
         gap: 2rem;
     }
-    .recent-contest-card {
+    .recent-photo-card {
         background: #f9f5f0;
         border-radius: 15px;
         overflow: hidden;
@@ -201,24 +158,21 @@
         position: relative;
         transition: box-shadow 0.2s;
     }
-    .recent-contest-card:hover {
+    .recent-photo-card:hover {
         box-shadow: 0 8px 32px rgba(233, 30, 99, 0.13);
     }
-    .recent-contest-card.winner {
-        border: 2px solid #4caf50;
-    }
-    .recent-contest-media {
+    .recent-photo-media {
         position: relative;
         height: 200px;
     }
-    .recent-contest-media img,
-    .recent-contest-media video {
+    .recent-photo-media img,
+    .recent-photo-media video {
         width: 100%;
         height: 100%;
         object-fit: cover;
         display: block;
     }
-    .recent-contest-date {
+    .recent-photo-date {
         position: absolute;
         top: 12px;
         right: 12px;
@@ -230,138 +184,126 @@
         font-weight: 600;
         box-shadow: 0 2px 8px rgba(233, 30, 99, 0.13);
     }
-    .recent-contest-info {
+    .recent-photo-info {
         padding: 1rem 1.2rem 0.7rem 1.2rem;
     }
-    .recent-contest-info .uploader {
+    .recent-photo-info .uploader {
         color: #8b7355;
         font-size: 1rem;
         margin-bottom: 0.3rem;
     }
-    .recent-contest-info .stats {
+    .recent-photo-info .stats {
         display: flex;
         align-items: center;
         justify-content: space-between;
         color: #6b5d54;
         font-size: 0.9rem;
     }
+    @media (max-width: 768px) {
+        .todays-photo-content {
+            grid-template-columns: 1fr;
+            gap: 1rem;
+        }
+        .todays-photo-info {
+            order: -1;
+        }
+    }
 </style>
 {% endblock %}
 
 {% block content %}
 <div class="photo-of-day-header">
-    <h1>📸 Photo of the Day Contest</h1>
-    <p>Vote for your favorite photo from today's candidates!</p>
+    <h1>📸 Photo of the Day</h1>
+    <p>Today's featured photo from your wedding celebration!</p>
 </div>
 
-{% if main_contest %}
-<div class="contest-section">
-    <div class="contest-header">
-        <h2>Current Contest</h2>
-        <p>Vote for your favorite photo!</p>
-        <div class="voting-status {% if main_contest.is_voting_open %}voting-open{% else %}voting-closed{% endif %}">
-            {% if main_contest.is_voting_open %}
-                🗳️ Voting Open
-            {% else %}
-                ⏰ Voting Closed
-            {% endif %}
-        </div>
+{% if todays_photo %}
+<div class="todays-photo-section">
+    <div class="todays-photo-header">
+        <h2>Today's Photo</h2>
+        <p>{{ todays_photo.date | timezone_format('%B %d, %Y') }}</p>
     </div>
     
-    {% if main_contest.candidates %}
-    <div class="candidates-grid">
-        {% for candidate in main_contest.candidates %}
-        <div class="candidate-card {% if candidate.is_winner %}winner{% endif %}">
-            {% if candidate.is_winner %}
-            <div class="winner-badge">🏆 Winner</div>
+    <div class="todays-photo-content">
+        <div class="todays-photo-media">
+            {% if todays_photo.photo.media_type == 'video' %}
+            <video controls>
+                <source src="{{ url_for('static', filename='uploads/videos/' + todays_photo.photo.filename) }}" type="video/mp4">
+                Your browser does not support the video tag.
+            </video>
+            {% elif todays_photo.photo.is_photobooth %}
+            <img src="{{ url_for('static', filename='uploads/photobooth/' + todays_photo.photo.filename) }}" alt="Photo of the Day">
+            {% else %}
+            <img src="{{ url_for('static', filename='uploads/' + todays_photo.photo.filename) }}" alt="Photo of the Day">
             {% endif %}
-            <div class="candidate-media">
-                {% if candidate.photo.media_type == 'video' %}
-                <video controls>
-                    <source src="{{ url_for('static', filename='uploads/videos/' + candidate.photo.filename) }}" type="video/mp4">
-                    Your browser does not support the video tag.
-                </video>
-                {% elif candidate.photo.is_photobooth %}
-                <img src="{{ url_for('static', filename='uploads/photobooth/' + candidate.photo.filename) }}" alt="Contest Candidate">
-                {% else %}
-                <img src="{{ url_for('static', filename='uploads/' + candidate.photo.filename) }}" alt="Contest Candidate">
-                {% endif %}
+        </div>
+        
+        <div class="todays-photo-info">
+            <div class="todays-photo-uploader">
+                📸 by {{ todays_photo.photo.uploader_name }}
             </div>
-            <div class="candidate-info">
-                <div class="candidate-uploader">
-                    📸 by {{ candidate.photo.uploader_name }}
+            
+            {% if todays_photo.photo.description %}
+            <div class="todays-photo-description">
+                {{ todays_photo.photo.description }}
+            </div>
+            {% endif %}
+            
+            <div class="todays-photo-votes">
+                <div class="vote-count" id="vote-count">
+                    <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20" style="width:20px;height:20px;"><path fill-rule="evenodd" d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z" clip-rule="evenodd"></path></svg>
+                    {{ todays_photo.votes|length }} votes
                 </div>
-                <div class="candidate-votes">
-                    <div class="vote-count" id="vote-count-{{ candidate.id }}">
-                        <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20" style="width:18px;height:18px;"><path fill-rule="evenodd" d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z" clip-rule="evenodd"></path></svg>
-                        {{ candidate.vote_count }} votes
-                    </div>
-                    {% if user_identifier and main_contest.is_voting_open %}
-                        {% if user_vote and user_vote.candidate_id == candidate.id %}
-                        <button class="unvote-btn" data-candidate-id="{{ candidate.id }}">
-                            Remove Vote
-                        </button>
-                        {% else %}
-                        <button class="vote-btn" data-candidate-id="{{ candidate.id }}" {% if user_vote %}disabled{% endif %}>
-                            Vote
-                        </button>
-                        {% endif %}
-                    {% elif not main_contest.is_voting_open %}
-                        <div style="color: #6b5d54; font-size: 0.9rem;">Voting closed</div>
+                
+                {% if user_identifier %}
+                    {% if user_vote %}
+                    <button class="unvote-btn" id="unvote-btn">
+                        Remove Vote
+                    </button>
                     {% else %}
-                        <div style="color: #6b5d54; font-size: 0.9rem;">Sign in to vote</div>
+                    <button class="vote-btn" id="vote-btn">
+                        Vote
+                    </button>
                     {% endif %}
-                </div>
-                {% if candidate.photo.description %}
-                <div class="candidate-description">
-                    {{ candidate.photo.description }}
-                </div>
+                {% else %}
+                    <div style="color: #6b5d54; font-size: 0.9rem;">Sign in to vote</div>
                 {% endif %}
             </div>
         </div>
-        {% endfor %}
     </div>
-    {% else %}
-    <div class="no-contest-section">
-        <div class="icon">📸</div>
-        <h3 style="font-family:'Playfair Display',serif;font-size:1.5rem;color:#8b7355;margin-bottom:0.5rem;">No Candidates Yet</h3>
-        <p style="color:#6b5d54; margin-bottom:1.5rem;">Check back later for today's contest candidates!</p>
-        <a href="{{ url_for('main.index') }}" class="vote-btn" style="background:#e91e63;">Browse All Photos</a>
-    </div>
-    {% endif %}
 </div>
 {% else %}
-<div class="contest-section" style="text-align:center;">
+<div class="todays-photo-section" style="text-align:center;">
     <div style="font-size:4rem; margin-bottom:1rem;">📸</div>
-    <h2 style="font-family:'Playfair Display',serif;font-size:2rem;color:#8b7355;margin-bottom:0.2rem;">No Contest Today</h2>
-    <p style="color:#6b5d54; margin-bottom:1.5rem;">Check back later for today's photo contest!</p>
+    <h2 style="font-family:'Playfair Display',serif;font-size:2rem;color:#8b7355;margin-bottom:0.2rem;">No Photo of the Day</h2>
+    <p style="color:#6b5d54; margin-bottom:1.5rem;">Check back later for today's featured photo!</p>
     <a href="{{ url_for('main.index') }}" class="vote-btn" style="background:#e91e63;">Browse All Photos</a>
 </div>
 {% endif %}
 
-{% if recent_winners %}
+{% if recent_photos %}
 <div class="recent-section">
-    <div class="recent-header">Recent Winners</div>
-    <div class="recent-contest-grid">
-        {% for winner in recent_winners %}
-        <div class="recent-contest-card winner">
-            <div class="recent-contest-media">
-                {% if winner.photo.media_type == 'video' %}
+    <div class="recent-header">Recent Photos of the Day</div>
+    <div class="recent-photos-grid">
+        {% for photo_of_day in recent_photos %}
+        <div class="recent-photo-card">
+            <div class="recent-photo-media">
+                {% if photo_of_day.photo.media_type == 'video' %}
                 <video controls>
-                    <source src="{{ url_for('static', filename='uploads/videos/' + winner.photo.filename) }}" type="video/mp4">
+                    <source src="{{ url_for('static', filename='uploads/videos/' + photo_of_day.photo.filename) }}" type="video/mp4">
                 </video>
-                {% elif winner.photo.is_photobooth %}
-                <img src="{{ url_for('static', filename='uploads/photobooth/' + winner.photo.filename) }}" alt="Contest Winner">
+                {% elif photo_of_day.photo.is_photobooth %}
+                <img src="{{ url_for('static', filename='uploads/photobooth/' + photo_of_day.photo.filename) }}" alt="Photo of the Day">
                 {% else %}
-                <img src="{{ url_for('static', filename='uploads/' + winner.photo.filename) }}" alt="Contest Winner">
+                <img src="{{ url_for('static', filename='uploads/' + photo_of_day.photo.filename) }}" alt="Photo of the Day">
                 {% endif %}
-                <div class="recent-contest-date">{{ winner.date_added | timezone_format('%b %d') }}</div>
+                <div class="recent-photo-date">{{ photo_of_day.date | timezone_format('%b %d') }}</div>
             </div>
-            <div class="recent-contest-info">
-                <div class="uploader">by {{ winner.photo.uploader_name }}</div>
+            <div class="recent-photo-info">
+                <div class="uploader">by {{ photo_of_day.photo.uploader_name }}</div>
                 <div class="stats">
-                    <span>🏆 Winner</span>
-                    <span>{{ winner.vote_count }} votes</span>
+                    <span>📸 Photo of the Day</span>
+                    <span>{{ photo_of_day.votes|length }} votes</span>
                 </div>
             </div>
         </div>
@@ -372,54 +314,44 @@
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    const voteButtons = document.querySelectorAll('.vote-btn');
-    const unvoteButtons = document.querySelectorAll('.unvote-btn');
+    const voteBtn = document.getElementById('vote-btn');
+    const unvoteBtn = document.getElementById('unvote-btn');
+    const voteCount = document.getElementById('vote-count');
     
-    voteButtons.forEach(btn => {
-        btn.addEventListener('click', function() {
-            const candidateId = this.getAttribute('data-candidate-id');
-            voteForCandidate(candidateId, this);
+    if (voteBtn) {
+        voteBtn.addEventListener('click', function() {
+            voteForPhoto();
         });
-    });
+    }
     
-    unvoteButtons.forEach(btn => {
-        btn.addEventListener('click', function() {
-            const candidateId = this.getAttribute('data-candidate-id');
-            unvoteCandidate(candidateId, this);
+    if (unvoteBtn) {
+        unvoteBtn.addEventListener('click', function() {
+            unvotePhoto();
         });
-    });
+    }
     
-    function voteForCandidate(candidateId, button) {
+    function voteForPhoto() {
         fetch('/api/photo-of-day/vote', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
             },
-            body: JSON.stringify({
-                candidate_id: candidateId
-            })
+            body: JSON.stringify({})
         })
         .then(response => response.json())
         .then(data => {
             if (data.success) {
                 // Update vote count
-                const voteCount = document.getElementById(`vote-count-${candidateId}`);
-                voteCount.innerHTML = `<svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20" style="width:18px;height:18px;"><path fill-rule="evenodd" d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z" clip-rule="evenodd"></path></svg> ${data.vote_count} votes`;
+                voteCount.innerHTML = `<svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20" style="width:20px;height:20px;"><path fill-rule="evenodd" d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z" clip-rule="evenodd"></path></svg> ${data.vote_count} votes`;
                 
                 // Replace vote button with unvote button
                 const newUnvoteBtn = document.createElement('button');
                 newUnvoteBtn.className = 'unvote-btn';
-                newUnvoteBtn.setAttribute('data-candidate-id', candidateId);
                 newUnvoteBtn.textContent = 'Remove Vote';
                 newUnvoteBtn.addEventListener('click', function() {
-                    unvoteCandidate(candidateId, this);
+                    unvotePhoto();
                 });
-                button.parentNode.replaceChild(newUnvoteBtn, button);
-                
-                // Disable all other vote buttons
-                document.querySelectorAll('.vote-btn').forEach(btn => {
-                    btn.disabled = true;
-                });
+                voteBtn.parentNode.replaceChild(newUnvoteBtn, voteBtn);
                 
                 showNotification('Vote recorded successfully!', 'success');
             } else {
@@ -432,7 +364,7 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
     
-    function unvoteCandidate(candidateId, button) {
+    function unvotePhoto() {
         fetch('/api/photo-of-day/unvote', {
             method: 'POST',
             headers: {
@@ -444,24 +376,16 @@ document.addEventListener('DOMContentLoaded', function() {
         .then(data => {
             if (data.success) {
                 // Update vote count
-                const voteCount = document.getElementById(`vote-count-${candidateId}`);
-                const currentVotes = parseInt(voteCount.textContent.match(/\d+/)[0]);
-                voteCount.innerHTML = `<svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20" style="width:18px;height:18px;"><path fill-rule="evenodd" d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z" clip-rule="evenodd"></path></svg> ${currentVotes - 1} votes`;
+                voteCount.innerHTML = `<svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20" style="width:20px;height:20px;"><path fill-rule="evenodd" d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z" clip-rule="evenodd"></path></svg> ${data.vote_count} votes`;
                 
                 // Replace unvote button with vote button
                 const newVoteBtn = document.createElement('button');
                 newVoteBtn.className = 'vote-btn';
-                newVoteBtn.setAttribute('data-candidate-id', candidateId);
                 newVoteBtn.textContent = 'Vote';
                 newVoteBtn.addEventListener('click', function() {
-                    voteForCandidate(candidateId, this);
+                    voteForPhoto();
                 });
-                button.parentNode.replaceChild(newVoteBtn, button);
-                
-                // Re-enable all vote buttons
-                document.querySelectorAll('.vote-btn').forEach(btn => {
-                    btn.disabled = false;
-                });
+                unvoteBtn.parentNode.replaceChild(newVoteBtn, unvoteBtn);
                 
                 showNotification('Vote removed successfully!', 'success');
             } else {

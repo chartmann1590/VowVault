@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 
-{% block title %}Admin - Photo of the Day Contest Management{% endblock %}
+{% block title %}Admin - Photo of the Day Management{% endblock %}
 
 {% block extra_styles %}
 <style>
@@ -60,7 +60,7 @@
         margin-bottom: 2rem;
         text-align: left;
     }
-    .contest-controls {
+    .admin-controls {
         display: flex;
         gap: 1rem;
         margin-bottom: 2rem;
@@ -98,10 +98,10 @@
     .admin-btn.success:hover {
         background: #388e3c;
     }
-    .admin-btn.delete {
+    .admin-btn.danger {
         background: #f44336;
     }
-    .admin-btn.delete:hover {
+    .admin-btn.danger:hover {
         background: #d32f2f;
     }
     .admin-btn.warning {
@@ -110,766 +110,286 @@
     .admin-btn.warning:hover {
         background: #f57c00;
     }
-    
-    /* Flash Messages */
-    .flash-messages {
+    .todays-photo-display {
+        background: #f9f5f0;
+        border-radius: 15px;
+        padding: 2rem;
         margin-bottom: 2rem;
+        text-align: center;
     }
-    .flash-message {
-        display: flex;
-        align-items: center;
-        gap: 0.75rem;
-        padding: 1rem 1.5rem;
+    .todays-photo-display img,
+    .todays-photo-display video {
+        max-width: 100%;
+        max-height: 400px;
         border-radius: 10px;
-        margin-bottom: 1rem;
-        box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-        animation: slideIn 0.3s ease-out;
-        position: relative;
+        box-shadow: 0 4px 24px rgba(0,0,0,0.1);
     }
-    .flash-success {
-        background: #e8f5e8;
-        border-left: 4px solid #4caf50;
-        color: #2e7d32;
+    .todays-photo-info {
+        margin-top: 1rem;
+        color: #8b7355;
     }
-    .flash-error {
-        background: #ffebee;
-        border-left: 4px solid #f44336;
-        color: #c62828;
-    }
-    .flash-warning {
-        background: #fff3e0;
-        border-left: 4px solid #ff9800;
-        color: #ef6c00;
-    }
-    .flash-info {
-        background: #e3f2fd;
-        border-left: 4px solid #2196f3;
-        color: #1565c0;
-    }
-    .flash-icon {
-        font-size: 1.2rem;
-        flex-shrink: 0;
-    }
-    .flash-text {
-        flex: 1;
-        font-weight: 500;
-    }
-    .flash-close {
-        background: none;
-        border: none;
-        font-size: 1.5rem;
-        cursor: pointer;
-        color: inherit;
-        opacity: 0.7;
-        transition: opacity 0.2s;
-        flex-shrink: 0;
-    }
-    .flash-close:hover {
-        opacity: 1;
-    }
-    @keyframes slideIn {
-        from {
-            opacity: 0;
-            transform: translateY(-10px);
-        }
-        to {
-            opacity: 1;
-            transform: translateY(0);
-        }
-    }
-    .contest-grid {
+    .photo-selection-grid {
         display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
-        gap: 2rem;
+        grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+        gap: 1.5rem;
+        margin-top: 2rem;
     }
-    .contest-card {
+    .photo-selection-card {
         background: #f9f5f0;
         border-radius: 15px;
         overflow: hidden;
         box-shadow: 0 4px 24px rgba(0,0,0,0.07);
-        position: relative;
         transition: box-shadow 0.2s;
+        cursor: pointer;
+        position: relative;
     }
-    .contest-card:hover {
+    .photo-selection-card:hover {
         box-shadow: 0 8px 32px rgba(233, 30, 99, 0.13);
     }
-    .contest-card.winner {
-        border: 3px solid #4caf50;
+    .photo-selection-card.selected {
+        border: 3px solid #e91e63;
+        box-shadow: 0 8px 32px rgba(233, 30, 99, 0.2);
     }
-    .contest-header {
-        padding: 1.5rem;
-        background: #e8f5e8;
-        border-bottom: 1px solid #c8e6c9;
+    .photo-selection-media {
+        position: relative;
+        height: 200px;
     }
-    .contest-date {
-        font-size: 1.2rem;
-        font-weight: 600;
-        color: #2e7d32;
-        margin-bottom: 0.5rem;
-    }
-    .contest-status {
-        display: inline-block;
-        padding: 0.3rem 0.8rem;
-        border-radius: 15px;
-        font-size: 0.9rem;
-        font-weight: 600;
-    }
-    .status-open {
-        background: #e8f5e8;
-        color: #2e7d32;
-    }
-    .status-closed {
-        background: #ffebee;
-        color: #c62828;
-    }
-    .status-active {
-        background: #e8f5e8;
-        color: #2e7d32;
-    }
-    .status-inactive {
-        background: #f5f5f5;
-        color: #757575;
-    }
-    .contest-card.active {
-        border: 2px solid #4caf50;
-    }
-    .contest-card.inactive {
-        border: 2px solid #e0e0e0;
-        opacity: 0.8;
-    }
-    .contest-actions {
-        padding: 1rem;
-        border-top: 1px solid #e0e0e0;
-        display: flex;
-        gap: 0.5rem;
-    }
-    .candidates-list {
-        padding: 1.5rem;
-    }
-    .candidate-item {
-        display: flex;
-        align-items: center;
-        gap: 1rem;
-        padding: 1rem;
-        background: white;
-        border-radius: 10px;
-        margin-bottom: 1rem;
-        box-shadow: 0 2px 8px rgba(0,0,0,0.05);
-    }
-    .candidate-item.winner {
-        border: 2px solid #4caf50;
-        background: #f1f8e9;
-    }
-    .candidate-thumbnail {
-        width: 60px;
-        height: 60px;
-        border-radius: 8px;
-        overflow: hidden;
-        flex-shrink: 0;
-    }
-    .candidate-thumbnail img {
+    .photo-selection-media img,
+    .photo-selection-media video {
         width: 100%;
         height: 100%;
         object-fit: cover;
+        display: block;
     }
-    .candidate-info {
-        flex: 1;
+    .photo-selection-info {
+        padding: 1rem;
     }
-    .candidate-uploader {
-        font-weight: 600;
+    .photo-selection-uploader {
         color: #8b7355;
-        margin-bottom: 0.2rem;
-    }
-    .candidate-votes {
-        color: #e91e63;
-        font-weight: 600;
         font-size: 0.9rem;
+        margin-bottom: 0.3rem;
     }
-    .candidate-actions {
+    .photo-selection-stats {
         display: flex;
-        gap: 0.5rem;
-    }
-    .winner-badge {
-        background: #4caf50;
-        color: white;
-        padding: 0.2rem 0.5rem;
-        border-radius: 4px;
+        justify-content: space-between;
+        color: #6b5d54;
         font-size: 0.8rem;
-        font-weight: 600;
     }
-    .candidate-grid {
+    .recent-photos-grid {
         display: grid;
         grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
         gap: 2rem;
     }
-    .candidate-card {
+    .recent-photo-card {
         background: #f9f5f0;
         border-radius: 15px;
         overflow: hidden;
         box-shadow: 0 4px 24px rgba(0,0,0,0.07);
         position: relative;
-        transition: box-shadow 0.2s;
     }
-    .candidate-card:hover {
-        box-shadow: 0 8px 32px rgba(233, 30, 99, 0.13);
-    }
-    .candidate-card img,
-    .candidate-card video {
-        width: 100%;
+    .recent-photo-media {
+        position: relative;
         height: 200px;
+    }
+    .recent-photo-media img,
+    .recent-photo-media video {
+        width: 100%;
+        height: 100%;
         object-fit: cover;
         display: block;
     }
-    .candidate-card-info {
-        padding: 1rem 1.2rem;
-    }
-    .candidate-card-uploader {
-        color: #8b7355;
-        font-size: 1rem;
-        margin-bottom: 0.5rem;
-    }
-    .candidate-card-votes {
-        color: #e91e63;
-        font-weight: 600;
-        font-size: 0.9rem;
-        margin-bottom: 1rem;
-    }
-    .form-group {
-        margin-bottom: 1.5rem;
-    }
-    .form-group label {
-        display: block;
-        margin-bottom: 0.5rem;
-        color: #8b7355;
-        font-weight: 600;
-    }
-    .form-group input,
-    .form-group select {
-        width: 100%;
-        padding: 0.8rem;
-        border: 2px solid #e0e0e0;
+    .recent-photo-date {
+        position: absolute;
+        top: 12px;
+        right: 12px;
+        background: #e91e63;
+        color: #fff;
+        padding: 0.3rem 0.9rem;
         border-radius: 8px;
-        font-size: 1rem;
-        transition: border-color 0.2s;
+        font-size: 0.9rem;
+        font-weight: 600;
     }
-    .form-group input:focus,
-    .form-group select:focus {
-        outline: none;
-        border-color: #e91e63;
+    .recent-photo-info {
+        padding: 1rem 1.2rem 0.7rem 1.2rem;
+    }
+    .recent-photo-info .uploader {
+        color: #8b7355;
+        font-size: 1rem;
+        margin-bottom: 0.3rem;
+    }
+    .recent-photo-info .stats {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        color: #6b5d54;
+        font-size: 0.9rem;
+    }
+    .no-photo-message {
+        text-align: center;
+        padding: 3rem 2rem;
+        color: #6b5d54;
+    }
+    .no-photo-message .icon {
+        font-size: 4rem;
+        margin-bottom: 1rem;
     }
 </style>
 {% endblock %}
 
 {% block content %}
 <div class="photo-of-day-admin-header">
-    <h1>📸 Photo of the Day Contest Management</h1>
-    <p>Manage daily photo contests and select winners</p>
-</div>
-
-<!-- Flash Messages -->
-{% with messages = get_flashed_messages(with_categories=true) %}
-    {% if messages %}
-        <div class="flash-messages">
-            {% for category, message in messages %}
-                <div class="flash-message flash-{{ category }}">
-                    <span class="flash-icon">
-                        {% if category == 'success' %}✅{% elif category == 'error' %}❌{% elif category == 'warning' %}⚠️{% else %}ℹ️{% endif %}
-                    </span>
-                    <span class="flash-text">{{ message }}</span>
-                    <button class="flash-close" onclick="this.parentElement.remove()">×</button>
-                </div>
-            {% endfor %}
-        </div>
-    {% endif %}
-{% endwith %}
-
-<!-- DEBUG SECTION -->
-<div style="background: #f0f0f0; padding: 1rem; margin: 1rem 0; border-radius: 8px; font-family: monospace; font-size: 0.9rem;">
-    <strong>DEBUG INFO:</strong><br>
-    Template rendered successfully!<br>
-    Main Contest: {{ main_contest }}<br>
-    Main Contest ID: {{ main_contest.id if main_contest else 'None' }}<br>
-    Main Contest Active: {{ main_contest.is_active if main_contest else 'None' }}<br>
-    Main Contest Date: {{ main_contest.contest_date if main_contest else 'None' }}<br>
-    Main Candidates Count: {{ main_candidates|length }}<br>
-    All Contests Count: {{ all_contests|length }}<br>
-    All Photos Count: {{ all_photos|length }}<br>
-    Likes Threshold: {{ likes_threshold }}<br>
-    Today Date: {{ today_date }}<br>
-    <br>
-    <strong>ALL CONTESTS DETAILS:</strong><br>
-    {% for contest in all_contests %}
-        Contest {{ loop.index }}: ID={{ contest.id }}, Date={{ contest.contest_date }}, Active={{ contest.is_active }}<br>
-    {% endfor %}
-    {% if all_contests|length == 0 %}
-        <strong>NO CONTESTS FOUND IN DATABASE</strong><br>
-    {% endif %}
+    <h1>📸 Photo of the Day Management</h1>
+    <p>Manage today's featured photo and view recent selections</p>
 </div>
 
 <div class="admin-stats-grid">
     <div class="admin-stat-card">
-        <div class="stat-value">{{ all_contests|length }}</div>
-        <div class="stat-label">Total Contests</div>
+        <div class="stat-value">{{ recent_photos|length }}</div>
+        <div class="stat-label">Total Photos of the Day</div>
     </div>
     <div class="admin-stat-card">
-        <div class="stat-value">{{ main_candidates|length }}</div>
-        <div class="stat-label">Current Candidates</div>
+        <div class="stat-value">{{ all_photos|length }}</div>
+        <div class="stat-label">Available Photos</div>
     </div>
     <div class="admin-stat-card">
-        <div class="stat-value">{{ likes_threshold }}</div>
-        <div class="stat-label">Auto-Candidate Threshold</div>
+        <div class="stat-value">{{ top_photos|length }}</div>
+        <div class="stat-label">Top Photos</div>
     </div>
 </div>
 
 <div class="admin-section-card">
-    <div class="admin-section-title">Create New Contest</div>
-    <div class="contest-controls">
-        <button id="create-contest-btn" class="admin-btn primary">Create Today's Contest</button>
-        <button id="close-current-contest-btn" class="admin-btn secondary">Close Current Contest</button>
-        <button id="delete-todays-contest-btn" class="admin-btn delete">Delete Today's Contest</button>
-        <button id="delete-contest-btn" class="admin-btn delete">Delete Contest by ID</button>
-        <button id="add-auto-candidates-btn" class="admin-btn secondary">Add Auto-Candidates</button>
-        <button id="update-threshold-btn" class="admin-btn secondary">Update Threshold</button>
-        <button id="force-cleanup-btn" class="admin-btn warning">Force Cleanup</button>
-        <button id="debug-db-btn" class="admin-btn secondary">Debug Database</button>
+    <div class="admin-section-title">Today's Photo of the Day</div>
+    
+    {% if todays_photo %}
+    <div class="todays-photo-display">
+        {% if todays_photo.photo.media_type == 'video' %}
+        <video controls>
+            <source src="{{ url_for('static', filename='uploads/videos/' + todays_photo.photo.filename) }}" type="video/mp4">
+        </video>
+        {% elif todays_photo.photo.is_photobooth %}
+        <img src="{{ url_for('static', filename='uploads/photobooth/' + todays_photo.photo.filename) }}" alt="Today's Photo">
+        {% else %}
+        <img src="{{ url_for('static', filename='uploads/' + todays_photo.photo.filename) }}" alt="Today's Photo">
+        {% endif %}
+        <div class="todays-photo-info">
+            <strong>{{ todays_photo.photo.original_filename }}</strong><br>
+            by {{ todays_photo.photo.uploader_name }}<br>
+            {{ todays_photo.votes|length }} votes
+        </div>
     </div>
     
-    <div id="create-contest-form" style="display: none; background: #f9f5f0; padding: 2rem; border-radius: 15px; margin-top: 1rem;">
-        <div class="form-group">
-            <label for="contest-date">Contest Date:</label>
-            <input type="date" id="contest-date" value="{{ today_date }}">
-        </div>
-        <div class="form-group">
-            <label for="voting-ends">Voting Ends (Optional):</label>
-            <input type="datetime-local" id="voting-ends">
-        </div>
-        <button id="submit-contest-btn" class="admin-btn primary">Create Contest</button>
-        <button id="cancel-contest-btn" class="admin-btn secondary">Cancel</button>
-    </div>
-    
-    <div id="threshold-form" style="display: none; background: #f9f5f0; padding: 2rem; border-radius: 15px; margin-top: 1rem;">
-        <div class="form-group">
-            <label for="new-threshold">New Likes Threshold:</label>
-            <input type="number" id="new-threshold" value="{{ likes_threshold }}" min="1">
-        </div>
-        <button id="submit-threshold-btn" class="admin-btn primary">Update Threshold</button>
-        <button id="cancel-threshold-btn" class="admin-btn secondary">Cancel</button>
-    </div>
-    
-    <p style="color:#6b5d54; margin-top: 1rem;">
-        <strong>Auto-Candidate System:</strong> Photos with {{ likes_threshold }} or more likes are automatically added as candidates for Photo of the Day contests.
-    </p>
-</div>
-
-<div class="admin-section-card">
-    <div class="admin-section-title">Current Main Contest</div>
-    <!-- DEBUG: main_contest = {{ main_contest }} -->
-    <!-- DEBUG: main_contest type = {{ main_contest.__class__.__name__ if main_contest else 'None' }} -->
-    <!-- DEBUG: main_contest.contest_date = {{ main_contest.contest_date if main_contest else 'None' }} -->
-    <!-- DEBUG: main_contest.contest_date type = {{ main_contest.contest_date.__class__.__name__ if main_contest and main_contest.contest_date else 'None' }} -->
-    <!-- DEBUG: today_date = {{ today_date }} -->
-    <!-- DEBUG: today_date type = {{ today_date.__class__.__name__ if today_date else 'None' }} -->
-    <!-- DEBUG: main_candidates count = {{ main_candidates|length }} -->
-    {% if main_contest %}
-    <div style="background: #e8f5e8; padding: 1rem; border-radius: 10px; margin-bottom: 1rem; border-left: 4px solid #4caf50;">
-        <strong>✅ Active Contest Found:</strong> Contest ID {{ main_contest.id }} from {{ main_contest.contest_date.strftime('%B %d, %Y') if main_contest.contest_date and hasattr(main_contest.contest_date, 'strftime') else str(main_contest.contest_date) if main_contest.contest_date else 'Unknown' }}
-        <br><small>You must close this contest before creating a new one.</small>
-    </div>
-    <div class="contest-card {% if main_contest.winner_photo_id %}winner{% endif %}">
-        <div class="contest-header">
-            <div class="contest-date">Main Contest - {{ main_contest.contest_date.strftime('%B %d, %Y') if main_contest.contest_date and hasattr(main_contest.contest_date, 'strftime') else str(main_contest.contest_date) if main_contest.contest_date else 'Unknown' }}</div>
-            <div class="contest-status {% if main_contest.is_voting_open %}status-open{% else %}status-closed{% endif %}">
-                {% if main_contest.is_voting_open %}
-                    🗳️ Voting Open
-                {% else %}
-                    ⏰ Voting Closed
-                {% endif %}
-            </div>
-        </div>
-        <div class="candidates-list">
-            {% if main_candidates %}
-                {% for candidate in main_candidates %}
-                <div class="candidate-item {% if candidate.is_winner %}winner{% endif %}">
-                    <div class="candidate-thumbnail">
-                        {% if candidate.photo.is_photobooth %}
-                        <img src="{{ url_for('static', filename='uploads/photobooth/' + candidate.photo.filename) }}" alt="Candidate">
-                        {% else %}
-                        <img src="{{ url_for('static', filename='uploads/' + candidate.photo.filename) }}" alt="Candidate">
-                        {% endif %}
-                    </div>
-                    <div class="candidate-info">
-                        <div class="candidate-uploader">by {{ candidate.photo.uploader_name }}</div>
-                        <div class="candidate-votes">{{ candidate.vote_count }} votes</div>
-                    </div>
-                    <div class="candidate-actions">
-                        {% if candidate.is_winner %}
-                            <span class="winner-badge">🏆 Winner</span>
-                        {% else %}
-                            <button onclick="selectWinner({{ main_contest.id }}, {{ candidate.id }})" class="admin-btn success">Select Winner</button>
-                        {% endif %}
-                    </div>
-                </div>
-                {% endfor %}
-            {% else %}
-                <p style="color:#6b5d54; text-align:center;">No candidates yet</p>
-            {% endif %}
-        </div>
-        <div style="padding: 1rem; border-top: 1px solid #e0e0e0;">
-            <button onclick="closeContest()" class="admin-btn secondary">Close Contest</button>
-            <button onclick="deleteContest({{ main_contest.id }})" class="admin-btn delete">Delete Contest</button>
-        </div>
+    <div class="admin-controls">
+        <form method="POST" action="{{ url_for('photo_of_day.clear_photo_of_day', key='wedding2024') }}" style="display: inline;">
+            <button type="submit" class="admin-btn danger" onclick="return confirm('Are you sure you want to clear today\'s Photo of the Day?')">
+                🗑️ Clear Today's Photo
+            </button>
+        </form>
     </div>
     {% else %}
-    <div style="background: #fff3e0; padding: 1rem; border-radius: 10px; margin-bottom: 1rem; border-left: 4px solid #ff9800;">
-        <strong>ℹ️ No Active Contest:</strong> You can create a new contest now.
+    <div class="no-photo-message">
+        <div class="icon">📸</div>
+        <h3 style="font-family:'Playfair Display',serif;font-size:1.5rem;color:#8b7355;margin-bottom:0.5rem;">No Photo of the Day Set</h3>
+        <p>Select a photo below to set as today's Photo of the Day</p>
     </div>
-    <p style="color:#6b5d54; text-align:center;">No active contest. Click "Create Today's Contest" to start one.</p>
     {% endif %}
 </div>
 
 <div class="admin-section-card">
-    <div class="admin-section-title">All Contests</div>
-    <div class="contest-grid">
-        {% for contest in all_contests %}
-        <div class="contest-card {% if contest.is_active %}active{% else %}inactive{% endif %} {% if contest.contest_date == today_date %}todays-contest{% endif %}">
-            <div class="contest-header">
-                <div class="contest-date">
-                    Contest {{ contest.id }} - {{ contest.contest_date.strftime('%B %d, %Y') if contest.contest_date and hasattr(contest.contest_date, 'strftime') else str(contest.contest_date) if contest.contest_date else 'Unknown' }}
-                    {% if contest.contest_date and today_date and contest.contest_date == today_date %}
-                        <span style="background: #e91e63; color: white; padding: 0.2rem 0.5rem; border-radius: 4px; font-size: 0.8rem; margin-left: 0.5rem;">TODAY</span>
-                    {% endif %}
-                </div>
-                <div class="contest-status {% if contest.is_active %}status-active{% else %}status-inactive{% endif %}">
-                    {% if contest.is_active %}
-                        🟢 Active
-                    {% else %}
-                        ⚫ Inactive
-                    {% endif %}
-                </div>
+    <div class="admin-section-title">Select Photo of the Day</div>
+    <p style="color: #6b5d54; margin-bottom: 2rem;">Click on a photo below to set it as today's Photo of the Day</p>
+    
+    <div class="photo-selection-grid">
+        {% for photo in all_photos %}
+        <div class="photo-selection-card" onclick="selectPhoto({{ photo.id }}, '{{ photo.original_filename }}')">
+            <div class="photo-selection-media">
+                {% if photo.media_type == 'video' %}
+                <video>
+                    <source src="{{ url_for('static', filename='uploads/videos/' + photo.filename) }}" type="video/mp4">
+                </video>
+                {% elif photo.is_photobooth %}
+                <img src="{{ url_for('static', filename='uploads/photobooth/' + photo.filename) }}" alt="Photo">
+                {% else %}
+                <img src="{{ url_for('static', filename='uploads/' + photo.filename) }}" alt="Photo">
+                {% endif %}
             </div>
-            <div class="contest-actions">
-                {% if contest.is_active %}
-                    <button onclick="closeContest()" class="admin-btn secondary">Close</button>
-                {% endif %}
-                <button onclick="deleteContest({{ contest.id }})" class="admin-btn delete">Delete</button>
-                {% if contest.contest_date == today_date %}
-                    <button onclick="deleteTodaysContest()" class="admin-btn delete" style="background: #e91e63;">Delete Today's</button>
-                {% endif %}
+            <div class="photo-selection-info">
+                <div class="photo-selection-uploader">{{ photo.uploader_name }}</div>
+                <div class="photo-selection-stats">
+                    <span>❤️ {{ photo.likes }}</span>
+                    <span>{{ photo.upload_date | timezone_format('%b %d') }}</span>
+                </div>
             </div>
         </div>
         {% endfor %}
     </div>
 </div>
 
+{% if recent_photos %}
 <div class="admin-section-card">
-    <div class="admin-section-title">Add Photo as Candidate</div>
-    <div class="candidate-grid">
-        {% for photo in all_photos[:20] %}
-        <div class="candidate-card">
-            {% if photo.is_photobooth %}
-            <img src="{{ url_for('static', filename='uploads/photobooth/' + photo.filename) }}" alt="Photo">
-            {% else %}
-            <img src="{{ url_for('static', filename='uploads/' + photo.filename) }}" alt="Photo">
-            {% endif %}
-            <div class="candidate-card-info">
-                <div class="candidate-card-uploader">by {{ photo.uploader_name }}</div>
-                <div class="candidate-card-votes">{{ photo.likes }} likes</div>
-                <button onclick="addAsCandidate({{ photo.id }})" class="admin-btn primary">Add as Candidate</button>
+    <div class="admin-section-title">Recent Photos of the Day</div>
+    <div class="recent-photos-grid">
+        {% for photo_of_day in recent_photos %}
+        <div class="recent-photo-card">
+            <div class="recent-photo-media">
+                {% if photo_of_day.photo.media_type == 'video' %}
+                <video controls>
+                    <source src="{{ url_for('static', filename='uploads/videos/' + photo_of_day.photo.filename) }}" type="video/mp4">
+                </video>
+                {% elif photo_of_day.photo.is_photobooth %}
+                <img src="{{ url_for('static', filename='uploads/photobooth/' + photo_of_day.photo.filename) }}" alt="Photo of the Day">
+                {% else %}
+                <img src="{{ url_for('static', filename='uploads/' + photo_of_day.photo.filename) }}" alt="Photo of the Day">
+                {% endif %}
+                <div class="recent-photo-date">{{ photo_of_day.date | timezone_format('%b %d') }}</div>
+            </div>
+            <div class="recent-photo-info">
+                <div class="uploader">by {{ photo_of_day.photo.uploader_name }}</div>
+                <div class="stats">
+                    <span>📸 Photo of the Day</span>
+                    <span>{{ photo_of_day.votes|length }} votes</span>
+                </div>
             </div>
         </div>
         {% endfor %}
     </div>
 </div>
+{% endif %}
 
 <script>
+function selectPhoto(photoId, photoName) {
+    if (confirm(`Set "${photoName}" as today's Photo of the Day?`)) {
+        const form = document.createElement('form');
+        form.method = 'POST';
+        form.action = '{{ url_for("photo_of_day.set_photo_of_day", key="wedding2024") }}';
+        
+        const photoIdInput = document.createElement('input');
+        photoIdInput.type = 'hidden';
+        photoIdInput.name = 'photo_id';
+        photoIdInput.value = photoId;
+        
+        form.appendChild(photoIdInput);
+        document.body.appendChild(form);
+        form.submit();
+    }
+}
+
+// Highlight selected photo if there's a current photo of the day
+{% if todays_photo %}
 document.addEventListener('DOMContentLoaded', function() {
-    const createContestBtn = document.getElementById('create-contest-btn');
-    const createContestForm = document.getElementById('create-contest-form');
-    const submitContestBtn = document.getElementById('submit-contest-btn');
-    const cancelContestBtn = document.getElementById('cancel-contest-btn');
+    const currentPhotoId = {{ todays_photo.photo.id }};
+    const photoCards = document.querySelectorAll('.photo-selection-card');
     
-    const updateThresholdBtn = document.getElementById('update-threshold-btn');
-    const thresholdForm = document.getElementById('threshold-form');
-    const submitThresholdBtn = document.getElementById('submit-threshold-btn');
-    const cancelThresholdBtn = document.getElementById('cancel-threshold-btn');
-    
-    const addAutoCandidatesBtn = document.getElementById('add-auto-candidates-btn');
-    const closeCurrentContestBtn = document.getElementById('close-current-contest-btn');
-    const deleteTodaysContestBtn = document.getElementById('delete-todays-contest-btn');
-    const deleteContestBtn = document.getElementById('delete-contest-btn');
-    const forceCleanupBtn = document.getElementById('force-cleanup-btn');
-    const debugDbBtn = document.getElementById('debug-db-btn');
-    
-    createContestBtn.addEventListener('click', function() {
-        createContestForm.style.display = 'block';
-        thresholdForm.style.display = 'none';
-    });
-    
-    cancelContestBtn.addEventListener('click', function() {
-        createContestForm.style.display = 'none';
-    });
-    
-    submitContestBtn.addEventListener('click', function() {
-        console.log('Creating contest...');  // Debug line
-        
-        // Create a form and submit it
-        const form = document.createElement('form');
-        form.method = 'POST';
-        form.action = '/admin/photo-of-day/create-contest?key=wedding2024';
-        
-        const input = document.createElement('input');
-        input.type = 'hidden';
-        input.name = 'action';
-        input.value = 'create_main_contest';
-        
-        form.appendChild(input);
-        document.body.appendChild(form);
-        form.submit();
-    });
-    
-    updateThresholdBtn.addEventListener('click', function() {
-        thresholdForm.style.display = 'block';
-        createContestForm.style.display = 'none';
-    });
-    
-    cancelThresholdBtn.addEventListener('click', function() {
-        thresholdForm.style.display = 'none';
-    });
-    
-    submitThresholdBtn.addEventListener('click', function() {
-        const threshold = document.getElementById('new-threshold').value;
-        
-        // Create a form and submit it
-        const form = document.createElement('form');
-        form.method = 'POST';
-        form.action = '/admin/photo-of-day/update-threshold?key=wedding2024';
-        
-        const input = document.createElement('input');
-        input.type = 'hidden';
-        input.name = 'threshold';
-        input.value = threshold;
-        
-        form.appendChild(input);
-        document.body.appendChild(form);
-        form.submit();
-    });
-    
-    addAutoCandidatesBtn.addEventListener('click', function() {
-        // Create a form and submit it
-        const form = document.createElement('form');
-        form.method = 'POST';
-        form.action = '/admin/photo-of-day/add-auto-candidates?key=wedding2024';
-        
-        document.body.appendChild(form);
-        form.submit();
-    });
-    
-    closeCurrentContestBtn.addEventListener('click', function() {
-        if (!confirm('Are you sure you want to close the current contest? This will allow you to create a new one.')) {
-            return;
-        }
-        
-        // Create a form and submit it
-        const form = document.createElement('form');
-        form.method = 'POST';
-        form.action = '/admin/photo-of-day/close-contest?key=wedding2024';
-        
-        document.body.appendChild(form);
-        form.submit();
-    });
-    
-    deleteTodaysContestBtn.addEventListener('click', function() {
-        if (!confirm('Are you sure you want to delete the contest for today? This action cannot be undone.')) {
-            return;
-        }
-        
-        // Create a form and submit it
-        const form = document.createElement('form');
-        form.method = 'POST';
-        form.action = '/admin/photo-of-day/delete-todays-contest?key=wedding2024';
-        
-        document.body.appendChild(form);
-        form.submit();
-    });
-    
-    deleteContestBtn.addEventListener('click', function() {
-        const contestId = prompt('Enter the contest ID to delete:');
-        if (!contestId || isNaN(contestId)) {
-            alert('Please enter a valid contest ID');
-            return;
-        }
-        
-        if (!confirm(`Are you sure you want to delete contest ${contestId}? This action cannot be undone.`)) {
-            return;
-        }
-        
-        // Create a form and submit it
-        const form = document.createElement('form');
-        form.method = 'POST';
-        form.action = `/admin/photo-of-day/delete-contest/${contestId}?key=wedding2024`;
-        
-        document.body.appendChild(form);
-        form.submit();
-    });
-    
-    forceCleanupBtn.addEventListener('click', function() {
-        if (!confirm('Are you sure you want to force cleanup orphaned contests? This will close all but the most recent active contest.')) {
-            return;
-        }
-        
-        // Create a form and submit it
-        const form = document.createElement('form');
-        form.method = 'POST';
-        form.action = '/admin/photo-of-day/force-cleanup?key=wedding2024';
-        
-        document.body.appendChild(form);
-        form.submit();
-    });
-    
-    debugDbBtn.addEventListener('click', function() {
-        fetch('/admin/photo-of-day/debug-db?key=wedding2024', {
-            method: 'GET',
-            headers: {
-                'Content-Type': 'application/json',
+    photoCards.forEach(card => {
+        const onclickStr = card.onclick.toString();
+        const match = onclickStr.match(/selectPhoto\((\d+)/);
+        if (match && match[1]) {
+            const photoId = parseInt(match[1]);
+            if (photoId === currentPhotoId) {
+                card.classList.add('selected');
             }
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                console.log('Database Debug Info:', data);
-                showNotification(`Database: ${data.total_contests} contests, ${data.total_candidates} candidates`, 'success');
-            } else {
-                showNotification(data.message, 'error');
-            }
-        })
-        .catch(error => {
-            console.error('Debug error:', error);
-            showNotification('Debug error occurred', 'error');
-        });
+        }
     });
-    
-    function showNotification(message, type) {
-        const notification = document.createElement('div');
-        notification.className = `fixed top-4 right-4 p-4 rounded-lg shadow-lg z-50 ${
-            type === 'success' ? 'bg-green-500 text-white' : 'bg-red-500 text-white'
-        }`;
-        notification.style.fontSize = '1rem';
-        notification.style.fontWeight = '600';
-        notification.style.minWidth = '300px';
-        notification.style.maxWidth = '500px';
-        notification.style.wordWrap = 'break-word';
-        notification.textContent = message;
-        document.body.appendChild(notification);
-        
-        // Auto-remove after 5 seconds for better visibility
-        setTimeout(() => {
-            if (notification.parentNode) {
-                notification.remove();
-            }
-        }, 5000);
-    }
 });
-
-function selectWinner(contestId, candidateId) {
-    if (!confirm('Are you sure you want to select this photo as the winner?')) {
-        return;
-    }
-    
-    fetch('/admin/photo-of-day/select-winner?key=wedding2024', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-            contest_id: contestId,
-            candidate_id: candidateId
-        })
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            showNotification('Winner selected successfully!', 'success');
-            setTimeout(() => location.reload(), 1000);
-        } else {
-            showNotification(data.message, 'error');
-        }
-    })
-    .catch(error => {
-        console.error('Error:', error);
-        showNotification('An error occurred', 'error');
-    });
-}
-
-function closeContest() {
-    if (!confirm('Are you sure you want to close the current contest? This will allow you to create a new one.')) {
-        return;
-    }
-    
-    // Create a form and submit it
-    const form = document.createElement('form');
-    form.method = 'POST';
-    form.action = '/admin/photo-of-day/close-contest?key=wedding2024';
-    
-    document.body.appendChild(form);
-    form.submit();
-}
-
-function deleteTodaysContest() {
-    if (!confirm('Are you sure you want to delete the contest for today? This action cannot be undone.')) {
-        return;
-    }
-    
-    // Create a form and submit it
-    const form = document.createElement('form');
-    form.method = 'POST';
-    form.action = '/admin/photo-of-day/delete-todays-contest?key=wedding2024';
-    
-    document.body.appendChild(form);
-    form.submit();
-}
-
-function deleteContest(contestId) {
-    if (!confirm('Are you sure you want to delete this contest?')) {
-        return;
-    }
-    
-    // Create a form and submit it
-    const form = document.createElement('form');
-    form.method = 'POST';
-    form.action = `/admin/photo-of-day/delete-contest/${contestId}?key=wedding2024`;
-    
-    document.body.appendChild(form);
-    form.submit();
-}
-
-function addAsCandidate(photoId) {
-    console.log('Adding photo as candidate:', photoId);  // Debug line
-    
-    // Create a form and submit it
-    const form = document.createElement('form');
-    form.method = 'POST';
-    form.action = '/admin/photo-of-day/add-candidate?key=wedding2024';
-    
-    const input = document.createElement('input');
-    input.type = 'hidden';
-    input.name = 'photo_id';
-    input.value = photoId;
-    
-    form.appendChild(input);
-    document.body.appendChild(form);
-    form.submit();
-}
-
-function showNotification(message, type) {
-    const notification = document.createElement('div');
-    notification.className = `fixed top-4 right-4 p-4 rounded-lg shadow-lg z-50 ${
-        type === 'success' ? 'bg-green-500 text-white' : 'bg-red-500 text-white'
-    }`;
-    notification.textContent = message;
-    document.body.appendChild(notification);
-    setTimeout(() => {
-        notification.remove();
-    }, 3000);
-}
+{% endif %}
 </script>
 {% endblock %} 
