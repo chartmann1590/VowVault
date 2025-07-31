@@ -1,5 +1,7 @@
 from flask import Blueprint, render_template, request, jsonify, redirect, url_for, flash
-from app.models import Photo, PhotoOfDay, PhotoOfDayVote, PhotoOfDayCandidate, PhotoOfDayContest, Settings
+from app.models.photo import Photo
+from app.models.settings import Settings
+from app.models.photo_of_day import PhotoOfDay, PhotoOfDayVote, PhotoOfDayCandidate, PhotoOfDayContest
 from app import db
 from datetime import datetime, date, timedelta
 import json
