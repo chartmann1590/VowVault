@@ -222,6 +222,27 @@
         background: #ffebee;
         color: #c62828;
     }
+    .status-active {
+        background: #e8f5e8;
+        color: #2e7d32;
+    }
+    .status-inactive {
+        background: #f5f5f5;
+        color: #757575;
+    }
+    .contest-card.active {
+        border: 2px solid #4caf50;
+    }
+    .contest-card.inactive {
+        border: 2px solid #e0e0e0;
+        opacity: 0.8;
+    }
+    .contest-actions {
+        padding: 1rem;
+        border-top: 1px solid #e0e0e0;
+        display: flex;
+        gap: 0.5rem;
+    }
     .candidates-list {
         padding: 1.5rem;
     }
@@ -393,6 +414,7 @@
     <div class="contest-controls">
         <button id="create-contest-btn" class="admin-btn primary">Create Today's Contest</button>
         <button id="close-current-contest-btn" class="admin-btn secondary">Close Current Contest</button>
+        <button id="delete-contest-btn" class="admin-btn delete">Delete Contest</button>
         <button id="add-auto-candidates-btn" class="admin-btn secondary">Add Auto-Candidates</button>
         <button id="update-threshold-btn" class="admin-btn secondary">Update Threshold</button>
         <button id="force-cleanup-btn" class="admin-btn warning">Force Cleanup</button>
@@ -488,6 +510,32 @@
 </div>
 
 <div class="admin-section-card">
+    <div class="admin-section-title">All Contests</div>
+    <div class="contest-grid">
+        {% for contest in all_contests %}
+        <div class="contest-card {% if contest.is_active %}active{% else %}inactive{% endif %}">
+            <div class="contest-header">
+                <div class="contest-date">Contest {{ contest.id }} - {{ contest.contest_date | timezone_format('%B %d, %Y') }}</div>
+                <div class="contest-status {% if contest.is_active %}status-active{% else %}status-inactive{% endif %}">
+                    {% if contest.is_active %}
+                        🟢 Active
+                    {% else %}
+                        ⚫ Inactive
+                    {% endif %}
+                </div>
+            </div>
+            <div class="contest-actions">
+                {% if contest.is_active %}
+                    <button onclick="closeContest()" class="admin-btn secondary">Close</button>
+                {% endif %}
+                <button onclick="deleteContest({{ contest.id }})" class="admin-btn delete">Delete</button>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+
+<div class="admin-section-card">
     <div class="admin-section-title">Add Photo as Candidate</div>
     <div class="candidate-grid">
         {% for photo in all_photos[:20] %}
@@ -521,6 +569,7 @@ document.addEventListener('DOMContentLoaded', function() {
     
     const addAutoCandidatesBtn = document.getElementById('add-auto-candidates-btn');
     const closeCurrentContestBtn = document.getElementById('close-current-contest-btn');
+    const deleteContestBtn = document.getElementById('delete-contest-btn');
     const forceCleanupBtn = document.getElementById('force-cleanup-btn');
     const debugDbBtn = document.getElementById('debug-db-btn');
     
@@ -597,6 +646,26 @@ document.addEventListener('DOMContentLoaded', function() {
         const form = document.createElement('form');
         form.method = 'POST';
         form.action = '/admin/photo-of-day/close-contest?key=wedding2024';
+        
+        document.body.appendChild(form);
+        form.submit();
+    });
+    
+    deleteContestBtn.addEventListener('click', function() {
+        const contestId = prompt('Enter the contest ID to delete:');
+        if (!contestId || isNaN(contestId)) {
+            alert('Please enter a valid contest ID');
+            return;
+        }
+        
+        if (!confirm(`Are you sure you want to delete contest ${contestId}? This action cannot be undone.`)) {
+            return;
+        }
+        
+        // Create a form and submit it
+        const form = document.createElement('form');
+        form.method = 'POST';
+        form.action = `/admin/photo-of-day/delete-contest/${contestId}?key=wedding2024`;
         
         document.body.appendChild(form);
         form.submit();

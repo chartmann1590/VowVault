@@ -283,12 +283,25 @@ def create_contest():
         print(f"DEBUG: Found existing active contest ID: {existing_active.id}")  # Debug line
         flash(f'An active contest already exists (ID: {existing_active.id}, Date: {existing_active.contest_date}). Please use "Close Current Contest" to close it before creating a new one.', 'warning')
         return redirect(url_for('photo_of_day.admin_photo_of_day', key=admin_key))
-    else:
-        print("DEBUG: No existing active contest found")  # Debug line
+    
+    # Check if there's already a contest for today's date (active or inactive)
+    today = date.today()
+    existing_contest_for_date = PhotoOfDayContest.query.filter_by(contest_date=today).first()
+    print(f"DEBUG: Existing contest for date {today}: {existing_contest_for_date}")  # Debug line
+    
+    if existing_contest_for_date:
+        print(f"DEBUG: Found existing contest for date {today}: ID {existing_contest_for_date.id}, Active: {existing_contest_for_date.is_active}")  # Debug line
+        if existing_contest_for_date.is_active:
+            flash(f'A contest already exists for today ({today}) and is active. Please use "Close Current Contest" to close it before creating a new one.', 'warning')
+        else:
+            flash(f'A contest already exists for today ({today}) but is inactive. Please use "Delete Contest" to remove it first.', 'warning')
+        return redirect(url_for('photo_of_day.admin_photo_of_day', key=admin_key))
+    
+    print("DEBUG: No existing contest found for today")  # Debug line
     
     # Create new main contest
     contest = PhotoOfDayContest(
-        contest_date=date.today(),
+        contest_date=today,
         is_active=True,
         voting_ends_at=None  # No end time for ongoing contest
     )
@@ -348,16 +361,19 @@ def delete_contest(contest_id):
     """Delete a Photo of the Day contest"""
     admin_key = request.args.get('key')
     if admin_key != 'wedding2024':
-        return jsonify({'success': False, 'message': 'Unauthorized'}), 403
+        flash('Unauthorized access', 'error')
+        return redirect(url_for('photo_of_day.admin_photo_of_day', key=admin_key))
     
     contest = PhotoOfDayContest.query.get(contest_id)
     if not contest:
-        return jsonify({'success': False, 'message': 'Contest not found'}), 404
+        flash('Contest not found', 'error')
+        return redirect(url_for('photo_of_day.admin_photo_of_day', key=admin_key))
     
     db.session.delete(contest)
     db.session.commit()
     
-    return jsonify({'success': True, 'message': 'Contest deleted successfully!'})
+    flash('Contest deleted successfully!', 'success')
+    return redirect(url_for('photo_of_day.admin_photo_of_day', key=admin_key))
 
 @photo_of_day_bp.route('/admin/photo-of-day/close-contest', methods=['POST'])
 def close_contest():
