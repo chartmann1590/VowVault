@@ -254,13 +254,13 @@
     <p>Vote for your favorite photo from today's candidates!</p>
 </div>
 
-{% if today_contest %}
+{% if main_contest %}
 <div class="contest-section">
     <div class="contest-header">
-        <h2>Today's Contest</h2>
-        <p>{{ today_contest.contest_date | timezone_format('%B %d, %Y') }}</p>
-        <div class="voting-status {% if today_contest.is_voting_open %}voting-open{% else %}voting-closed{% endif %}">
-            {% if today_contest.is_voting_open %}
+        <h2>Current Contest</h2>
+        <p>Vote for your favorite photo!</p>
+        <div class="voting-status {% if main_contest.is_voting_open %}voting-open{% else %}voting-closed{% endif %}">
+            {% if main_contest.is_voting_open %}
                 🗳️ Voting Open
             {% else %}
                 ⏰ Voting Closed
@@ -268,9 +268,9 @@
         </div>
     </div>
     
-    {% if today_contest.candidates %}
+    {% if main_contest.candidates %}
     <div class="candidates-grid">
-        {% for candidate in today_contest.candidates %}
+        {% for candidate in main_contest.candidates %}
         <div class="candidate-card {% if candidate.is_winner %}winner{% endif %}">
             {% if candidate.is_winner %}
             <div class="winner-badge">🏆 Winner</div>
@@ -296,7 +296,7 @@
                         <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20" style="width:18px;height:18px;"><path fill-rule="evenodd" d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z" clip-rule="evenodd"></path></svg>
                         {{ candidate.vote_count }} votes
                     </div>
-                    {% if user_identifier and today_contest.is_voting_open %}
+                    {% if user_identifier and main_contest.is_voting_open %}
                         {% if user_vote and user_vote.candidate_id == candidate.id %}
                         <button class="unvote-btn" data-candidate-id="{{ candidate.id }}">
                             Remove Vote
@@ -306,7 +306,7 @@
                             Vote
                         </button>
                         {% endif %}
-                    {% elif not today_contest.is_voting_open %}
+                    {% elif not main_contest.is_voting_open %}
                         <div style="color: #6b5d54; font-size: 0.9rem;">Voting closed</div>
                     {% else %}
                         <div style="color: #6b5d54; font-size: 0.9rem;">Sign in to vote</div>
@@ -339,35 +339,32 @@
 </div>
 {% endif %}
 
-{% if recent_contests %}
+{% if recent_winners %}
 <div class="recent-section">
-    <div class="recent-header">Recent Contest Winners</div>
+    <div class="recent-header">Recent Winners</div>
     <div class="recent-contest-grid">
-        {% for contest in recent_contests %}
-            {% if contest.winner_photo_id %}
-            <div class="recent-contest-card winner">
-                <div class="recent-contest-media">
-                    {% set winner_photo = contest.winner_photo %}
-                    {% if winner_photo.media_type == 'video' %}
-                    <video controls>
-                        <source src="{{ url_for('static', filename='uploads/videos/' + winner_photo.filename) }}" type="video/mp4">
-                    </video>
-                    {% elif winner_photo.is_photobooth %}
-                    <img src="{{ url_for('static', filename='uploads/photobooth/' + winner_photo.filename) }}" alt="Contest Winner">
-                    {% else %}
-                    <img src="{{ url_for('static', filename='uploads/' + winner_photo.filename) }}" alt="Contest Winner">
-                    {% endif %}
-                    <div class="recent-contest-date">{{ contest.contest_date | timezone_format('%b %d') }}</div>
-                </div>
-                <div class="recent-contest-info">
-                    <div class="uploader">by {{ winner_photo.uploader_name }}</div>
-                    <div class="stats">
-                        <span>🏆 Winner</span>
-                        <span>{{ contest.total_votes }} total votes</span>
-                    </div>
+        {% for winner in recent_winners %}
+        <div class="recent-contest-card winner">
+            <div class="recent-contest-media">
+                {% if winner.photo.media_type == 'video' %}
+                <video controls>
+                    <source src="{{ url_for('static', filename='uploads/videos/' + winner.photo.filename) }}" type="video/mp4">
+                </video>
+                {% elif winner.photo.is_photobooth %}
+                <img src="{{ url_for('static', filename='uploads/photobooth/' + winner.photo.filename) }}" alt="Contest Winner">
+                {% else %}
+                <img src="{{ url_for('static', filename='uploads/' + winner.photo.filename) }}" alt="Contest Winner">
+                {% endif %}
+                <div class="recent-contest-date">{{ winner.date_added | timezone_format('%b %d') }}</div>
+            </div>
+            <div class="recent-contest-info">
+                <div class="uploader">by {{ winner.photo.uploader_name }}</div>
+                <div class="stats">
+                    <span>🏆 Winner</span>
+                    <span>{{ winner.vote_count }} votes</span>
                 </div>
             </div>
-            {% endif %}
+        </div>
         {% endfor %}
     </div>
 </div>

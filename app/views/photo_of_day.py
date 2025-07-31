@@ -27,18 +27,17 @@ def add_automatic_candidates():
         # Check if already a candidate
         existing = PhotoOfDayCandidate.query.filter_by(photo_id=photo.id).first()
         if not existing:
-            # Get or create today's contest
-            today = date.today()
-            contest = PhotoOfDayContest.query.filter_by(contest_date=today).first()
-            if not contest:
-                contest = PhotoOfDayContest(contest_date=today, is_active=True)
-                db.session.add(contest)
+            # Get or create the main ongoing contest
+            main_contest = PhotoOfDayContest.query.filter_by(is_active=True).first()
+            if not main_contest:
+                main_contest = PhotoOfDayContest(contest_date=date.today(), is_active=True)
+                db.session.add(main_contest)
                 db.session.flush()  # Get the ID
             
             candidate = PhotoOfDayCandidate(
                 photo_id=photo.id,
-                contest_id=contest.id,
-                date_added=today,
+                contest_id=main_contest.id,
+                date_added=date.today(),
                 is_winner=False
             )
             db.session.add(candidate)
@@ -56,27 +55,25 @@ def photo_of_day():
     user_identifier = request.cookies.get('user_identifier')
     user_name = request.cookies.get('user_name', 'Anonymous')
     
-    # Get today's contest
-    today = date.today()
-    today_contest = PhotoOfDayContest.query.filter_by(contest_date=today, is_active=True).first()
+    # Get the main ongoing contest
+    main_contest = PhotoOfDayContest.query.filter_by(is_active=True).first()
     
-    # Get recent contests (last 7 days)
-    recent_contests = PhotoOfDayContest.query.filter(
-        PhotoOfDayContest.contest_date >= today - timedelta(days=7),
-        PhotoOfDayContest.is_active == True
-    ).order_by(PhotoOfDayContest.contest_date.desc()).all()
+    # Get recent winners (last 10 winners)
+    recent_winners = PhotoOfDayCandidate.query.filter_by(is_winner=True).order_by(
+        PhotoOfDayCandidate.date_added.desc()
+    ).limit(10).all()
     
-    # Get user's vote for today if it exists
+    # Get user's vote for the main contest if it exists
     user_vote = None
-    if today_contest and user_identifier:
+    if main_contest and user_identifier:
         user_vote = PhotoOfDayVote.query.filter_by(
-            contest_id=today_contest.id,
+            contest_id=main_contest.id,
             user_identifier=user_identifier
         ).first()
     
     return render_template('photo_of_day.html',
-                         today_contest=today_contest,
-                         recent_contests=recent_contests,
+                         main_contest=main_contest,
+                         recent_winners=recent_winners,
                          user_vote=user_vote,
                          user_identifier=user_identifier,
                          user_name=user_name)
@@ -95,37 +92,37 @@ def vote_photo_of_day():
     if not candidate_id:
         return jsonify({'success': False, 'message': 'Candidate ID required'}), 400
     
-    today = date.today()
-    today_contest = PhotoOfDayContest.query.filter_by(contest_date=today, is_active=True).first()
+    # Get the main ongoing contest
+    main_contest = PhotoOfDayContest.query.filter_by(is_active=True).first()
     
-    if not today_contest:
-        return jsonify({'success': False, 'message': 'No contest found for today'}), 404
+    if not main_contest:
+        return jsonify({'success': False, 'message': 'No active contest found'}), 404
     
-    # Check if candidate exists and belongs to today's contest
+    # Check if candidate exists and belongs to the main contest
     candidate = PhotoOfDayCandidate.query.filter_by(
         id=candidate_id,
-        contest_id=today_contest.id
+        contest_id=main_contest.id
     ).first()
     
     if not candidate:
         return jsonify({'success': False, 'message': 'Invalid candidate'}), 404
     
     # Check if voting is still open
-    if not today_contest.is_voting_open:
-        return jsonify({'success': False, 'message': 'Voting has closed for today'}), 400
+    if not main_contest.is_voting_open:
+        return jsonify({'success': False, 'message': 'Voting has closed'}), 400
     
     # Check if user already voted
     existing_vote = PhotoOfDayVote.query.filter_by(
-        contest_id=today_contest.id,
+        contest_id=main_contest.id,
         user_identifier=user_identifier
     ).first()
     
     if existing_vote:
-        return jsonify({'success': False, 'message': 'You have already voted in today\'s contest'}), 400
+        return jsonify({'success': False, 'message': 'You have already voted'}), 400
     
     # Create new vote
     vote = PhotoOfDayVote(
-        contest_id=today_contest.id,
+        contest_id=main_contest.id,
         candidate_id=candidate_id,
         user_identifier=user_identifier,
         user_name=user_name
@@ -148,15 +145,15 @@ def unvote_photo_of_day():
     if not user_identifier:
         return jsonify({'success': False, 'message': 'User identifier required'}), 400
     
-    today = date.today()
-    today_contest = PhotoOfDayContest.query.filter_by(contest_date=today, is_active=True).first()
+    # Get the main ongoing contest
+    main_contest = PhotoOfDayContest.query.filter_by(is_active=True).first()
     
-    if not today_contest:
-        return jsonify({'success': False, 'message': 'No contest found for today'}), 404
+    if not main_contest:
+        return jsonify({'success': False, 'message': 'No active contest found'}), 404
     
     # Find and delete user's vote
     vote = PhotoOfDayVote.query.filter_by(
-        contest_id=today_contest.id,
+        contest_id=main_contest.id,
         user_identifier=user_identifier
     ).first()
     
@@ -339,28 +336,27 @@ def add_photo_candidate():
     if not photo:
         return jsonify({'success': False, 'message': 'Photo not found'}), 404
     
-    # Get or create today's contest
-    today = date.today()
-    contest = PhotoOfDayContest.query.filter_by(contest_date=today).first()
-    if not contest:
-        contest = PhotoOfDayContest(contest_date=today, is_active=True)
-        db.session.add(contest)
+    # Get or create the main ongoing contest
+    main_contest = PhotoOfDayContest.query.filter_by(is_active=True).first()
+    if not main_contest:
+        main_contest = PhotoOfDayContest(contest_date=date.today(), is_active=True)
+        db.session.add(main_contest)
         db.session.flush()  # Get the ID
     
     # Check if already a candidate
     existing = PhotoOfDayCandidate.query.filter_by(
         photo_id=photo_id,
-        contest_id=contest.id
+        contest_id=main_contest.id
     ).first()
     
     if existing:
-        return jsonify({'success': False, 'message': 'Photo is already a candidate for this contest'}), 400
+        return jsonify({'success': False, 'message': 'Photo is already a candidate'}), 400
     
     # Add as candidate
     candidate = PhotoOfDayCandidate(
         photo_id=photo_id,
-        contest_id=contest.id,
-        date_added=today,
+        contest_id=main_contest.id,
+        date_added=date.today(),
         is_winner=False
     )
     
