@@ -202,17 +202,54 @@ def migrate_database():
                 CREATE TABLE photo_of_day_candidate (
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
                     photo_id INTEGER NOT NULL,
-                    candidate_date DATE NOT NULL,
-                    score FLOAT DEFAULT 0.0,
+                    contest_id INTEGER,
+                    date_added DATE NOT NULL,
+                    is_winner BOOLEAN DEFAULT FALSE,
                     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
                     FOREIGN KEY (photo_id) REFERENCES photo (id) ON DELETE CASCADE,
-                    UNIQUE(photo_id, candidate_date)
+                    FOREIGN KEY (contest_id) REFERENCES photo_of_day_contest (id) ON DELETE CASCADE
                 )
             """)
             conn.commit()
             print("✅ photo_of_day_candidate table created successfully!")
         else:
             print("✅ photo_of_day_candidate table already exists")
+
+        # --- Photo of the Day Contest Tables ---
+        cursor.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='photo_of_day_contest'")
+        if not cursor.fetchone():
+            print("Creating photo_of_day_contest table...")
+            cursor.execute("""
+                CREATE TABLE photo_of_day_contest (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    contest_date DATE UNIQUE NOT NULL,
+                    is_active BOOLEAN DEFAULT TRUE,
+                    voting_ends_at DATETIME,
+                    winner_photo_id INTEGER,
+                    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+                    FOREIGN KEY (winner_photo_id) REFERENCES photo (id) ON DELETE SET NULL
+                )
+            """)
+            conn.commit()
+            print("✅ photo_of_day_contest table created successfully!")
+        else:
+            print("✅ photo_of_day_contest table already exists")
+
+        # Update photo_of_day_vote table to support new contest system
+        cursor.execute("PRAGMA table_info(photo_of_day_vote)")
+        columns = [column[1] for column in cursor.fetchall()]
+        
+        if 'contest_id' not in columns:
+            print("Adding contest_id column to photo_of_day_vote table...")
+            cursor.execute("ALTER TABLE photo_of_day_vote ADD COLUMN contest_id INTEGER REFERENCES photo_of_day_contest(id)")
+            conn.commit()
+            print("✅ contest_id column added to photo_of_day_vote table")
+        
+        if 'candidate_id' not in columns:
+            print("Adding candidate_id column to photo_of_day_vote table...")
+            cursor.execute("ALTER TABLE photo_of_day_vote ADD COLUMN candidate_id INTEGER REFERENCES photo_of_day_candidate(id)")
+            conn.commit()
+            print("✅ candidate_id column added to photo_of_day_vote table")
 
         # --- Security Audit Log Table ---
         cursor.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='security_audit_log'")

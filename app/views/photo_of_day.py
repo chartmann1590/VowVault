@@ -1,5 +1,5 @@
 from flask import Blueprint, render_template, request, jsonify, redirect, url_for, flash
-from app.models import Photo, PhotoOfDay, PhotoOfDayVote, PhotoOfDayCandidate, Settings
+from app.models import Photo, PhotoOfDay, PhotoOfDayVote, PhotoOfDayCandidate, PhotoOfDayContest, Settings
 from app import db
 from datetime import datetime, date, timedelta
 import json
@@ -25,10 +25,19 @@ def add_automatic_candidates():
         # Check if already a candidate
         existing = PhotoOfDayCandidate.query.filter_by(photo_id=photo.id).first()
         if not existing:
+            # Get or create today's contest
+            today = date.today()
+            contest = PhotoOfDayContest.query.filter_by(contest_date=today).first()
+            if not contest:
+                contest = PhotoOfDayContest(contest_date=today, is_active=True)
+                db.session.add(contest)
+                db.session.flush()  # Get the ID
+            
             candidate = PhotoOfDayCandidate(
                 photo_id=photo.id,
-                date_added=date.today(),
-                is_selected=False
+                contest_id=contest.id,
+                date_added=today,
+                is_winner=False
             )
             db.session.add(candidate)
             added_count += 1
@@ -45,34 +54,34 @@ def photo_of_day():
     user_identifier = request.cookies.get('user_identifier')
     user_name = request.cookies.get('user_name', 'Anonymous')
     
-    # Get today's photo of the day
+    # Get today's contest
     today = date.today()
-    today_photo = PhotoOfDay.query.filter_by(date=today, is_active=True).first()
+    today_contest = PhotoOfDayContest.query.filter_by(contest_date=today, is_active=True).first()
     
-    # Get recent photos of the day (last 7 days)
-    recent_photos = PhotoOfDay.query.filter(
-        PhotoOfDay.date >= today - timedelta(days=7),
-        PhotoOfDay.is_active == True
-    ).order_by(PhotoOfDay.date.desc()).all()
+    # Get recent contests (last 7 days)
+    recent_contests = PhotoOfDayContest.query.filter(
+        PhotoOfDayContest.contest_date >= today - timedelta(days=7),
+        PhotoOfDayContest.is_active == True
+    ).order_by(PhotoOfDayContest.contest_date.desc()).all()
     
     # Get user's vote for today if it exists
     user_vote = None
-    if today_photo and user_identifier:
+    if today_contest and user_identifier:
         user_vote = PhotoOfDayVote.query.filter_by(
-            photo_of_day_id=today_photo.id,
+            contest_id=today_contest.id,
             user_identifier=user_identifier
         ).first()
     
     return render_template('photo_of_day.html',
-                         today_photo=today_photo,
-                         recent_photos=recent_photos,
+                         today_contest=today_contest,
+                         recent_contests=recent_contests,
                          user_vote=user_vote,
                          user_identifier=user_identifier,
                          user_name=user_name)
 
 @photo_of_day_bp.route('/api/photo-of-day/vote', methods=['POST'])
 def vote_photo_of_day():
-    """Vote for the current Photo of the Day"""
+    """Vote for a candidate in the current Photo of the Day contest"""
     data = request.get_json()
     user_identifier = request.cookies.get('user_identifier')
     user_name = request.cookies.get('user_name', 'Anonymous')
@@ -80,24 +89,42 @@ def vote_photo_of_day():
     if not user_identifier:
         return jsonify({'success': False, 'message': 'User identifier required'}), 400
     
-    today = date.today()
-    today_photo = PhotoOfDay.query.filter_by(date=today, is_active=True).first()
+    candidate_id = data.get('candidate_id')
+    if not candidate_id:
+        return jsonify({'success': False, 'message': 'Candidate ID required'}), 400
     
-    if not today_photo:
-        return jsonify({'success': False, 'message': 'No photo of the day found for today'}), 404
+    today = date.today()
+    today_contest = PhotoOfDayContest.query.filter_by(contest_date=today, is_active=True).first()
+    
+    if not today_contest:
+        return jsonify({'success': False, 'message': 'No contest found for today'}), 404
+    
+    # Check if candidate exists and belongs to today's contest
+    candidate = PhotoOfDayCandidate.query.filter_by(
+        id=candidate_id,
+        contest_id=today_contest.id
+    ).first()
+    
+    if not candidate:
+        return jsonify({'success': False, 'message': 'Invalid candidate'}), 404
+    
+    # Check if voting is still open
+    if not today_contest.is_voting_open:
+        return jsonify({'success': False, 'message': 'Voting has closed for today'}), 400
     
     # Check if user already voted
     existing_vote = PhotoOfDayVote.query.filter_by(
-        photo_of_day_id=today_photo.id,
+        contest_id=today_contest.id,
         user_identifier=user_identifier
     ).first()
     
     if existing_vote:
-        return jsonify({'success': False, 'message': 'You have already voted for today\'s photo'}), 400
+        return jsonify({'success': False, 'message': 'You have already voted in today\'s contest'}), 400
     
     # Create new vote
     vote = PhotoOfDayVote(
-        photo_of_day_id=today_photo.id,
+        contest_id=today_contest.id,
+        candidate_id=candidate_id,
         user_identifier=user_identifier,
         user_name=user_name
     )
@@ -108,26 +135,26 @@ def vote_photo_of_day():
     return jsonify({
         'success': True,
         'message': 'Vote recorded successfully!',
-        'vote_count': today_photo.vote_count
+        'vote_count': candidate.vote_count
     })
 
 @photo_of_day_bp.route('/api/photo-of-day/unvote', methods=['POST'])
 def unvote_photo_of_day():
-    """Remove vote for the current Photo of the Day"""
+    """Remove vote for the current Photo of the Day contest"""
     user_identifier = request.cookies.get('user_identifier')
     
     if not user_identifier:
         return jsonify({'success': False, 'message': 'User identifier required'}), 400
     
     today = date.today()
-    today_photo = PhotoOfDay.query.filter_by(date=today, is_active=True).first()
+    today_contest = PhotoOfDayContest.query.filter_by(contest_date=today, is_active=True).first()
     
-    if not today_photo:
-        return jsonify({'success': False, 'message': 'No photo of the day found for today'}), 404
+    if not today_contest:
+        return jsonify({'success': False, 'message': 'No contest found for today'}), 404
     
     # Find and delete user's vote
     vote = PhotoOfDayVote.query.filter_by(
-        photo_of_day_id=today_photo.id,
+        contest_id=today_contest.id,
         user_identifier=user_identifier
     ).first()
     
@@ -139,20 +166,19 @@ def unvote_photo_of_day():
     
     return jsonify({
         'success': True,
-        'message': 'Vote removed successfully!',
-        'vote_count': today_photo.vote_count
+        'message': 'Vote removed successfully!'
     })
 
 @photo_of_day_bp.route('/admin/photo-of-day')
 def admin_photo_of_day():
-    """Admin interface for managing Photo of the Day"""
+    """Admin interface for managing Photo of the Day contests"""
     # Check admin access (you'll need to implement this based on your auth system)
     admin_key = request.args.get('key')
     if admin_key != 'wedding2024':  # Replace with your actual admin key
         return redirect(url_for('main.index'))
     
-    # Get all photos of the day
-    photos_of_day = PhotoOfDay.query.order_by(PhotoOfDay.date.desc()).all()
+    # Get all contests
+    contests = PhotoOfDayContest.query.order_by(PhotoOfDayContest.contest_date.desc()).all()
     
     # Get candidate photos (photos that could be selected)
     candidate_photos = PhotoOfDayCandidate.query.order_by(PhotoOfDayCandidate.date_added.desc()).all()
@@ -169,15 +195,16 @@ def admin_photo_of_day():
     ).order_by(Photo.likes.desc()).limit(20).all()
     
     return render_template('admin_photo_of_day.html',
-                         photos_of_day=photos_of_day,
+                         contests=contests,
                          candidate_photos=candidate_photos,
                          all_photos=all_photos,
                          likes_threshold=likes_threshold,
-                         auto_candidate_photos=auto_candidate_photos)
+                         auto_candidate_photos=auto_candidate_photos,
+                         today_date=date.today().isoformat())
 
-@photo_of_day_bp.route('/admin/photo-of-day/select', methods=['POST'])
-def select_photo_of_day():
-    """Select a photo as Photo of the Day"""
+@photo_of_day_bp.route('/admin/photo-of-day/create-contest', methods=['POST'])
+def create_contest():
+    """Create a new Photo of the Day contest"""
     admin_key = request.args.get('key')
     if admin_key != 'wedding2024':
         return jsonify({'success': False, 'message': 'Unauthorized'}), 403
@@ -190,57 +217,100 @@ def select_photo_of_day():
     if not data:
         return jsonify({'success': False, 'message': 'No JSON data provided'}), 400
     
-    photo_id = data.get('photo_id')
-    selected_date = data.get('date')
+    contest_date = data.get('contest_date')
+    voting_ends_at = data.get('voting_ends_at')
     
-    print(f"DEBUG: Received data - photo_id: {photo_id}, selected_date: {selected_date}")
-    print(f"DEBUG: Data type - photo_id: {type(photo_id)}, selected_date: {type(selected_date)}")
-    
-    if not photo_id or not selected_date:
-        return jsonify({'success': False, 'message': 'Photo ID and date required'}), 400
+    if not contest_date:
+        return jsonify({'success': False, 'message': 'Contest date required'}), 400
     
     try:
-        selected_date = datetime.strptime(selected_date, '%Y-%m-%d').date()
+        contest_date = datetime.strptime(contest_date, '%Y-%m-%d').date()
     except ValueError:
         return jsonify({'success': False, 'message': 'Invalid date format'}), 400
     
-    # Check if photo exists
-    photo = Photo.query.get(photo_id)
-    if not photo:
-        return jsonify({'success': False, 'message': 'Photo not found'}), 404
-    
-    # Check if there's already a photo of the day for this date
-    existing = PhotoOfDay.query.filter_by(date=selected_date).first()
+    # Check if contest already exists for this date
+    existing = PhotoOfDayContest.query.filter_by(contest_date=contest_date).first()
     if existing:
-        return jsonify({'success': False, 'message': 'Photo of the day already exists for this date'}), 400
+        return jsonify({'success': False, 'message': 'Contest already exists for this date'}), 400
     
-    # Create new Photo of the Day
-    photo_of_day = PhotoOfDay(
-        photo_id=photo_id,
-        date=selected_date,
-        is_active=True
+    # Parse voting end time if provided
+    voting_end_datetime = None
+    if voting_ends_at:
+        try:
+            voting_end_datetime = datetime.strptime(voting_ends_at, '%Y-%m-%d %H:%M')
+        except ValueError:
+            return jsonify({'success': False, 'message': 'Invalid voting end time format'}), 400
+    
+    # Create new contest
+    contest = PhotoOfDayContest(
+        contest_date=contest_date,
+        is_active=True,
+        voting_ends_at=voting_end_datetime
     )
     
-    db.session.add(photo_of_day)
+    db.session.add(contest)
     db.session.commit()
     
-    return jsonify({'success': True, 'message': 'Photo of the day selected successfully!'})
+    return jsonify({'success': True, 'message': 'Contest created successfully!'})
 
-@photo_of_day_bp.route('/admin/photo-of-day/delete/<int:photo_of_day_id>', methods=['POST'])
-def delete_photo_of_day(photo_of_day_id):
-    """Delete a Photo of the Day"""
+@photo_of_day_bp.route('/admin/photo-of-day/select-winner', methods=['POST'])
+def select_winner():
+    """Select a winner for a contest"""
     admin_key = request.args.get('key')
     if admin_key != 'wedding2024':
         return jsonify({'success': False, 'message': 'Unauthorized'}), 403
     
-    photo_of_day = PhotoOfDay.query.get(photo_of_day_id)
-    if not photo_of_day:
-        return jsonify({'success': False, 'message': 'Photo of the day not found'}), 404
+    try:
+        data = request.get_json()
+    except Exception as e:
+        return jsonify({'success': False, 'message': f'Invalid JSON data: {str(e)}'}), 400
     
-    db.session.delete(photo_of_day)
+    if not data:
+        return jsonify({'success': False, 'message': 'No JSON data provided'}), 400
+    
+    contest_id = data.get('contest_id')
+    candidate_id = data.get('candidate_id')
+    
+    if not contest_id or not candidate_id:
+        return jsonify({'success': False, 'message': 'Contest ID and candidate ID required'}), 400
+    
+    # Check if contest exists
+    contest = PhotoOfDayContest.query.get(contest_id)
+    if not contest:
+        return jsonify({'success': False, 'message': 'Contest not found'}), 404
+    
+    # Check if candidate exists and belongs to this contest
+    candidate = PhotoOfDayCandidate.query.filter_by(
+        id=candidate_id,
+        contest_id=contest_id
+    ).first()
+    
+    if not candidate:
+        return jsonify({'success': False, 'message': 'Candidate not found'}), 404
+    
+    # Set the winner
+    contest.winner_photo_id = candidate.photo_id
+    candidate.is_winner = True
+    
     db.session.commit()
     
-    return jsonify({'success': True, 'message': 'Photo of the day deleted successfully!'})
+    return jsonify({'success': True, 'message': 'Winner selected successfully!'})
+
+@photo_of_day_bp.route('/admin/photo-of-day/delete-contest/<int:contest_id>', methods=['POST'])
+def delete_contest(contest_id):
+    """Delete a Photo of the Day contest"""
+    admin_key = request.args.get('key')
+    if admin_key != 'wedding2024':
+        return jsonify({'success': False, 'message': 'Unauthorized'}), 403
+    
+    contest = PhotoOfDayContest.query.get(contest_id)
+    if not contest:
+        return jsonify({'success': False, 'message': 'Contest not found'}), 404
+    
+    db.session.delete(contest)
+    db.session.commit()
+    
+    return jsonify({'success': True, 'message': 'Contest deleted successfully!'})
 
 @photo_of_day_bp.route('/admin/photo-of-day/add-candidate', methods=['POST'])
 def add_photo_candidate():
@@ -258,6 +328,7 @@ def add_photo_candidate():
         return jsonify({'success': False, 'message': 'No JSON data provided'}), 400
     
     photo_id = data.get('photo_id')
+    contest_date = data.get('contest_date', date.today().isoformat())
     
     if not photo_id:
         return jsonify({'success': False, 'message': 'Photo ID required'}), 400
@@ -267,15 +338,34 @@ def add_photo_candidate():
     if not photo:
         return jsonify({'success': False, 'message': 'Photo not found'}), 404
     
+    # Parse contest date
+    try:
+        contest_date = datetime.strptime(contest_date, '%Y-%m-%d').date()
+    except ValueError:
+        return jsonify({'success': False, 'message': 'Invalid date format'}), 400
+    
+    # Get or create contest for this date
+    contest = PhotoOfDayContest.query.filter_by(contest_date=contest_date).first()
+    if not contest:
+        contest = PhotoOfDayContest(contest_date=contest_date, is_active=True)
+        db.session.add(contest)
+        db.session.flush()  # Get the ID
+    
     # Check if already a candidate
-    existing = PhotoOfDayCandidate.query.filter_by(photo_id=photo_id).first()
+    existing = PhotoOfDayCandidate.query.filter_by(
+        photo_id=photo_id,
+        contest_id=contest.id
+    ).first()
+    
     if existing:
-        return jsonify({'success': False, 'message': 'Photo is already a candidate'}), 400
+        return jsonify({'success': False, 'message': 'Photo is already a candidate for this contest'}), 400
     
     # Add as candidate
     candidate = PhotoOfDayCandidate(
         photo_id=photo_id,
-        date_added=date.today()
+        contest_id=contest.id,
+        date_added=contest_date,
+        is_winner=False
     )
     
     db.session.add(candidate)
@@ -321,26 +411,27 @@ def add_automatic_candidates_route():
 
 @photo_of_day_bp.route('/api/photo-of-day/stats')
 def photo_of_day_stats():
-    """Get statistics for Photo of the Day"""
+    """Get statistics for Photo of the Day contest"""
     today = date.today()
-    today_photo = PhotoOfDay.query.filter_by(date=today, is_active=True).first()
+    today_contest = PhotoOfDayContest.query.filter_by(contest_date=today, is_active=True).first()
     
-    if not today_photo:
-        return jsonify({'success': False, 'message': 'No photo of the day for today'})
+    if not today_contest:
+        return jsonify({'success': False, 'message': 'No contest for today'})
     
     user_identifier = request.cookies.get('user_identifier')
     has_voted = False
     
     if user_identifier:
         vote = PhotoOfDayVote.query.filter_by(
-            photo_of_day_id=today_photo.id,
+            contest_id=today_contest.id,
             user_identifier=user_identifier
         ).first()
         has_voted = vote is not None
     
     return jsonify({
         'success': True,
-        'vote_count': today_photo.vote_count,
-        'unique_voters': today_photo.unique_voters,
-        'has_voted': has_voted
+        'total_votes': today_contest.total_votes,
+        'unique_voters': today_contest.unique_voters,
+        'has_voted': has_voted,
+        'is_voting_open': today_contest.is_voting_open
     }) 
