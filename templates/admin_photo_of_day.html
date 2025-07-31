@@ -274,12 +274,12 @@
 
 <div class="admin-stats-grid">
     <div class="admin-stat-card">
-        <div class="stat-value">{{ contests|length }}</div>
+        <div class="stat-value">{{ all_contests|length }}</div>
         <div class="stat-label">Total Contests</div>
     </div>
     <div class="admin-stat-card">
-        <div class="stat-value">{{ candidate_photos|length }}</div>
-        <div class="stat-label">Total Candidates</div>
+        <div class="stat-value">{{ main_candidates|length }}</div>
+        <div class="stat-label">Current Candidates</div>
     </div>
     <div class="admin-stat-card">
         <div class="stat-value">{{ likes_threshold }}</div>
@@ -323,57 +323,53 @@
 </div>
 
 <div class="admin-section-card">
-    <div class="admin-section-title">Current Contests</div>
-    {% if contests %}
-    <div class="contest-grid">
-        {% for contest in contests %}
-        <div class="contest-card {% if contest.winner_photo_id %}winner{% endif %}">
-            <div class="contest-header">
-                <div class="contest-date">{{ contest.contest_date | timezone_format('%B %d, %Y') }}</div>
-                <div class="contest-status {% if contest.is_voting_open %}status-open{% else %}status-closed{% endif %}">
-                    {% if contest.is_voting_open %}
-                        🗳️ Voting Open
-                    {% else %}
-                        ⏰ Voting Closed
-                    {% endif %}
-                </div>
-            </div>
-            <div class="candidates-list">
-                {% if contest.candidates %}
-                    {% for candidate in contest.candidates %}
-                    <div class="candidate-item {% if candidate.is_winner %}winner{% endif %}">
-                        <div class="candidate-thumbnail">
-                            {% if candidate.photo.is_photobooth %}
-                            <img src="{{ url_for('static', filename='uploads/photobooth/' + candidate.photo.filename) }}" alt="Candidate">
-                            {% else %}
-                            <img src="{{ url_for('static', filename='uploads/' + candidate.photo.filename) }}" alt="Candidate">
-                            {% endif %}
-                        </div>
-                        <div class="candidate-info">
-                            <div class="candidate-uploader">by {{ candidate.photo.uploader_name }}</div>
-                            <div class="candidate-votes">{{ candidate.vote_count }} votes</div>
-                        </div>
-                        <div class="candidate-actions">
-                            {% if candidate.is_winner %}
-                                <span class="winner-badge">🏆 Winner</span>
-                            {% else %}
-                                <button onclick="selectWinner({{ contest.id }}, {{ candidate.id }})" class="admin-btn success">Select Winner</button>
-                            {% endif %}
-                        </div>
-                    </div>
-                    {% endfor %}
+    <div class="admin-section-title">Current Main Contest</div>
+    {% if main_contest %}
+    <div class="contest-card {% if main_contest.winner_photo_id %}winner{% endif %}">
+        <div class="contest-header">
+            <div class="contest-date">Main Contest - {{ main_contest.contest_date | timezone_format('%B %d, %Y') }}</div>
+            <div class="contest-status {% if main_contest.is_voting_open %}status-open{% else %}status-closed{% endif %}">
+                {% if main_contest.is_voting_open %}
+                    🗳️ Voting Open
                 {% else %}
-                    <p style="color:#6b5d54; text-align:center;">No candidates yet</p>
+                    ⏰ Voting Closed
                 {% endif %}
             </div>
-            <div style="padding: 1rem; border-top: 1px solid #e0e0e0;">
-                <button onclick="deleteContest({{ contest.id }})" class="admin-btn delete">Delete Contest</button>
-            </div>
         </div>
-        {% endfor %}
+        <div class="candidates-list">
+            {% if main_candidates %}
+                {% for candidate in main_candidates %}
+                <div class="candidate-item {% if candidate.is_winner %}winner{% endif %}">
+                    <div class="candidate-thumbnail">
+                        {% if candidate.photo.is_photobooth %}
+                        <img src="{{ url_for('static', filename='uploads/photobooth/' + candidate.photo.filename) }}" alt="Candidate">
+                        {% else %}
+                        <img src="{{ url_for('static', filename='uploads/' + candidate.photo.filename) }}" alt="Candidate">
+                        {% endif %}
+                    </div>
+                    <div class="candidate-info">
+                        <div class="candidate-uploader">by {{ candidate.photo.uploader_name }}</div>
+                        <div class="candidate-votes">{{ candidate.vote_count }} votes</div>
+                    </div>
+                    <div class="candidate-actions">
+                        {% if candidate.is_winner %}
+                            <span class="winner-badge">🏆 Winner</span>
+                        {% else %}
+                            <button onclick="selectWinner({{ main_contest.id }}, {{ candidate.id }})" class="admin-btn success">Select Winner</button>
+                        {% endif %}
+                    </div>
+                </div>
+                {% endfor %}
+            {% else %}
+                <p style="color:#6b5d54; text-align:center;">No candidates yet</p>
+            {% endif %}
+        </div>
+        <div style="padding: 1rem; border-top: 1px solid #e0e0e0;">
+            <button onclick="deleteContest({{ main_contest.id }})" class="admin-btn delete">Delete Contest</button>
+        </div>
     </div>
     {% else %}
-    <p style="color:#6b5d54; text-align:center;">No contests created yet</p>
+    <p style="color:#6b5d54; text-align:center;">No active contest. Click "Create Today's Contest" to start one.</p>
     {% endif %}
 </div>
 

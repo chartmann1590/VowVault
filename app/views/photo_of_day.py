@@ -176,11 +176,16 @@ def admin_photo_of_day():
     if admin_key != 'wedding2024':  # Replace with your actual admin key
         return redirect(url_for('main.index'))
     
-    # Get all contests
-    contests = PhotoOfDayContest.query.order_by(PhotoOfDayContest.contest_date.desc()).all()
+    # Get the main active contest
+    main_contest = PhotoOfDayContest.query.filter_by(is_active=True).first()
     
-    # Get candidate photos (photos that could be selected)
-    candidate_photos = PhotoOfDayCandidate.query.order_by(PhotoOfDayCandidate.date_added.desc()).all()
+    # Get all contests for history
+    all_contests = PhotoOfDayContest.query.order_by(PhotoOfDayContest.contest_date.desc()).all()
+    
+    # Get candidate photos for the main contest
+    main_candidates = []
+    if main_contest:
+        main_candidates = PhotoOfDayCandidate.query.filter_by(contest_id=main_contest.id).order_by(PhotoOfDayCandidate.date_added.desc()).all()
     
     # Get all photos for selection
     all_photos = Photo.query.order_by(Photo.upload_date.desc()).limit(100).all()
@@ -194,8 +199,9 @@ def admin_photo_of_day():
     ).order_by(Photo.likes.desc()).limit(20).all()
     
     return render_template('admin_photo_of_day.html',
-                         contests=contests,
-                         candidate_photos=candidate_photos,
+                         main_contest=main_contest,
+                         main_candidates=main_candidates,
+                         all_contests=all_contests,
                          all_photos=all_photos,
                          likes_threshold=likes_threshold,
                          auto_candidate_photos=auto_candidate_photos,
