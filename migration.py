@@ -17,9 +17,9 @@ def migrate_database():
     """Add tags column to Photo table and create Photo of the Day tables if they don't exist"""
     
     # Connect to the database
-    db_path = 'instance/wedding_photos.db'
-    if not os.path.exists('instance'):
-        os.makedirs('instance')
+    db_path = 'data/wedding_photos.db'
+    if not os.path.exists('data'):
+        os.makedirs('data')
     
     conn = sqlite3.connect(db_path)
     cursor = conn.cursor()
