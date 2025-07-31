@@ -1097,6 +1097,11 @@ def save_settings():
         Settings.set('captcha_guestbook_enabled', str(captcha_data.get('guestbook_enabled', True)).lower())
         Settings.set('captcha_message_enabled', str(captcha_data.get('message_enabled', True)).lower())
     
+    # Save timezone settings
+    if 'timezone_settings' in data:
+        timezone_data = data['timezone_settings']
+        Settings.set('timezone_settings', json.dumps(timezone_data))
+    
     # Save slideshow settings
     if 'slideshow_settings' in data:
         slideshow_data = data['slideshow_settings']
