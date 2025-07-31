@@ -8,7 +8,7 @@ A beautiful, modern wedding photo gallery with advanced features including SSO a
 - **Drag & Drop Upload**: Easy photo and video uploads
 - **Auto-Organization**: Automatic sorting by upload date
 - **Like & Comment System**: Interactive engagement features
-- **Photo of the Day**: Daily voting system for community engagement
+
 - **Virtual Photobooth**: Custom wedding-themed photo capture
 - **Video Support**: Full video upload and playback support
 
@@ -79,8 +79,7 @@ A beautiful, modern wedding photo gallery with advanced features including SSO a
 ![Guestbook](docs/screenshots/guestbook.png)
 *Digital guestbook with photo attachments*
 
-![Photo of the Day](docs/screenshots/photo-of-day.png)
-*Daily photo voting system with engagement tracking*
+
 
 ## 🚀 Quick Start
 
@@ -116,7 +115,7 @@ For detailed information, see our comprehensive documentation:
 - **[SSO Setup](docs/sso_setup.md)** - Configure secure admin authentication with enhanced security
 - **[Usage Guide](docs/usage.md)** - Step-by-step user instructions
 - **[PWA Guide](docs/pwa.md)** - Progressive Web App setup and troubleshooting
-- **[Photo of the Day](docs/photo_of_day.md)** - Daily photo voting system documentation
+
 
 ## 🔧 Configuration
 

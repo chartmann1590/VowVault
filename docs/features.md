@@ -110,11 +110,7 @@
 - **User Activity**: Log user interactions for analytics and debugging
 - **Resolvable Issues**: Mark and track resolution of system problems
 
-### Photo of the Day
-- **Daily Selection**: Choose a featured photo each day
-- **Voting System**: Guests can vote on candidates
-- **Admin Selection**: Manual override capability
-- **Archive**: Historical photo of the day records
+
 
 ### CAPTCHA Spam Prevention
 - **Math Challenges**: Simple arithmetic problems for verification

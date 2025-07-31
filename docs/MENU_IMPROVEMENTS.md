@@ -22,7 +22,7 @@ The wedding gallery navigation has been significantly improved to provide a bett
 #### Main Navigation
 1. **Gallery** - Direct link to main photo gallery
 2. **Photos & Media** (Dropdown)
-   - 📸 Photo of the Day
+   
    - 🎬 Live Slideshow
    - Upload Photo
    - Virtual Photobooth

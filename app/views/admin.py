@@ -356,45 +356,7 @@ def admin_qr_settings():
                          qr_settings=qr_settings,
                          qr_code_url=qr_code_url)
 
-@admin_bp.route('/photo-of-day')
-def admin_photo_of_day():
-    # Check for SSO session first
-    sso_user_email = session.get('sso_user_email')
-    sso_user_domain = session.get('sso_user_domain')
-    admin_key = request.args.get('key', '')
-    
-    # Verify admin access
-    if not verify_admin_access(admin_key, sso_user_email, sso_user_domain):
-        return "Unauthorized", 401
-    
-    # Import photo of day models
-    from app.models.photo_of_day import PhotoOfDay, PhotoOfDayCandidate, PhotoOfDayVote
-    from app.models.photo import Photo
-    from datetime import datetime, timedelta
-    
-    # Get all photos of the day
-    photos_of_day = PhotoOfDay.query.order_by(PhotoOfDay.date.desc()).all()
-    
-    # Get candidate photos (photos that could be selected)
-    candidate_photos = PhotoOfDayCandidate.query.order_by(PhotoOfDayCandidate.date_added.desc()).all()
-    
-    # Get all photos for selection
-    all_photos = Photo.query.order_by(Photo.upload_date.desc()).limit(100).all()
-    
-    # Get current settings
-    likes_threshold = int(Settings.get('photo_of_day_likes_threshold', '3'))
-    
-    # Get photos that would be auto-candidates based on current threshold
-    auto_candidate_photos = Photo.query.filter(
-        Photo.likes >= likes_threshold
-    ).order_by(Photo.likes.desc()).limit(20).all()
-    
-    return render_template('admin_photo_of_day.html',
-                         photos_of_day=photos_of_day,
-                         candidate_photos=candidate_photos,
-                         all_photos=all_photos,
-                         likes_threshold=likes_threshold,
-                         auto_candidate_photos=auto_candidate_photos)
+
 
 @admin_bp.route('/welcome-modal')
 def admin_welcome_modal():

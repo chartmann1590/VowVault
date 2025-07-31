@@ -3,7 +3,6 @@ import secrets
 from app.models.photo import Photo, Comment, Like
 from app.models.messages import Message, MessageComment, MessageLike
 from app.models.notifications import Notification, NotificationUser
-from app.models.photo_of_day import PhotoOfDayCandidate
 from app import db
 from app.utils.notification_utils import create_notification_with_push
 from datetime import datetime, date
@@ -32,20 +31,6 @@ def toggle_like(photo_id):
         liked = True
     
     db.session.commit()
-    
-    # Check if photo should be added as a candidate for Photo of the Day
-    if liked and photo.likes >= 3:
-        # Check if already a candidate
-        existing_candidate = PhotoOfDayCandidate.query.filter_by(photo_id=photo_id).first()
-        if not existing_candidate:
-            # Add as candidate
-            candidate = PhotoOfDayCandidate(
-                photo_id=photo_id,
-                date_added=date.today(),
-                is_selected=False
-            )
-            db.session.add(candidate)
-            db.session.commit()
     
     # Create database notification for the photo uploader if someone else liked it
     if liked and photo.uploader_identifier and photo.uploader_identifier != user_identifier:

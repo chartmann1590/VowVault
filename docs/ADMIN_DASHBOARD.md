@@ -33,7 +33,7 @@ The main admin dashboard (`/admin`) provides:
 - **System Reset** - Complete system reset (destructive action)
 - **PWA Debug** - Debug Progressive Web App functionality
 - **Notification Users** - Manage push notification users
-- **Photo of the Day** - Manage photo of the day feature
+
 
 ### Comprehensive Navigation
 The admin dashboard includes organized navigation to all admin pages:

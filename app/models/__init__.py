@@ -4,7 +4,6 @@ from app.models.messages import Message, MessageComment, MessageLike
 from app.models.settings import Settings
 from app.models.email import EmailLog, ImmichSyncLog
 from app.models.notifications import NotificationUser, Notification
-from app.models.photo_of_day import PhotoOfDay, PhotoOfDayVote, PhotoOfDayCandidate, PhotoOfDayContest
 from app.models.slideshow import SlideshowSettings, SlideshowActivity
 
 __all__ = [
@@ -14,6 +13,5 @@ __all__ = [
     'Settings',
     'EmailLog', 'ImmichSyncLog',
     'NotificationUser', 'Notification',
-    'PhotoOfDay', 'PhotoOfDayVote', 'PhotoOfDayCandidate', 'PhotoOfDayContest',
     'SlideshowSettings', 'SlideshowActivity'
 ] 

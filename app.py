@@ -36,8 +36,7 @@ import requests
 from pathlib import Path
 import sqlite3
 
-# Import PhotoOfDayCandidate for automatic candidate functionality
-from app.models.photo_of_day import PhotoOfDayCandidate
+
 
 # Import database optimization utilities
 from app.utils.db_optimization import db_optimizer, optimize_photo_queries, get_photo_stats, maintenance_task
@@ -1429,20 +1428,6 @@ def toggle_like(photo_id):
         liked = True
     
     db.session.commit()
-    
-    # Check if photo should be added as a candidate for Photo of the Day
-    if liked and photo.likes >= 3:
-        # Check if already a candidate
-        existing_candidate = PhotoOfDayCandidate.query.filter_by(photo_id=photo_id).first()
-        if not existing_candidate:
-            # Add as candidate
-            candidate = PhotoOfDayCandidate(
-                photo_id=photo_id,
-                date_added=date.today(),
-                is_selected=False
-            )
-            db.session.add(candidate)
-            db.session.commit()
     
     # Create database notification for the photo uploader if someone else liked it
     if liked and photo.uploader_identifier and photo.uploader_identifier != user_identifier:

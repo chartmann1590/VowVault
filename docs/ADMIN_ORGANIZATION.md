@@ -122,7 +122,7 @@ The main admin dashboard (`/admin`) includes:
 - System Reset
 - PWA Debug
 - Notification Users
-- Photo of the Day
+
 
 #### Statistics Overview
 - Total photos and videos
@@ -228,7 +228,7 @@ templates/
 ├── admin_captcha_settings.html  # CAPTCHA settings
 ├── admin_email_settings.html    # Email settings
 ├── admin_immich_settings.html   # Immich sync settings
-├── admin_photo_of_day.html      # Photo of day management
+
 ├── admin_logs.html              # System logs
 └── admin_database.html          # Database maintenance
 ```
@@ -237,7 +237,7 @@ templates/
 ```
 app/views/
 ├── admin.py                     # Main admin routes
-├── photo_of_day.py             # Photo of day routes
+
 └── slideshow.py                # Slideshow routes
 ```
 
