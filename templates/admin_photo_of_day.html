@@ -386,6 +386,7 @@
 <!-- DEBUG SECTION -->
 <div style="background: #f0f0f0; padding: 1rem; margin: 1rem 0; border-radius: 8px; font-family: monospace; font-size: 0.9rem;">
     <strong>DEBUG INFO:</strong><br>
+    Template rendered successfully!<br>
     Main Contest: {{ main_contest }}<br>
     Main Contest ID: {{ main_contest.id if main_contest else 'None' }}<br>
     Main Contest Active: {{ main_contest.is_active if main_contest else 'None' }}<br>
@@ -393,11 +394,16 @@
     Main Candidates Count: {{ main_candidates|length }}<br>
     All Contests Count: {{ all_contests|length }}<br>
     All Photos Count: {{ all_photos|length }}<br>
+    Likes Threshold: {{ likes_threshold }}<br>
+    Today Date: {{ today_date }}<br>
     <br>
     <strong>ALL CONTESTS DETAILS:</strong><br>
     {% for contest in all_contests %}
         Contest {{ loop.index }}: ID={{ contest.id }}, Date={{ contest.contest_date }}, Active={{ contest.is_active }}<br>
     {% endfor %}
+    {% if all_contests|length == 0 %}
+        <strong>NO CONTESTS FOUND IN DATABASE</strong><br>
+    {% endif %}
 </div>
 
 <div class="admin-stats-grid">

@@ -205,45 +205,68 @@ def admin_photo_of_day():
     if admin_key != 'wedding2024':  # Replace with your actual admin key
         return redirect(url_for('main.index'))
     
-    # Get the main active contest
-    main_contest = PhotoOfDayContest.query.filter_by(is_active=True).first()
-    print(f"DEBUG: Main contest found: {main_contest}")  # Debug line
+    try:
+        # Test database connection
+        print("DEBUG: Testing database connection...")
+        db.session.execute('SELECT 1')
+        print("DEBUG: Database connection successful")
+        
+        # Get the main active contest
+        main_contest = PhotoOfDayContest.query.filter_by(is_active=True).first()
+        print(f"DEBUG: Main contest found: {main_contest}")  # Debug line
+        
+        # Get all contests for history
+        all_contests = PhotoOfDayContest.query.order_by(PhotoOfDayContest.contest_date.desc()).all()
+        print(f"DEBUG: Total contests in database: {len(all_contests)}")  # Debug line
+        
+        # Debug: Check all contests and their active status
+        for i, contest in enumerate(all_contests):
+            print(f"DEBUG: Contest {i+1}: ID={contest.id}, Active={contest.is_active}, Date={contest.contest_date}")
+        
+        # Get candidate photos for the main contest
+        main_candidates = []
+        if main_contest:
+            main_candidates = PhotoOfDayCandidate.query.filter_by(contest_id=main_contest.id).order_by(PhotoOfDayCandidate.date_added.desc()).all()
+            print(f"DEBUG: Main contest candidates: {len(main_candidates)}")  # Debug line
+        else:
+            print("DEBUG: No main contest found")  # Debug line
+        
+        # Get all photos for selection
+        all_photos = Photo.query.order_by(Photo.upload_date.desc()).limit(100).all()
+        print(f"DEBUG: Total photos found: {len(all_photos)}")
+        
+        # Get current settings
+        likes_threshold = get_likes_threshold()
+        print(f"DEBUG: Likes threshold: {likes_threshold}")
+        
+        # Get photos that would be auto-candidates based on current threshold
+        auto_candidate_photos = Photo.query.filter(
+            Photo.likes >= likes_threshold
+        ).order_by(Photo.likes.desc()).limit(20).all()
+        print(f"DEBUG: Auto-candidate photos: {len(auto_candidate_photos)}")
+        
+        print(f"DEBUG: About to render template with data:")
+        print(f"DEBUG: - main_contest: {main_contest}")
+        print(f"DEBUG: - main_candidates count: {len(main_candidates)}")
+        print(f"DEBUG: - all_contests count: {len(all_contests)}")
+        print(f"DEBUG: - all_photos count: {len(all_photos)}")
+        print(f"DEBUG: - likes_threshold: {likes_threshold}")
+        print(f"DEBUG: - today_date: {date.today().isoformat()}")
+        
+        return render_template('admin_photo_of_day.html',
+                             main_contest=main_contest,
+                             main_candidates=main_candidates,
+                             all_contests=all_contests,
+                             all_photos=all_photos,
+                             likes_threshold=likes_threshold,
+                             auto_candidate_photos=auto_candidate_photos,
+                             today_date=date.today().isoformat())
     
-    # Get all contests for history
-    all_contests = PhotoOfDayContest.query.order_by(PhotoOfDayContest.contest_date.desc()).all()
-    print(f"DEBUG: Total contests in database: {len(all_contests)}")  # Debug line
-    
-    # Debug: Check all contests and their active status
-    for i, contest in enumerate(all_contests):
-        print(f"DEBUG: Contest {i+1}: ID={contest.id}, Active={contest.is_active}, Date={contest.contest_date}")
-    
-    # Get candidate photos for the main contest
-    main_candidates = []
-    if main_contest:
-        main_candidates = PhotoOfDayCandidate.query.filter_by(contest_id=main_contest.id).order_by(PhotoOfDayCandidate.date_added.desc()).all()
-        print(f"DEBUG: Main contest candidates: {len(main_candidates)}")  # Debug line
-    else:
-        print("DEBUG: No main contest found")  # Debug line
-    
-    # Get all photos for selection
-    all_photos = Photo.query.order_by(Photo.upload_date.desc()).limit(100).all()
-    
-    # Get current settings
-    likes_threshold = get_likes_threshold()
-    
-    # Get photos that would be auto-candidates based on current threshold
-    auto_candidate_photos = Photo.query.filter(
-        Photo.likes >= likes_threshold
-    ).order_by(Photo.likes.desc()).limit(20).all()
-    
-    return render_template('admin_photo_of_day.html',
-                         main_contest=main_contest,
-                         main_candidates=main_candidates,
-                         all_contests=all_contests,
-                         all_photos=all_photos,
-                         likes_threshold=likes_threshold,
-                         auto_candidate_photos=auto_candidate_photos,
-                         today_date=date.today().isoformat())
+    except Exception as e:
+        print(f"DEBUG: Error in admin_photo_of_day: {e}")
+        import traceback
+        traceback.print_exc()
+        return f"Error: {str(e)}", 500
 
 @photo_of_day_bp.route('/admin/photo-of-day/create-contest', methods=['POST'])
 def create_contest():
