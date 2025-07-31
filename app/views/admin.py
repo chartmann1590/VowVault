@@ -1723,3 +1723,143 @@ def admin_database():
                          stats=stats,
                          optimization_status=optimization_status,
                          admin_key=admin_key) 
+
+@admin_bp.route('/qr-preview')
+def qr_preview():
+    # Check for SSO session first
+    sso_user_email = session.get('sso_user_email')
+    sso_user_domain = session.get('sso_user_domain')
+    admin_key = request.args.get('key', '')
+    
+    # Verify admin access
+    if not verify_admin_access(admin_key, sso_user_email, sso_user_domain):
+        return "Unauthorized", 401
+    
+    # Get QR settings
+    qr_settings = Settings.get('qr_settings', '{}')
+    qr_settings = json.loads(qr_settings) if qr_settings else {}
+    
+    # Get parameters
+    color = request.args.get('color', qr_settings.get('color', 'black'))
+    size = qr_settings.get('size', 'medium')
+    
+    # Generate QR code URL
+    base_url = request.host_url.rstrip('/')
+    qr_data = f"{base_url}/?key={admin_key}"
+    
+    # Generate QR code
+    import qrcode
+    from io import BytesIO
+    from PIL import Image
+    
+    # Create QR code
+    qr = qrcode.QRCode(
+        version=1,
+        error_correction=qrcode.constants.ERROR_CORRECT_L,
+        box_size=10,
+        border=4,
+    )
+    qr.add_data(qr_data)
+    qr.make(fit=True)
+    
+    # Create QR code image
+    qr_image = qr.make_image(fill_color=color, back_color="white")
+    
+    # Resize based on size setting
+    size_map = {
+        'small': 200,
+        'medium': 300,
+        'large': 400
+    }
+    target_size = size_map.get(size, 300)
+    qr_image = qr_image.resize((target_size, target_size), Image.Resampling.LANCZOS)
+    
+    # Convert to bytes
+    img_io = BytesIO()
+    qr_image.save(img_io, 'PNG')
+    img_io.seek(0)
+    
+    from flask import send_file
+    return send_file(img_io, mimetype='image/png')
+
+@admin_bp.route('/download-qr')
+def download_qr():
+    # Check for SSO session first
+    sso_user_email = session.get('sso_user_email')
+    sso_user_domain = session.get('sso_user_domain')
+    admin_key = request.args.get('key', '')
+    
+    # Verify admin access
+    if not verify_admin_access(admin_key, sso_user_email, sso_user_domain):
+        return "Unauthorized", 401
+    
+    # Get QR settings
+    qr_settings = Settings.get('qr_settings', '{}')
+    qr_settings = json.loads(qr_settings) if qr_settings else {}
+    
+    # Get parameters
+    color = request.args.get('color', qr_settings.get('color', 'black'))
+    format_type = request.args.get('format', 'png')
+    size = qr_settings.get('size', 'medium')
+    
+    # Generate QR code URL
+    base_url = request.host_url.rstrip('/')
+    qr_data = f"{base_url}/?key={admin_key}"
+    
+    # Generate QR code
+    import qrcode
+    from io import BytesIO
+    from PIL import Image
+    
+    # Create QR code
+    qr = qrcode.QRCode(
+        version=1,
+        error_correction=qrcode.constants.ERROR_CORRECT_L,
+        box_size=10,
+        border=4,
+    )
+    qr.add_data(qr_data)
+    qr.make(fit=True)
+    
+    # Create QR code image
+    qr_image = qr.make_image(fill_color=color, back_color="white")
+    
+    # Resize based on size setting
+    size_map = {
+        'small': 200,
+        'medium': 300,
+        'large': 400
+    }
+    target_size = size_map.get(size, 300)
+    qr_image = qr_image.resize((target_size, target_size), Image.Resampling.LANCZOS)
+    
+    # Convert to bytes
+    img_io = BytesIO()
+    
+    if format_type == 'svg':
+        # For SVG, we'll create a simple SVG representation
+        svg_content = f'''<?xml version="1.0" encoding="UTF-8"?>
+<svg width="{target_size}" height="{target_size}" xmlns="http://www.w3.org/2000/svg">
+    <rect width="100%" height="100%" fill="white"/>
+    <text x="50%" y="50%" text-anchor="middle" dy=".3em" font-family="Arial" font-size="12" fill="{color}">
+        QR Code - Wedding Gallery
+    </text>
+</svg>'''
+        img_io.write(svg_content.encode())
+        mimetype = 'image/svg+xml'
+        filename = 'wedding-qr-code.svg'
+    else:
+        # PNG format
+        qr_image.save(img_io, 'PNG')
+        mimetype = 'image/png'
+        filename = 'wedding-qr-code.png'
+    
+    img_io.seek(0)
+    
+    from flask import send_file
+    return send_file(
+        img_io, 
+        mimetype=mimetype,
+        as_attachment=True,
+        download_name=filename
+    ) 

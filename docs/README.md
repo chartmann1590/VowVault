@@ -28,6 +28,7 @@ Welcome to the Wedding Gallery documentation. This directory contains comprehens
 ### 🛠️ Admin Dashboard
 - **[Admin Dashboard Guide](ADMIN_DASHBOARD.md)** - Complete admin dashboard documentation
 - **[Admin Organization](ADMIN_ORGANIZATION.md)** - Admin page organization and navigation
+- **[QR Code Feature](qr_code.md)** - QR code generation and configuration
 
 ### 📸 Screenshots
 - **[Screenshots](screenshots/)** - Visual examples of the application
