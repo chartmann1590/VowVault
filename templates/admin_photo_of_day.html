@@ -272,6 +272,17 @@
     <p>Manage daily photo contests and select winners</p>
 </div>
 
+<!-- DEBUG SECTION -->
+<div style="background: #f0f0f0; padding: 1rem; margin: 1rem 0; border-radius: 8px; font-family: monospace; font-size: 0.9rem;">
+    <strong>DEBUG INFO:</strong><br>
+    Main Contest: {{ main_contest }}<br>
+    Main Contest ID: {{ main_contest.id if main_contest else 'None' }}<br>
+    Main Contest Active: {{ main_contest.is_active if main_contest else 'None' }}<br>
+    Main Candidates Count: {{ main_candidates|length }}<br>
+    All Contests Count: {{ all_contests|length }}<br>
+    All Photos Count: {{ all_photos|length }}
+</div>
+
 <div class="admin-stats-grid">
     <div class="admin-stat-card">
         <div class="stat-value">{{ all_contests|length }}</div>
@@ -324,6 +335,8 @@
 
 <div class="admin-section-card">
     <div class="admin-section-title">Current Main Contest</div>
+    <!-- DEBUG: main_contest = {{ main_contest }} -->
+    <!-- DEBUG: main_candidates count = {{ main_candidates|length }} -->
     {% if main_contest %}
     <div class="contest-card {% if main_contest.winner_photo_id %}winner{% endif %}">
         <div class="contest-header">
