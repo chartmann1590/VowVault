@@ -99,6 +99,13 @@ The admin dashboard includes organized navigation to all admin pages:
 - Set CAPTCHA difficulty
 - Manage spam prevention
 
+#### Timezone Settings (`/admin/timezone-settings`)
+- Configure admin timezone preferences
+- View all dates/times in local timezone
+- Select from comprehensive timezone list
+- Real-time timezone preview
+- Affects all admin interface date displays
+
 ### 🔗 Integrations & Services
 
 #### Email Settings (`/admin/email-settings`)

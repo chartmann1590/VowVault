@@ -96,6 +96,7 @@ docker run -p 5000:5000 wedding-gallery
 - **Comprehensive System Logging** - Track all system events, errors, and user activities
 - **Database Maintenance** - Database optimization and maintenance tools
 - **Slideshow Settings** - Configure photo slideshow functionality
+- **Timezone Support** - Admin timezone configuration for local date/time display
 
 ## 🔧 Configuration
 

@@ -96,6 +96,13 @@ cp env.example .env
 # Edit .env with your actual values
 ```
 
+### Timezone Configuration
+The application includes timezone support for admin users:
+- Default timezone: UTC
+- Configurable through admin dashboard
+- Supports all major timezones worldwide
+- Affects all date/time displays in admin interface
+
 ### Git Configuration
 The `.gitignore` file is configured to exclude:
 - Virtual environment (`venv/`)

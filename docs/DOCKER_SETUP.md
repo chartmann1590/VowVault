@@ -350,6 +350,28 @@ If you're migrating from the old monolithic structure:
    docker-compose up -d
    ```
 
+## Timezone Support
+
+The application includes timezone support for admin users:
+
+### Configuration
+- **Default Timezone**: UTC
+- **Admin Configuration**: Accessible via `/admin/timezone-settings`
+- **Global Support**: All major timezones worldwide
+- **Real-time Preview**: See current time in selected timezone
+
+### Features
+- **Date/Time Display**: All admin interface dates/times shown in local timezone
+- **Comprehensive List**: UTC, US, European, Asian, Australian timezones
+- **Automatic Fallback**: Falls back to UTC if invalid timezone selected
+- **Database Storage**: Timezone settings stored in database
+
+### Usage
+1. Access admin dashboard: `/admin?key=wedding2024`
+2. Navigate to "Timezone Settings" in Settings & Configuration
+3. Select your preferred timezone
+4. Save settings to apply globally
+
 ## Conclusion
 
 The Docker setup has been successfully updated to work with the new modular structure. All functionality is preserved while providing better organization, maintainability, and scalability.

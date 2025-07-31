@@ -98,6 +98,13 @@
 ### 5. PWA Debug Tools
 - Click "PWA Debug" button in admin panel
 - View PWA requirements status (HTTPS, manifest, service worker, icons)
+
+### 6. Configure Timezone Settings
+- Navigate to "Timezone Settings" in admin dashboard
+- Select your preferred timezone from the dropdown
+- View real-time preview of current time in selected timezone
+- Save settings to see all admin dates/times in your local timezone
+- Affects photo upload dates, guestbook timestamps, message times, and system logs
 - Check connection details and user agent information
 - Get troubleshooting solutions for self-signed certificates
 - Access quick links to view manifest and service worker files

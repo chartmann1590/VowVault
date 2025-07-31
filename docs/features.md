@@ -51,6 +51,7 @@
 - **System Settings**: Configure all features
 - **Statistics**: View usage and engagement metrics
 - **Batch Operations**: Download all content at once
+- **Timezone Support**: View all dates/times in your local timezone
 
 ## Advanced Features
 
