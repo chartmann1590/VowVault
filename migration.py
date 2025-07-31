@@ -215,6 +215,22 @@ def migrate_database():
         else:
             print("✅ photo_of_day_candidate table already exists")
 
+        # Update photo_of_day_candidate table to support new contest system
+        cursor.execute("PRAGMA table_info(photo_of_day_candidate)")
+        candidate_columns = [column[1] for column in cursor.fetchall()]
+        
+        if 'contest_id' not in candidate_columns:
+            print("Adding contest_id column to photo_of_day_candidate table...")
+            cursor.execute("ALTER TABLE photo_of_day_candidate ADD COLUMN contest_id INTEGER REFERENCES photo_of_day_contest(id)")
+            conn.commit()
+            print("✅ contest_id column added to photo_of_day_candidate table")
+        
+        if 'is_winner' not in candidate_columns:
+            print("Adding is_winner column to photo_of_day_candidate table...")
+            cursor.execute("ALTER TABLE photo_of_day_candidate ADD COLUMN is_winner BOOLEAN DEFAULT FALSE")
+            conn.commit()
+            print("✅ is_winner column added to photo_of_day_candidate table")
+
         # --- Photo of the Day Contest Tables ---
         cursor.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='photo_of_day_contest'")
         if not cursor.fetchone():
