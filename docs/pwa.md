@@ -74,6 +74,8 @@ The `sw.js` service worker provides:
 - Cache management and updates
 - Network request interception
 
+**Service Worker Route**: The service worker is served at `/sw.js` with proper JavaScript MIME type for optimal browser compatibility.
+
 ### Icons
 Multiple icon sizes are provided for different devices:
 - 16x16, 32x32, 72x72, 96x96, 128x128
@@ -136,6 +138,13 @@ Multiple icon sizes are provided for different devices:
 4. Test offline functionality
 
 ## Common Issues
+
+### Service Worker 404 Error
+If you see `GET /sw.js HTTP/1.1" 404` in logs:
+- ✅ **Fixed**: Service worker is now properly served at `/sw.js`
+- The route was added to handle service worker requests
+- Check browser console for successful registration
+- Verify HTTPS setup for production use
 
 ### Installation Not Available
 - Check HTTPS setup
