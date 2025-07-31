@@ -104,6 +104,79 @@
     .admin-btn.delete:hover {
         background: #d32f2f;
     }
+    .admin-btn.warning {
+        background: #ff9800;
+    }
+    .admin-btn.warning:hover {
+        background: #f57c00;
+    }
+    
+    /* Flash Messages */
+    .flash-messages {
+        margin-bottom: 2rem;
+    }
+    .flash-message {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        padding: 1rem 1.5rem;
+        border-radius: 10px;
+        margin-bottom: 1rem;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        animation: slideIn 0.3s ease-out;
+        position: relative;
+    }
+    .flash-success {
+        background: #e8f5e8;
+        border-left: 4px solid #4caf50;
+        color: #2e7d32;
+    }
+    .flash-error {
+        background: #ffebee;
+        border-left: 4px solid #f44336;
+        color: #c62828;
+    }
+    .flash-warning {
+        background: #fff3e0;
+        border-left: 4px solid #ff9800;
+        color: #ef6c00;
+    }
+    .flash-info {
+        background: #e3f2fd;
+        border-left: 4px solid #2196f3;
+        color: #1565c0;
+    }
+    .flash-icon {
+        font-size: 1.2rem;
+        flex-shrink: 0;
+    }
+    .flash-text {
+        flex: 1;
+        font-weight: 500;
+    }
+    .flash-close {
+        background: none;
+        border: none;
+        font-size: 1.5rem;
+        cursor: pointer;
+        color: inherit;
+        opacity: 0.7;
+        transition: opacity 0.2s;
+        flex-shrink: 0;
+    }
+    .flash-close:hover {
+        opacity: 1;
+    }
+    @keyframes slideIn {
+        from {
+            opacity: 0;
+            transform: translateY(-10px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
     .contest-grid {
         display: grid;
         grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
@@ -272,6 +345,23 @@
     <p>Manage daily photo contests and select winners</p>
 </div>
 
+<!-- Flash Messages -->
+{% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+        <div class="flash-messages">
+            {% for category, message in messages %}
+                <div class="flash-message flash-{{ category }}">
+                    <span class="flash-icon">
+                        {% if category == 'success' %}✅{% elif category == 'error' %}❌{% elif category == 'warning' %}⚠️{% else %}ℹ️{% endif %}
+                    </span>
+                    <span class="flash-text">{{ message }}</span>
+                    <button class="flash-close" onclick="this.parentElement.remove()">×</button>
+                </div>
+            {% endfor %}
+        </div>
+    {% endif %}
+{% endwith %}
+
 <!-- DEBUG SECTION -->
 <div style="background: #f0f0f0; padding: 1rem; margin: 1rem 0; border-radius: 8px; font-family: monospace; font-size: 0.9rem;">
     <strong>DEBUG INFO:</strong><br>
@@ -437,41 +527,19 @@ document.addEventListener('DOMContentLoaded', function() {
     submitContestBtn.addEventListener('click', function() {
         console.log('Creating contest...');  // Debug line
         
-        fetch('/admin/photo-of-day/create-contest?key=wedding2024', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-                action: 'create_main_contest'
-            })
-        })
-        .then(response => {
-            console.log('Create contest response status:', response.status);  // Debug line
-            if (!response.ok) {
-                return response.json().then(data => {
-                    // Check if this is an active contest error
-                    if (data.contest_id) {
-                        throw new Error(`${data.message} Click 'Force Cleanup' to fix this issue.`);
-                    }
-                    throw new Error(data.message || `HTTP ${response.status}`);
-                });
-            }
-            return response.json();
-        })
-        .then(data => {
-            console.log('Create contest response data:', data);  // Debug line
-            if (data.success) {
-                showNotification('Main contest created successfully!', 'success');
-                setTimeout(() => location.reload(), 1000);
-            } else {
-                showNotification(data.message || 'Unknown error occurred', 'error');
-            }
-        })
-        .catch(error => {
-            console.error('Create contest error:', error);
-            showNotification(`Error: ${error.message}`, 'error');
-        });
+        // Create a form and submit it
+        const form = document.createElement('form');
+        form.method = 'POST';
+        form.action = '/admin/photo-of-day/create-contest?key=wedding2024';
+        
+        const input = document.createElement('input');
+        input.type = 'hidden';
+        input.name = 'action';
+        input.value = 'create_main_contest';
+        
+        form.appendChild(input);
+        document.body.appendChild(form);
+        form.submit();
     });
     
     updateThresholdBtn.addEventListener('click', function() {
@@ -486,50 +554,29 @@ document.addEventListener('DOMContentLoaded', function() {
     submitThresholdBtn.addEventListener('click', function() {
         const threshold = document.getElementById('new-threshold').value;
         
-        fetch('/admin/photo-of-day/update-threshold?key=wedding2024', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-                threshold: threshold
-            })
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                showNotification('Threshold updated successfully!', 'success');
-                setTimeout(() => location.reload(), 1000);
-            } else {
-                showNotification(data.message, 'error');
-            }
-        })
-        .catch(error => {
-            console.error('Error:', error);
-            showNotification('An error occurred', 'error');
-        });
+        // Create a form and submit it
+        const form = document.createElement('form');
+        form.method = 'POST';
+        form.action = '/admin/photo-of-day/update-threshold?key=wedding2024';
+        
+        const input = document.createElement('input');
+        input.type = 'hidden';
+        input.name = 'threshold';
+        input.value = threshold;
+        
+        form.appendChild(input);
+        document.body.appendChild(form);
+        form.submit();
     });
     
     addAutoCandidatesBtn.addEventListener('click', function() {
-        fetch('/admin/photo-of-day/add-auto-candidates?key=wedding2024', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            }
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                showNotification(data.message, 'success');
-                setTimeout(() => location.reload(), 1000);
-            } else {
-                showNotification(data.message, 'error');
-            }
-        })
-        .catch(error => {
-            console.error('Error:', error);
-            showNotification('An error occurred', 'error');
-        });
+        // Create a form and submit it
+        const form = document.createElement('form');
+        form.method = 'POST';
+        form.action = '/admin/photo-of-day/add-auto-candidates?key=wedding2024';
+        
+        document.body.appendChild(form);
+        form.submit();
     });
     
     forceCleanupBtn.addEventListener('click', function() {
@@ -537,25 +584,13 @@ document.addEventListener('DOMContentLoaded', function() {
             return;
         }
         
-        fetch('/admin/photo-of-day/force-cleanup?key=wedding2024', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            }
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                showNotification(data.message, 'success');
-                setTimeout(() => location.reload(), 1000);
-            } else {
-                showNotification(data.message, 'error');
-            }
-        })
-        .catch(error => {
-            console.error('Force cleanup error:', error);
-            showNotification('An error occurred during cleanup', 'error');
-        });
+        // Create a form and submit it
+        const form = document.createElement('form');
+        form.method = 'POST';
+        form.action = '/admin/photo-of-day/force-cleanup?key=wedding2024';
+        
+        document.body.appendChild(form);
+        form.submit();
     });
     
     debugDbBtn.addEventListener('click', function() {
@@ -637,25 +672,13 @@ function closeContest() {
         return;
     }
     
-    fetch('/admin/photo-of-day/close-contest?key=wedding2024', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-        }
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            showNotification('Contest closed successfully!', 'success');
-            setTimeout(() => location.reload(), 1000);
-        } else {
-            showNotification(data.message, 'error');
-        }
-    })
-    .catch(error => {
-        console.error('Error:', error);
-        showNotification('An error occurred', 'error');
-    });
+    // Create a form and submit it
+    const form = document.createElement('form');
+    form.method = 'POST';
+    form.action = '/admin/photo-of-day/close-contest?key=wedding2024';
+    
+    document.body.appendChild(form);
+    form.submit();
 }
 
 function deleteContest(contestId) {
@@ -687,37 +710,19 @@ function deleteContest(contestId) {
 function addAsCandidate(photoId) {
     console.log('Adding photo as candidate:', photoId);  // Debug line
     
-    fetch('/admin/photo-of-day/add-candidate?key=wedding2024', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-            photo_id: photoId
-        })
-    })
-    .then(response => {
-        console.log('Response status:', response.status);  // Debug line
-        if (!response.ok) {
-            return response.json().then(data => {
-                throw new Error(data.message || `HTTP ${response.status}`);
-            });
-        }
-        return response.json();
-    })
-    .then(data => {
-        console.log('Response data:', data);  // Debug line
-        if (data.success) {
-            showNotification('Photo added as candidate successfully!', 'success');
-            setTimeout(() => location.reload(), 1000);
-        } else {
-            showNotification(data.message || 'Unknown error occurred', 'error');
-        }
-    })
-    .catch(error => {
-        console.error('Error:', error);
-        showNotification(`Error: ${error.message}`, 'error');
-    });
+    // Create a form and submit it
+    const form = document.createElement('form');
+    form.method = 'POST';
+    form.action = '/admin/photo-of-day/add-candidate?key=wedding2024';
+    
+    const input = document.createElement('input');
+    input.type = 'hidden';
+    input.name = 'photo_id';
+    input.value = photoId;
+    
+    form.appendChild(input);
+    document.body.appendChild(form);
+    form.submit();
 }
 
 function showNotification(message, type) {

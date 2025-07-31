@@ -250,17 +250,25 @@ def create_contest():
     """Create a new Photo of the Day contest"""
     admin_key = request.args.get('key')
     if admin_key != 'wedding2024':
-        return jsonify({'success': False, 'message': 'Unauthorized'}), 403
+        flash('Unauthorized access', 'error')
+        return redirect(url_for('photo_of_day.admin_photo_of_day', key=admin_key))
     
-    try:
-        data = request.get_json()
-        print(f"DEBUG: Create contest received data: {data}")  # Debug line
-    except Exception as e:
-        print(f"DEBUG: Create contest JSON error: {e}")  # Debug line
-        return jsonify({'success': False, 'message': f'Invalid JSON data: {str(e)}'}), 400
+    # Handle both JSON and form data
+    if request.is_json:
+        try:
+            data = request.get_json()
+            print(f"DEBUG: Create contest received JSON data: {data}")  # Debug line
+        except Exception as e:
+            print(f"DEBUG: Create contest JSON error: {e}")  # Debug line
+            flash(f'Invalid JSON data: {str(e)}', 'error')
+            return redirect(url_for('photo_of_day.admin_photo_of_day', key=admin_key))
+    else:
+        # Handle form data
+        data = request.form.to_dict()
+        print(f"DEBUG: Create contest received form data: {data}")  # Debug line
     
     # Allow empty data for main contest creation
-    if data is None:
+    if not data:
         data = {}
         print("DEBUG: Create contest - using empty data for main contest")  # Debug line
     
@@ -273,12 +281,8 @@ def create_contest():
     
     if existing_active:
         print(f"DEBUG: Found existing active contest ID: {existing_active.id}")  # Debug line
-        return jsonify({
-            'success': False, 
-            'message': f'An active contest already exists (ID: {existing_active.id}, Date: {existing_active.contest_date}). Please close the current contest first.',
-            'contest_id': existing_active.id,
-            'contest_date': existing_active.contest_date.isoformat()
-        }), 400
+        flash(f'An active contest already exists (ID: {existing_active.id}, Date: {existing_active.contest_date}). Please close the current contest first or use Force Cleanup.', 'warning')
+        return redirect(url_for('photo_of_day.admin_photo_of_day', key=admin_key))
     else:
         print("DEBUG: No existing active contest found")  # Debug line
     
@@ -293,7 +297,8 @@ def create_contest():
     db.session.commit()
     
     print("DEBUG: Created new main contest successfully")  # Debug line
-    return jsonify({'success': True, 'message': 'Main contest created successfully!'})
+    flash('Main contest created successfully!', 'success')
+    return redirect(url_for('photo_of_day.admin_photo_of_day', key=admin_key))
 
 @photo_of_day_bp.route('/admin/photo-of-day/select-winner', methods=['POST'])
 def select_winner():
@@ -359,47 +364,61 @@ def close_contest():
     """Close the current active contest (set is_active=False)"""
     admin_key = request.args.get('key')
     if admin_key != 'wedding2024':
-        return jsonify({'success': False, 'message': 'Unauthorized'}), 403
+        flash('Unauthorized access', 'error')
+        return redirect(url_for('photo_of_day.admin_photo_of_day', key=admin_key))
     
     main_contest = PhotoOfDayContest.query.filter_by(is_active=True).first()
     if not main_contest:
-        return jsonify({'success': False, 'message': 'No active contest found'}), 404
+        flash('No active contest found', 'error')
+        return redirect(url_for('photo_of_day.admin_photo_of_day', key=admin_key))
     
     main_contest.is_active = False
     db.session.commit()
     
     print(f"DEBUG: Closed contest {main_contest.id}")  # Debug line
-    return jsonify({'success': True, 'message': 'Contest closed successfully!'})
+    flash('Contest closed successfully!', 'success')
+    return redirect(url_for('photo_of_day.admin_photo_of_day', key=admin_key))
 
 @photo_of_day_bp.route('/admin/photo-of-day/add-candidate', methods=['POST'])
 def add_photo_candidate():
     """Add a photo as a candidate for Photo of the Day"""
     admin_key = request.args.get('key')
     if admin_key != 'wedding2024':
-        return jsonify({'success': False, 'message': 'Unauthorized'}), 403
+        flash('Unauthorized access', 'error')
+        return redirect(url_for('photo_of_day.admin_photo_of_day', key=admin_key))
     
-    try:
-        data = request.get_json()
-        print(f"DEBUG: Received data: {data}")  # Debug line
-    except Exception as e:
-        print(f"DEBUG: JSON error: {e}")  # Debug line
-        return jsonify({'success': False, 'message': f'Invalid JSON data: {str(e)}'}), 400
+    # Handle both JSON and form data
+    if request.is_json:
+        try:
+            data = request.get_json()
+            print(f"DEBUG: Received JSON data: {data}")  # Debug line
+        except Exception as e:
+            print(f"DEBUG: JSON error: {e}")  # Debug line
+            flash(f'Invalid JSON data: {str(e)}', 'error')
+            return redirect(url_for('photo_of_day.admin_photo_of_day', key=admin_key))
+    else:
+        # Handle form data
+        data = request.form.to_dict()
+        print(f"DEBUG: Received form data: {data}")  # Debug line
     
     if not data:
         print("DEBUG: No data received")  # Debug line
-        return jsonify({'success': False, 'message': 'No JSON data provided'}), 400
+        flash('No data provided', 'error')
+        return redirect(url_for('photo_of_day.admin_photo_of_day', key=admin_key))
     
     photo_id = data.get('photo_id')
     print(f"DEBUG: Photo ID: {photo_id}")  # Debug line
     
     if not photo_id:
-        return jsonify({'success': False, 'message': 'Photo ID required'}), 400
+        flash('Photo ID required', 'error')
+        return redirect(url_for('photo_of_day.admin_photo_of_day', key=admin_key))
     
     # Check if photo exists
     photo = Photo.query.get(photo_id)
     if not photo:
         print(f"DEBUG: Photo {photo_id} not found")  # Debug line
-        return jsonify({'success': False, 'message': 'Photo not found'}), 404
+        flash('Photo not found', 'error')
+        return redirect(url_for('photo_of_day.admin_photo_of_day', key=admin_key))
     
     print(f"DEBUG: Photo found: {photo.filename}")  # Debug line
     
@@ -421,7 +440,8 @@ def add_photo_candidate():
     
     if existing:
         print("DEBUG: Photo already a candidate")  # Debug line
-        return jsonify({'success': False, 'message': 'Photo is already a candidate'}), 400
+        flash('Photo is already a candidate', 'warning')
+        return redirect(url_for('photo_of_day.admin_photo_of_day', key=admin_key))
     
     # Add as candidate
     candidate = PhotoOfDayCandidate(
@@ -435,43 +455,52 @@ def add_photo_candidate():
     db.session.commit()
     
     print("DEBUG: Successfully added candidate")  # Debug line
-    return jsonify({'success': True, 'message': 'Photo added as candidate successfully!'})
+    flash('Photo added as candidate successfully!', 'success')
+    return redirect(url_for('photo_of_day.admin_photo_of_day', key=admin_key))
 
 @photo_of_day_bp.route('/admin/photo-of-day/update-threshold', methods=['POST'])
 def update_likes_threshold():
     """Update the likes threshold for automatic candidates"""
     admin_key = request.args.get('key')
     if admin_key != 'wedding2024':
-        return jsonify({'success': False, 'message': 'Unauthorized'}), 403
+        flash('Unauthorized access', 'error')
+        return redirect(url_for('photo_of_day.admin_photo_of_day', key=admin_key))
     
-    data = request.get_json()
+    # Handle both JSON and form data
+    if request.is_json:
+        data = request.get_json()
+    else:
+        data = request.form.to_dict()
+    
     threshold = data.get('threshold')
     
     if not threshold or not threshold.isdigit():
-        return jsonify({'success': False, 'message': 'Valid threshold required'}), 400
+        flash('Valid threshold required', 'error')
+        return redirect(url_for('photo_of_day.admin_photo_of_day', key=admin_key))
     
     threshold = int(threshold)
     if threshold < 1:
-        return jsonify({'success': False, 'message': 'Threshold must be at least 1'}), 400
+        flash('Threshold must be at least 1', 'error')
+        return redirect(url_for('photo_of_day.admin_photo_of_day', key=admin_key))
     
     # Update the setting
     Settings.set('photo_of_day_likes_threshold', str(threshold))
     
-    return jsonify({'success': True, 'message': f'Likes threshold updated to {threshold}'})
+    flash(f'Likes threshold updated to {threshold}', 'success')
+    return redirect(url_for('photo_of_day.admin_photo_of_day', key=admin_key))
 
 @photo_of_day_bp.route('/admin/photo-of-day/add-auto-candidates', methods=['POST'])
 def add_automatic_candidates_route():
     """Manually trigger adding automatic candidates"""
     admin_key = request.args.get('key')
     if admin_key != 'wedding2024':
-        return jsonify({'success': False, 'message': 'Unauthorized'}), 403
+        flash('Unauthorized access', 'error')
+        return redirect(url_for('photo_of_day.admin_photo_of_day', key=admin_key))
     
     added_count = add_automatic_candidates()
     
-    return jsonify({
-        'success': True, 
-        'message': f'Added {added_count} photos as automatic candidates'
-    })
+    flash(f'Added {added_count} photos as automatic candidates', 'success')
+    return redirect(url_for('photo_of_day.admin_photo_of_day', key=admin_key))
 
 @photo_of_day_bp.route('/admin/photo-of-day/debug-db', methods=['GET'])
 def debug_database():
@@ -526,25 +555,20 @@ def force_cleanup_contests():
     """Force cleanup of orphaned contests"""
     admin_key = request.args.get('key')
     if admin_key != 'wedding2024':
-        return jsonify({'success': False, 'message': 'Unauthorized'}), 403
+        flash('Unauthorized access', 'error')
+        return redirect(url_for('photo_of_day.admin_photo_of_day', key=admin_key))
     
     try:
         # Get all active contests
         active_contests = PhotoOfDayContest.query.filter_by(is_active=True).all()
         
         if len(active_contests) == 0:
-            return jsonify({
-                'success': True, 
-                'message': 'No active contests found. No cleanup needed.',
-                'contests_closed': 0
-            })
+            flash('No active contests found. No cleanup needed.', 'info')
+            return redirect(url_for('photo_of_day.admin_photo_of_day', key=admin_key))
         
         if len(active_contests) == 1:
-            return jsonify({
-                'success': True, 
-                'message': f'Single active contest found (ID: {active_contests[0].id}). No cleanup needed.',
-                'contests_closed': 0
-            })
+            flash(f'Single active contest found (ID: {active_contests[0].id}). No cleanup needed.', 'info')
+            return redirect(url_for('photo_of_day.admin_photo_of_day', key=admin_key))
         
         # Multiple active contests - close all but the most recent
         sorted_contests = sorted(active_contests, key=lambda x: x.contest_date, reverse=True)
@@ -556,19 +580,13 @@ def force_cleanup_contests():
         
         db.session.commit()
         
-        return jsonify({
-            'success': True,
-            'message': f'Cleanup completed. Kept contest {contest_to_keep.id} active, closed {len(contests_to_close)} orphaned contests.',
-            'contests_closed': len(contests_to_close),
-            'kept_contest_id': contest_to_keep.id
-        })
+        flash(f'Cleanup completed. Kept contest {contest_to_keep.id} active, closed {len(contests_to_close)} orphaned contests.', 'success')
+        return redirect(url_for('photo_of_day.admin_photo_of_day', key=admin_key))
         
     except Exception as e:
         print(f"DEBUG: Error in force cleanup: {e}")
-        return jsonify({
-            'success': False,
-            'message': f'Error during cleanup: {str(e)}'
-        }), 500
+        flash(f'Error during cleanup: {str(e)}', 'error')
+        return redirect(url_for('photo_of_day.admin_photo_of_day', key=admin_key))
 
 @photo_of_day_bp.route('/api/photo-of-day/stats')
 def photo_of_day_stats():
