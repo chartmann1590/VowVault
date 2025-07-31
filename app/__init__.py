@@ -87,10 +87,22 @@ def create_app(config_name='default'):
     # Register error handlers
     @app.errorhandler(413)
     def too_large(e):
+        from app.utils.system_logger import log_error
+        log_error('system', 'File upload too large', details={'error': '413', 'max_size': app.config['MAX_CONTENT_LENGTH']})
         return "File is too large. Maximum size is 50MB.", 413
 
     @app.errorhandler(404)
     def not_found(e):
+        from app.utils.system_logger import log_error
+        from flask import request
+        log_error('system', 'Page not found', details={'path': request.path, 'method': request.method})
         return "Page not found.", 404
+
+    @app.errorhandler(500)
+    def internal_error(e):
+        from app.utils.system_logger import log_critical
+        from flask import request
+        log_critical('system', 'Internal server error', details={'path': request.path, 'method': request.method})
+        return "Internal server error.", 500
 
     return app 

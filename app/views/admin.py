@@ -25,6 +25,7 @@ from app.utils.email_utils import start_email_monitor
 from app.utils.immich_utils import sync_all_to_immich
 from app.utils.notification_utils import create_notification_with_push
 from app.utils.db_optimization import db_optimizer, get_photo_stats, maintenance_task
+from app.utils.system_logger import log_info, log_error, log_exception
 
 admin_bp = Blueprint('admin', __name__)
 
@@ -1762,6 +1763,12 @@ def admin_logs():
     # Get system logs
     from app.models.email import SystemLog
     system_logs = SystemLog.query.order_by(SystemLog.timestamp.desc()).limit(100).all()
+    
+    # Log access to admin logs page
+    log_info('system', 'Admin logs page accessed', user_identifier=request.cookies.get('user_identifier', ''))
+    
+    # Log counts for debugging
+    log_info('system', f'Log counts - Email: {len(email_logs)}, Immich: {len(immich_sync_logs)}, System: {len(system_logs)}')
     
     return render_template('admin_logs.html',
                          email_logs=email_logs,

@@ -29,6 +29,7 @@ Welcome to the Wedding Gallery documentation. This directory contains comprehens
 - **[Admin Dashboard Guide](ADMIN_DASHBOARD.md)** - Complete admin dashboard documentation
 - **[Admin Organization](ADMIN_ORGANIZATION.md)** - Admin page organization and navigation
 - **[QR Code Feature](qr_code.md)** - QR code generation and configuration
+- **[System Logging](system_logging.md)** - Comprehensive system logging and monitoring
 
 ### 📸 Screenshots
 - **[Screenshots](screenshots/)** - Visual examples of the application
@@ -92,6 +93,7 @@ docker run -p 5000:5000 wedding-gallery
 - **Comprehensive Admin Dashboard** - Complete admin interface with navigation
 - **QR Code Generation** - Generate QR codes for easy sharing
 - **System Logs** - Monitor email processing and sync activities
+- **Comprehensive System Logging** - Track all system events, errors, and user activities
 - **Database Maintenance** - Database optimization and maintenance tools
 - **Slideshow Settings** - Configure photo slideshow functionality
 
