@@ -428,7 +428,9 @@ document.addEventListener('DOMContentLoaded', function() {
             headers: {
                 'Content-Type': 'application/json',
             },
-            body: JSON.stringify({})  // No data needed for main contest
+            body: JSON.stringify({
+                action: 'create_main_contest'
+            })
         })
         .then(response => {
             console.log('Create contest response status:', response.status);  // Debug line

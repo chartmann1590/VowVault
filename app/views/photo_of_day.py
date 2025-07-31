@@ -215,9 +215,10 @@ def create_contest():
         print(f"DEBUG: Create contest JSON error: {e}")  # Debug line
         return jsonify({'success': False, 'message': f'Invalid JSON data: {str(e)}'}), 400
     
-    if not data:
-        print("DEBUG: Create contest - no data received")  # Debug line
-        return jsonify({'success': False, 'message': 'No JSON data provided'}), 400
+    # Allow empty data for main contest creation
+    if data is None:
+        data = {}
+        print("DEBUG: Create contest - using empty data for main contest")  # Debug line
     
     # Check if there's already an active contest
     existing_active = PhotoOfDayContest.query.filter_by(is_active=True).first()
