@@ -420,7 +420,8 @@
     <div class="contest-controls">
         <button id="create-contest-btn" class="admin-btn primary">Create Today's Contest</button>
         <button id="close-current-contest-btn" class="admin-btn secondary">Close Current Contest</button>
-        <button id="delete-contest-btn" class="admin-btn delete">Delete Contest</button>
+        <button id="delete-todays-contest-btn" class="admin-btn delete">Delete Today's Contest</button>
+        <button id="delete-contest-btn" class="admin-btn delete">Delete Contest by ID</button>
         <button id="add-auto-candidates-btn" class="admin-btn secondary">Add Auto-Candidates</button>
         <button id="update-threshold-btn" class="admin-btn secondary">Update Threshold</button>
         <button id="force-cleanup-btn" class="admin-btn warning">Force Cleanup</button>
@@ -519,9 +520,14 @@
     <div class="admin-section-title">All Contests</div>
     <div class="contest-grid">
         {% for contest in all_contests %}
-        <div class="contest-card {% if contest.is_active %}active{% else %}inactive{% endif %}">
+        <div class="contest-card {% if contest.is_active %}active{% else %}inactive{% endif %} {% if contest.contest_date == today_date %}todays-contest{% endif %}">
             <div class="contest-header">
-                <div class="contest-date">Contest {{ contest.id }} - {{ contest.contest_date.strftime('%B %d, %Y') if contest.contest_date else 'Unknown' }}</div>
+                <div class="contest-date">
+                    Contest {{ contest.id }} - {{ contest.contest_date.strftime('%B %d, %Y') if contest.contest_date else 'Unknown' }}
+                    {% if contest.contest_date == today_date %}
+                        <span style="background: #e91e63; color: white; padding: 0.2rem 0.5rem; border-radius: 4px; font-size: 0.8rem; margin-left: 0.5rem;">TODAY</span>
+                    {% endif %}
+                </div>
                 <div class="contest-status {% if contest.is_active %}status-active{% else %}status-inactive{% endif %}">
                     {% if contest.is_active %}
                         🟢 Active
@@ -535,6 +541,9 @@
                     <button onclick="closeContest()" class="admin-btn secondary">Close</button>
                 {% endif %}
                 <button onclick="deleteContest({{ contest.id }})" class="admin-btn delete">Delete</button>
+                {% if contest.contest_date == today_date %}
+                    <button onclick="deleteTodaysContest()" class="admin-btn delete" style="background: #e91e63;">Delete Today's</button>
+                {% endif %}
             </div>
         </div>
         {% endfor %}
@@ -575,6 +584,7 @@ document.addEventListener('DOMContentLoaded', function() {
     
     const addAutoCandidatesBtn = document.getElementById('add-auto-candidates-btn');
     const closeCurrentContestBtn = document.getElementById('close-current-contest-btn');
+    const deleteTodaysContestBtn = document.getElementById('delete-todays-contest-btn');
     const deleteContestBtn = document.getElementById('delete-contest-btn');
     const forceCleanupBtn = document.getElementById('force-cleanup-btn');
     const debugDbBtn = document.getElementById('debug-db-btn');
@@ -652,6 +662,20 @@ document.addEventListener('DOMContentLoaded', function() {
         const form = document.createElement('form');
         form.method = 'POST';
         form.action = '/admin/photo-of-day/close-contest?key=wedding2024';
+        
+        document.body.appendChild(form);
+        form.submit();
+    });
+    
+    deleteTodaysContestBtn.addEventListener('click', function() {
+        if (!confirm('Are you sure you want to delete the contest for today? This action cannot be undone.')) {
+            return;
+        }
+        
+        // Create a form and submit it
+        const form = document.createElement('form');
+        form.method = 'POST';
+        form.action = '/admin/photo-of-day/delete-todays-contest?key=wedding2024';
         
         document.body.appendChild(form);
         form.submit();
@@ -779,30 +803,32 @@ function closeContest() {
     form.submit();
 }
 
+function deleteTodaysContest() {
+    if (!confirm('Are you sure you want to delete the contest for today? This action cannot be undone.')) {
+        return;
+    }
+    
+    // Create a form and submit it
+    const form = document.createElement('form');
+    form.method = 'POST';
+    form.action = '/admin/photo-of-day/delete-todays-contest?key=wedding2024';
+    
+    document.body.appendChild(form);
+    form.submit();
+}
+
 function deleteContest(contestId) {
     if (!confirm('Are you sure you want to delete this contest?')) {
         return;
     }
     
-    fetch(`/admin/photo-of-day/delete-contest/${contestId}?key=wedding2024`, {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-        }
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            showNotification('Contest closed successfully!', 'success');
-            setTimeout(() => location.reload(), 1000);
-        } else {
-            showNotification(data.message, 'error');
-        }
-    })
-    .catch(error => {
-        console.error('Error:', error);
-        showNotification('An error occurred', 'error');
-    });
+    // Create a form and submit it
+    const form = document.createElement('form');
+    form.method = 'POST';
+    form.action = `/admin/photo-of-day/delete-contest/${contestId}?key=wedding2024`;
+    
+    document.body.appendChild(form);
+    form.submit();
 }
 
 function addAsCandidate(photoId) {

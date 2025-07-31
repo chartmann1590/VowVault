@@ -375,6 +375,31 @@ def delete_contest(contest_id):
     flash('Contest deleted successfully!', 'success')
     return redirect(url_for('photo_of_day.admin_photo_of_day', key=admin_key))
 
+@photo_of_day_bp.route('/admin/photo-of-day/delete-todays-contest', methods=['POST'])
+def delete_todays_contest():
+    """Delete the contest for today's date (if it exists)"""
+    admin_key = request.args.get('key')
+    if admin_key != 'wedding2024':
+        flash('Unauthorized access', 'error')
+        return redirect(url_for('photo_of_day.admin_photo_of_day', key=admin_key))
+    
+    today = date.today()
+    contest = PhotoOfDayContest.query.filter_by(contest_date=today).first()
+    
+    if not contest:
+        flash(f'No contest found for today ({today})', 'info')
+        return redirect(url_for('photo_of_day.admin_photo_of_day', key=admin_key))
+    
+    contest_id = contest.id
+    contest_date = contest.contest_date
+    is_active = contest.is_active
+    
+    db.session.delete(contest)
+    db.session.commit()
+    
+    flash(f'Contest for {contest_date} (ID: {contest_id}, Active: {is_active}) deleted successfully!', 'success')
+    return redirect(url_for('photo_of_day.admin_photo_of_day', key=admin_key))
+
 @photo_of_day_bp.route('/admin/photo-of-day/close-contest', methods=['POST'])
 def close_contest():
     """Close the current active contest (set is_active=False)"""
