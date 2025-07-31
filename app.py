@@ -2507,10 +2507,9 @@ def admin_timezone_settings():
     timezone_settings = Settings.get('timezone_settings', '{}')
     timezone_settings = json.loads(timezone_settings) if timezone_settings else {}
     
-    # Calculate current time in selected timezone
-    from app.utils.settings_utils import format_datetime_in_timezone
+    # Calculate current time (simple fallback without pytz)
     from datetime import datetime
-    current_time = format_datetime_in_timezone(datetime.utcnow())
+    current_time = datetime.utcnow().strftime('%B %d, %Y at %I:%M %p')
     
     return render_template('admin_timezone_settings.html', 
                          timezone_settings=timezone_settings,

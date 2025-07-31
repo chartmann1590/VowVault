@@ -1,6 +1,5 @@
 from app.models.settings import Settings
 import json
-import pytz
 from datetime import datetime
 
 def verify_admin_access(admin_key=None, user_email=None, user_domain=None):
@@ -82,17 +81,8 @@ def get_timezone_settings():
 
 def format_datetime_in_timezone(dt, format_str='%B %d, %Y at %I:%M %p'):
     """Format a datetime object in the admin's selected timezone"""
-    timezone_settings = get_timezone_settings()
-    selected_timezone = timezone_settings.get('timezone', 'UTC')
-    
-    try:
-        tz = pytz.timezone(selected_timezone)
-        if dt.tzinfo is None:
-            # Assume UTC if no timezone info
-            dt = pytz.utc.localize(dt)
-        return dt.astimezone(tz).strftime(format_str)
-    except:
-        # Fallback to UTC if timezone is invalid
-        if dt.tzinfo is None:
-            dt = pytz.utc.localize(dt)
-        return dt.strftime(format_str) 
+    # Simple fallback without pytz - just return formatted UTC time
+    if dt.tzinfo is None:
+        # Assume UTC if no timezone info
+        pass
+    return dt.strftime(format_str) 
