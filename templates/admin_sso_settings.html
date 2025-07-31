@@ -314,6 +314,46 @@
         border: 1px solid #bee5eb;
     }
 
+    .provider-config {
+        background: #f8f9fa;
+        padding: 1rem;
+        border-radius: 8px;
+        margin-top: 1rem;
+        border-left: 4px solid #8b7355;
+    }
+
+    .provider-config h5 {
+        color: #8b7355;
+        margin-bottom: 0.5rem;
+        font-size: 1rem;
+    }
+
+    .provider-config p {
+        color: #666;
+        font-size: 0.9rem;
+        margin-bottom: 0.5rem;
+    }
+
+    .provider-config code {
+        background: #e9ecef;
+        padding: 0.2rem 0.4rem;
+        border-radius: 4px;
+        font-size: 0.8rem;
+    }
+
+    .security-note {
+        background: #fff3cd;
+        border: 1px solid #ffeaa7;
+        color: #856404;
+        padding: 1rem;
+        border-radius: 8px;
+        margin-top: 1rem;
+    }
+
+    .security-note strong {
+        color: #856404;
+    }
+
     @media (max-width: 768px) {
         .admin-header {
             margin: -3rem -1.5rem 2rem -1.5rem;
@@ -354,7 +394,7 @@
             </div>
 
             <div class="sso-info">
-                <strong>🔐 Single Sign-On Feature:</strong> Configure SSO authentication to allow secure admin access using your existing identity provider (Google, Azure, Okta, or custom OAuth).
+                <strong>🔐 Single Sign-On Feature:</strong> Configure SSO authentication to allow secure admin access using your existing identity provider (Google, Microsoft Azure, Okta, or custom OAuth). SSO is disabled by default for security.
             </div>
 
             <div class="settings-grid">
@@ -370,6 +410,7 @@
                                     <span class="slider"></span>
                                 </label>
                             </div>
+                            <small style="color: #666;">When enabled, admin access will require SSO login instead of just the admin key</small>
                         </div>
 
                         <div class="form-group">
@@ -405,18 +446,48 @@
                             <input type="text" 
                                    id="ssoRedirectUri" 
                                    class="form-control" 
-                                   placeholder="https://yourdomain.com/admin/sso/callback"
+                                   placeholder="https://yourdomain.com/sso/callback"
                                    value="{{ sso_settings.get('redirect_uri', '') }}">
                             <small style="color: #666;">This URL must be configured in your OAuth provider</small>
                         </div>
 
                         <div class="form-group">
-                            <label for="ssoAuthorizedEmails">Authorized Email Addresses</label>
-                            <textarea id="ssoAuthorizedEmails" 
+                            <label for="ssoScope">OAuth Scope</label>
+                            <input type="text" 
+                                   id="ssoScope" 
+                                   class="form-control" 
+                                   placeholder="openid email profile"
+                                   value="{{ sso_settings.get('scope', 'openid email profile') }}">
+                            <small style="color: #666;">Required scopes for user authentication</small>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="ssoAllowedEmails">Authorized Email Addresses</label>
+                            <textarea id="ssoAllowedEmails" 
                                       rows="4" 
                                       class="form-control" 
-                                      placeholder="Enter email addresses (one per line) that are allowed to access admin">{{ sso_settings.get('authorized_emails', '') }}</textarea>
+                                      placeholder="Enter email addresses (one per line) that are allowed to access admin">{{ sso_settings.get('allowed_emails', '') }}</textarea>
                             <small style="color: #666;">Only these email addresses will be granted admin access</small>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="ssoAllowedDomains">Authorized Domains</label>
+                            <textarea id="ssoAllowedDomains" 
+                                      rows="3" 
+                                      class="form-control" 
+                                      placeholder="Enter domains (one per line) that are allowed to access admin">{{ sso_settings.get('allowed_domains', '') }}</textarea>
+                            <small style="color: #666;">Allow entire domains (e.g., company.com) to access admin</small>
+                        </div>
+
+                        <div class="form-group">
+                            <div class="switch-wrapper">
+                                <label for="ssoAdminKeyFallback">Allow Admin Key Fallback</label>
+                                <label class="switch">
+                                    <input type="checkbox" id="ssoAdminKeyFallback" {% if sso_settings.get('admin_key_fallback', True) %}checked{% endif %}>
+                                    <span class="slider"></span>
+                                </label>
+                            </div>
+                            <small style="color: #666;">When enabled, admin key can still be used as backup authentication</small>
                         </div>
 
                         <button type="submit" class="btn btn-primary">
@@ -445,6 +516,13 @@
                         </div>
                         <p style="color: #666; margin-bottom: 1rem;">Configure Google OAuth for admin authentication</p>
                         <button class="btn btn-secondary" onclick="testSSO('google')">Test Connection</button>
+                        
+                        <div class="provider-config" id="google-config" style="display: none;">
+                            <h5>Google OAuth Configuration</h5>
+                            <p><strong>Authorization URL:</strong> <code>https://accounts.google.com/oauth/authorize</code></p>
+                            <p><strong>Token URL:</strong> <code>https://oauth2.googleapis.com/token</code></p>
+                            <p><strong>User Info URL:</strong> <code>https://www.googleapis.com/oauth2/v2/userinfo</code></p>
+                        </div>
                     </div>
 
                     <div class="sso-provider">
@@ -461,6 +539,13 @@
                         </div>
                         <p style="color: #666; margin-bottom: 1rem;">Configure Microsoft Azure AD for admin authentication</p>
                         <button class="btn btn-secondary" onclick="testSSO('azure')">Test Connection</button>
+                        
+                        <div class="provider-config" id="azure-config" style="display: none;">
+                            <h5>Azure AD Configuration</h5>
+                            <p><strong>Authorization URL:</strong> <code>https://login.microsoftonline.com/{tenant-id}/oauth2/v2.0/authorize</code></p>
+                            <p><strong>Token URL:</strong> <code>https://login.microsoftonline.com/{tenant-id}/oauth2/v2.0/token</code></p>
+                            <p><strong>User Info URL:</strong> <code>https://graph.microsoft.com/oidc/userinfo</code></p>
+                        </div>
                     </div>
 
                     <div class="sso-provider">
@@ -477,6 +562,13 @@
                         </div>
                         <p style="color: #666; margin-bottom: 1rem;">Configure Okta for admin authentication</p>
                         <button class="btn btn-secondary" onclick="testSSO('okta')">Test Connection</button>
+                        
+                        <div class="provider-config" id="okta-config" style="display: none;">
+                            <h5>Okta Configuration</h5>
+                            <p><strong>Authorization URL:</strong> <code>https://{your-domain}.okta.com/oauth2/v1/authorize</code></p>
+                            <p><strong>Token URL:</strong> <code>https://{your-domain}.okta.com/oauth2/v1/token</code></p>
+                            <p><strong>User Info URL:</strong> <code>https://{your-domain}.okta.com/oauth2/v1/userinfo</code></p>
+                        </div>
                     </div>
 
                     <div class="sso-provider">
@@ -493,6 +585,20 @@
                         </div>
                         <p style="color: #666; margin-bottom: 1rem;">Configure custom OAuth provider for admin authentication</p>
                         <button class="btn btn-secondary" onclick="testSSO('custom')">Test Connection</button>
+                        
+                        <div class="provider-config" id="custom-config" style="display: none;">
+                            <h5>Custom OAuth Configuration</h5>
+                            <p>For custom OAuth providers, you need to configure the following URLs manually:</p>
+                            <ul style="color: #666; margin-left: 1rem;">
+                                <li>Authorization URL</li>
+                                <li>Token URL</li>
+                                <li>User Info URL</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <div class="security-note">
+                        <strong>🔒 Security Note:</strong> SSO is disabled by default. Only enable after properly configuring your OAuth provider and testing the connection. Keep your Client Secret secure and never expose it in client-side code.
                     </div>
                 </div>
             </div>
@@ -517,7 +623,7 @@
                                 <li>Enable Google+ API</li>
                                 <li>Go to Credentials → Create Credentials → OAuth 2.0 Client ID</li>
                                 <li>Set Application Type to "Web application"</li>
-                                <li>Add your redirect URI: <code>https://yourdomain.com/admin/sso/callback</code></li>
+                                <li>Add your redirect URI: <code>https://yourdomain.com/sso/callback</code></li>
                             </ol>
                         </div>
                         
@@ -543,6 +649,7 @@
                                 <li>Two-factor authentication support</li>
                                 <li>Centralized user management</li>
                                 <li>Automatic session management</li>
+                                <li>CSRF protection with state parameter</li>
                             </ul>
                         </div>
                         
@@ -563,6 +670,7 @@
                                 <li>Keep Client Secret secure</li>
                                 <li>Test connection before going live</li>
                                 <li>Backup admin key as fallback</li>
+                                <li>SSO is disabled by default for security</li>
                             </ul>
                         </div>
                     </div>
@@ -588,7 +696,10 @@
             client_id: document.getElementById('ssoClientId').value,
             client_secret: document.getElementById('ssoClientSecret').value,
             redirect_uri: document.getElementById('ssoRedirectUri').value,
-            authorized_emails: document.getElementById('ssoAuthorizedEmails').value
+            scope: document.getElementById('ssoScope').value,
+            allowed_emails: document.getElementById('ssoAllowedEmails').value,
+            allowed_domains: document.getElementById('ssoAllowedDomains').value,
+            admin_key_fallback: document.getElementById('ssoAdminKeyFallback').checked
         };
         
         fetch(`/admin/save-settings?key=${key}`, {
@@ -659,13 +770,13 @@
         testButton.textContent = 'Testing...';
         testButton.disabled = true;
         
-        fetch(`/admin/test-sso/${provider}?key=${key}`)
-        .then(response => response.json())
+        fetch(`/auth/test?key=${key}`)
+        .then(response => response.text())
         .then(data => {
-            if (data.success) {
+            if (data.includes('valid')) {
                 alert('SSO connection test successful!');
             } else {
-                alert('SSO connection test failed: ' + (data.error || 'Unknown error'));
+                alert('SSO connection test failed: ' + data);
             }
         })
         .catch(error => {
@@ -677,8 +788,31 @@
         });
     }
 
+    // Show/hide provider-specific configuration
+    function showProviderConfig(provider) {
+        // Hide all config sections
+        document.querySelectorAll('.provider-config').forEach(config => {
+            config.style.display = 'none';
+        });
+        
+        // Show the selected provider's config
+        const configElement = document.getElementById(provider + '-config');
+        if (configElement) {
+            configElement.style.display = 'block';
+        }
+    }
+
     // Update provider status when settings change
     document.getElementById('ssoEnabled').addEventListener('change', updateProviderStatus);
-    document.getElementById('ssoProvider').addEventListener('change', updateProviderStatus);
+    document.getElementById('ssoProvider').addEventListener('change', function() {
+        updateProviderStatus();
+        showProviderConfig(this.value);
+    });
+
+    // Initialize provider config display
+    document.addEventListener('DOMContentLoaded', function() {
+        const selectedProvider = document.getElementById('ssoProvider').value;
+        showProviderConfig(selectedProvider);
+    });
 </script>
 {% endblock %} 

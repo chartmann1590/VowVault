@@ -313,6 +313,49 @@ def migrate_database():
         else:
             print("✅ slideshow_activity table already exists")
 
+        # --- SSO Settings Table ---
+        cursor.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='sso_settings'")
+        if not cursor.fetchone():
+            print("Creating sso_settings table...")
+            cursor.execute("""
+                CREATE TABLE sso_settings (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    key VARCHAR(100) UNIQUE NOT NULL,
+                    value TEXT NOT NULL,
+                    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+                )
+            """)
+            conn.commit()
+            print("✅ sso_settings table created successfully!")
+        else:
+            print("✅ sso_settings table already exists")
+
+        # Initialize default SSO settings if they don't exist
+        print("Initializing default SSO settings...")
+        default_sso_settings = [
+            ('sso_enabled', 'false'),
+            ('sso_provider', 'google'),
+            ('sso_client_id', ''),
+            ('sso_client_secret', ''),
+            ('sso_authorization_url', ''),
+            ('sso_token_url', ''),
+            ('sso_userinfo_url', ''),
+            ('sso_redirect_uri', ''),
+            ('sso_scope', 'openid email profile'),
+            ('sso_allowed_domains', ''),
+            ('sso_allowed_emails', ''),
+            ('sso_admin_key_fallback', 'true')
+        ]
+        
+        for key, value in default_sso_settings:
+            cursor.execute("SELECT COUNT(*) FROM settings WHERE key = ?", (key,))
+            if cursor.fetchone()[0] == 0:
+                cursor.execute("INSERT INTO settings (key, value) VALUES (?, ?)", (key, value))
+                print(f"✅ Initialized SSO setting: {key}")
+        
+        conn.commit()
+        print("✅ Default SSO settings initialized successfully!")
+
         # Create indexes for better performance and security
         print("Creating security-related indexes...")
         
