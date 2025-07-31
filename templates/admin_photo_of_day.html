@@ -304,6 +304,7 @@
         <button id="create-contest-btn" class="admin-btn primary">Create Today's Contest</button>
         <button id="add-auto-candidates-btn" class="admin-btn secondary">Add Auto-Candidates</button>
         <button id="update-threshold-btn" class="admin-btn secondary">Update Threshold</button>
+        <button id="debug-db-btn" class="admin-btn secondary">Debug Database</button>
     </div>
     
     <div id="create-contest-form" style="display: none; background: #f9f5f0; padding: 2rem; border-radius: 15px; margin-top: 1rem;">
@@ -420,6 +421,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const cancelThresholdBtn = document.getElementById('cancel-threshold-btn');
     
     const addAutoCandidatesBtn = document.getElementById('add-auto-candidates-btn');
+    const debugDbBtn = document.getElementById('debug-db-btn');
     
     createContestBtn.addEventListener('click', function() {
         createContestForm.style.display = 'block';
@@ -521,6 +523,28 @@ document.addEventListener('DOMContentLoaded', function() {
         .catch(error => {
             console.error('Error:', error);
             showNotification('An error occurred', 'error');
+        });
+    });
+    
+    debugDbBtn.addEventListener('click', function() {
+        fetch('/admin/photo-of-day/debug-db?key=wedding2024', {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json',
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                console.log('Database Debug Info:', data);
+                showNotification(`Database: ${data.total_contests} contests, ${data.total_candidates} candidates`, 'success');
+            } else {
+                showNotification(data.message, 'error');
+            }
+        })
+        .catch(error => {
+            console.error('Debug error:', error);
+            showNotification('Debug error occurred', 'error');
         });
     });
     

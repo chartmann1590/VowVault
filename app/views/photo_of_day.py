@@ -184,6 +184,10 @@ def admin_photo_of_day():
     all_contests = PhotoOfDayContest.query.order_by(PhotoOfDayContest.contest_date.desc()).all()
     print(f"DEBUG: Total contests in database: {len(all_contests)}")  # Debug line
     
+    # Debug: Check all contests and their active status
+    for i, contest in enumerate(all_contests):
+        print(f"DEBUG: Contest {i+1}: ID={contest.id}, Active={contest.is_active}, Date={contest.contest_date}")
+    
     # Get candidate photos for the main contest
     main_candidates = []
     if main_contest:
@@ -233,8 +237,13 @@ def create_contest():
     
     # Check if there's already an active contest
     existing_active = PhotoOfDayContest.query.filter_by(is_active=True).first()
+    print(f"DEBUG: Existing active contest check: {existing_active}")  # Debug line
+    
     if existing_active:
+        print(f"DEBUG: Found existing active contest ID: {existing_active.id}")  # Debug line
         return jsonify({'success': False, 'message': 'An active contest already exists. Please close the current contest first.'}), 400
+    else:
+        print("DEBUG: No existing active contest found")  # Debug line
     
     # Create new main contest
     contest = PhotoOfDayContest(
@@ -425,6 +434,47 @@ def add_automatic_candidates_route():
     return jsonify({
         'success': True, 
         'message': f'Added {added_count} photos as automatic candidates'
+    })
+
+@photo_of_day_bp.route('/admin/photo-of-day/debug-db', methods=['GET'])
+def debug_database():
+    """Debug database state"""
+    admin_key = request.args.get('key')
+    if admin_key != 'wedding2024':
+        return jsonify({'success': False, 'message': 'Unauthorized'}), 403
+    
+    # Get all contests
+    all_contests = PhotoOfDayContest.query.all()
+    contests_data = []
+    
+    for contest in all_contests:
+        contests_data.append({
+            'id': contest.id,
+            'contest_date': contest.contest_date.isoformat(),
+            'is_active': contest.is_active,
+            'winner_photo_id': contest.winner_photo_id,
+            'voting_ends_at': contest.voting_ends_at.isoformat() if contest.voting_ends_at else None
+        })
+    
+    # Get all candidates
+    all_candidates = PhotoOfDayCandidate.query.all()
+    candidates_data = []
+    
+    for candidate in all_candidates:
+        candidates_data.append({
+            'id': candidate.id,
+            'photo_id': candidate.photo_id,
+            'contest_id': candidate.contest_id,
+            'is_winner': candidate.is_winner,
+            'date_added': candidate.date_added.isoformat()
+        })
+    
+    return jsonify({
+        'success': True,
+        'contests': contests_data,
+        'candidates': candidates_data,
+        'total_contests': len(contests_data),
+        'total_candidates': len(candidates_data)
     })
 
 @photo_of_day_bp.route('/api/photo-of-day/stats')
