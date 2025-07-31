@@ -1,0 +1,283 @@
+{% extends "base.html" %}
+
+{% block title %}Timezone Settings - Wedding Gallery{% endblock %}
+
+{% block extra_styles %}
+<style>
+    .admin-header {
+        background: linear-gradient(135deg, #2c2c2c 0%, #4a4a4a 100%);
+        color: white;
+        padding: 3rem 0;
+        margin: -3rem -20px 3rem -20px;
+        text-align: center;
+    }
+
+    .admin-header h2 {
+        font-family: 'Playfair Display', serif;
+        font-size: 2.5rem;
+        margin-bottom: 1rem;
+    }
+
+    .section-card {
+        background: white;
+        border-radius: 15px;
+        overflow: hidden;
+        box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+        margin-bottom: 3rem;
+    }
+
+    .section-header {
+        background: #f9f5f0;
+        padding: 1.5rem 2rem;
+        border-bottom: 1px solid #e8ddd3;
+    }
+
+    .section-header h3 {
+        color: #8b7355;
+        font-family: 'Playfair Display', serif;
+        font-size: 1.8rem;
+        margin: 0;
+    }
+
+    .section-content {
+        padding: 2rem;
+    }
+
+    .form-group {
+        margin-bottom: 1.5rem;
+    }
+
+    .form-group label {
+        display: block;
+        margin-bottom: 0.5rem;
+        font-weight: 600;
+        color: #333;
+    }
+
+    .form-control {
+        width: 100%;
+        padding: 0.75rem;
+        border: 2px solid #e8ddd3;
+        border-radius: 8px;
+        font-size: 1rem;
+        transition: border-color 0.3s ease;
+    }
+
+    .form-control:focus {
+        outline: none;
+        border-color: #8b7355;
+    }
+
+    .timezone-preview {
+        background: #f9f5f0;
+        padding: 1.5rem;
+        border-radius: 10px;
+        margin-top: 1.5rem;
+    }
+
+    .timezone-preview h4 {
+        color: #8b7355;
+        margin-bottom: 1rem;
+    }
+
+    .current-time-display {
+        background: white;
+        padding: 1rem;
+        border-radius: 8px;
+        border-left: 4px solid #8b7355;
+        margin-bottom: 1rem;
+    }
+
+    .current-time-display p {
+        margin: 0.5rem 0;
+        font-size: 1.1rem;
+    }
+
+    .current-time-display strong {
+        color: #8b7355;
+    }
+
+    .button-group {
+        display: flex;
+        gap: 1rem;
+        margin-top: 2rem;
+    }
+
+    .btn {
+        padding: 0.75rem 1.5rem;
+        border: none;
+        border-radius: 8px;
+        font-size: 1rem;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        text-decoration: none;
+        display: inline-block;
+    }
+
+    .btn-primary {
+        background: #8b7355;
+        color: white;
+    }
+
+    .btn-primary:hover {
+        background: #6b5d54;
+    }
+
+    .btn-secondary {
+        background: #6c757d;
+        color: white;
+    }
+
+    .btn-secondary:hover {
+        background: #545b62;
+    }
+
+    .success-message {
+        background: #d4edda;
+        color: #155724;
+        padding: 1rem;
+        border-radius: 8px;
+        margin-bottom: 1rem;
+        display: none;
+    }
+
+    .back-link {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        color: #8b7355;
+        text-decoration: none;
+        font-weight: 600;
+        margin-bottom: 2rem;
+    }
+
+    .back-link:hover {
+        color: #6b5d54;
+    }
+
+    .timezone-info {
+        background: #e3f2fd;
+        padding: 1rem;
+        border-radius: 8px;
+        margin-bottom: 1.5rem;
+        border-left: 4px solid #2196f3;
+    }
+
+    .timezone-info p {
+        margin: 0;
+        color: #1976d2;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="admin-header">
+        <h2>Timezone Settings</h2>
+        <p>Configure your timezone to view all dates and times correctly</p>
+    </div>
+
+    <a href="/admin?key={{ admin_key }}" class="back-link">
+        <svg viewBox="0 0 24 24" width="20" height="20">
+            <path d="M20,11V13H8L13.5,18.5L12.08,19.92L4.16,12L12.08,4.08L13.5,5.5L8,11H20Z"/>
+        </svg>
+        Back to Admin Dashboard
+    </a>
+
+    <div class="section-card">
+        <div class="section-header">
+            <h3>Timezone Configuration</h3>
+        </div>
+        <div class="section-content">
+            <div class="timezone-info">
+                <p><strong>ℹ️ Timezone Information:</strong> Setting your timezone will ensure all dates and times in the admin interface are displayed in your local timezone. This affects photo upload dates, guestbook entries, message timestamps, and system logs.</p>
+            </div>
+
+            <div class="success-message" id="successMessage">
+                ✅ Timezone settings saved successfully!
+            </div>
+
+            <form id="timezoneForm">
+                <div class="form-group">
+                    <label for="timezone">Admin Timezone</label>
+                    <select id="timezone" class="form-control">
+                        <option value="UTC" {% if timezone_settings.get('timezone', 'UTC') == 'UTC' %}selected{% endif %}>UTC (Coordinated Universal Time)</option>
+                        <option value="America/New_York" {% if timezone_settings.get('timezone', 'UTC') == 'America/New_York' %}selected{% endif %}>Eastern Time (ET)</option>
+                        <option value="America/Chicago" {% if timezone_settings.get('timezone', 'UTC') == 'America/Chicago' %}selected{% endif %}>Central Time (CT)</option>
+                        <option value="America/Denver" {% if timezone_settings.get('timezone', 'UTC') == 'America/Denver' %}selected{% endif %}>Mountain Time (MT)</option>
+                        <option value="America/Los_Angeles" {% if timezone_settings.get('timezone', 'UTC') == 'America/Los_Angeles' %}selected{% endif %}>Pacific Time (PT)</option>
+                        <option value="Europe/London" {% if timezone_settings.get('timezone', 'UTC') == 'Europe/London' %}selected{% endif %}>London (GMT/BST)</option>
+                        <option value="Europe/Paris" {% if timezone_settings.get('timezone', 'UTC') == 'Europe/Paris' %}selected{% endif %}>Paris (CET/CEST)</option>
+                        <option value="Europe/Berlin" {% if timezone_settings.get('timezone', 'UTC') == 'Europe/Berlin' %}selected{% endif %}>Berlin (CET/CEST)</option>
+                        <option value="Asia/Tokyo" {% if timezone_settings.get('timezone', 'UTC') == 'Asia/Tokyo' %}selected{% endif %}>Tokyo (JST)</option>
+                        <option value="Asia/Shanghai" {% if timezone_settings.get('timezone', 'UTC') == 'Asia/Shanghai' %}selected{% endif %}>Shanghai (CST)</option>
+                        <option value="Australia/Sydney" {% if timezone_settings.get('timezone', 'UTC') == 'Australia/Sydney' %}selected{% endif %}>Sydney (AEST/AEDT)</option>
+                        <option value="Pacific/Auckland" {% if timezone_settings.get('timezone', 'UTC') == 'Pacific/Auckland' %}selected{% endif %}>Auckland (NZST/NZDT)</option>
+                    </select>
+                    <small style="color: #666; display: block; margin-top: 0.5rem;">
+                        Select your timezone to display dates and times correctly in the admin interface
+                    </small>
+                </div>
+
+                <div class="timezone-preview">
+                    <h4>Current Time Preview</h4>
+                    <div class="current-time-display">
+                        <p><strong>Current Time:</strong> <span id="currentTimePreview">{{ current_time }}</span></p>
+                        <p><strong>Selected Timezone:</strong> <span id="selectedTimezone">{{ timezone_settings.get('timezone', 'UTC') }}</span></p>
+                    </div>
+                    <p style="color: #666; font-size: 0.9rem;">
+                        This preview shows the current time in your selected timezone. All dates and times throughout the admin interface will be displayed in this timezone.
+                    </p>
+                </div>
+
+                <div class="button-group">
+                    <button type="button" class="btn btn-primary" onclick="saveTimezoneSettings()">Save Timezone Settings</button>
+                    <a href="/admin?key={{ admin_key }}" class="btn btn-secondary">Cancel</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Handle timezone changes
+    document.getElementById('timezone').addEventListener('change', function(e) {
+        const selectedTimezone = e.target.value;
+        const timezoneDisplay = document.getElementById('selectedTimezone');
+        if (timezoneDisplay) {
+            timezoneDisplay.textContent = selectedTimezone;
+        }
+    });
+
+    function saveTimezoneSettings() {
+        const timezone = document.getElementById('timezone').value;
+        
+        const settings = {
+            timezone_settings: {
+                timezone: timezone
+            }
+        };
+
+        fetch(`/admin/save-settings?key={{ admin_key }}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(settings)
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                document.getElementById('successMessage').style.display = 'block';
+                setTimeout(() => {
+                    document.getElementById('successMessage').style.display = 'none';
+                }, 3000);
+            }
+        })
+        .catch(error => {
+            console.error('Error saving timezone settings:', error);
+            alert('Error saving timezone settings. Please try again.');
+        });
+    }
+</script>
+{% endblock %} 
