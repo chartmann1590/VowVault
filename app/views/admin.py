@@ -1099,14 +1099,37 @@ def save_settings():
     # Save slideshow settings
     if 'slideshow_settings' in data:
         slideshow_data = data['slideshow_settings']
-        Settings.set('slideshow_enabled', str(slideshow_data.get('enabled', True)).lower())
-        Settings.set('slideshow_speed', str(slideshow_data.get('speed', 3)))
-        Settings.set('slideshow_effect', slideshow_data.get('effect', 'fade'))
-        Settings.set('slideshow_order', slideshow_data.get('order', 'random'))
-        Settings.set('slideshow_max_photos', str(slideshow_data.get('max_photos', 20)))
-        Settings.set('slideshow_autoplay', str(slideshow_data.get('autoplay', True)).lower())
-        Settings.set('slideshow_loop', str(slideshow_data.get('loop', True)).lower())
-        Settings.set('slideshow_show_controls', str(slideshow_data.get('show_controls', True)).lower())
+        
+        # Import slideshow settings model
+        from app.models.slideshow import SlideshowSettings
+        
+        # Save all slideshow settings to the slideshow_settings table
+        slideshow_settings_mapping = {
+            'enabled': slideshow_data.get('enabled', True),
+            'speed': slideshow_data.get('speed', 3),
+            'effect': slideshow_data.get('effect', 'fade'),
+            'order': slideshow_data.get('order', 'random'),
+            'max_photos': slideshow_data.get('max_photos', 20),
+            'autoplay': slideshow_data.get('autoplay', True),
+            'loop': slideshow_data.get('loop', True),
+            'show_controls': slideshow_data.get('show_controls', True),
+            'slideshow_interval': slideshow_data.get('slideshow_interval', 5000),
+            'show_photos': slideshow_data.get('show_photos', True),
+            'show_guestbook': slideshow_data.get('show_guestbook', True),
+            'show_messages': slideshow_data.get('show_messages', True),
+            'time_range_hours': slideshow_data.get('time_range_hours', 24),
+            'max_activities': slideshow_data.get('max_activities', 50)
+        }
+        
+        for key, value in slideshow_settings_mapping.items():
+            setting = SlideshowSettings.query.filter_by(key=key).first()
+            if setting:
+                setting.value = str(value)
+            else:
+                setting = SlideshowSettings(key=key, value=str(value))
+                db.session.add(setting)
+        
+        db.session.commit()
     
     return jsonify({'success': True})
 

@@ -21,73 +21,80 @@ def slideshow():
 @slideshow_bp.route('/api/slideshow/activities')
 def get_slideshow_activities():
     """API endpoint to get activities for slideshow"""
-    # Get time range (last 24 hours by default)
+    # Get parameters
     hours_back = request.args.get('hours', 24, type=int)
+    max_activities = request.args.get('max_activities', 50, type=int)
+    show_photos = request.args.get('show_photos', 'true') == 'true'
+    show_guestbook = request.args.get('show_guestbook', 'true') == 'true'
+    show_messages = request.args.get('show_messages', 'true') == 'true'
+    
     since_time = datetime.utcnow() - timedelta(hours=hours_back)
     
-    # Get recent photos
-    photos = Photo.query.filter(
-        Photo.upload_date >= since_time
-    ).order_by(Photo.upload_date.desc()).limit(50).all()
-    
-    # Get recent guestbook entries
-    guestbook_entries = GuestbookEntry.query.filter(
-        GuestbookEntry.created_at >= since_time
-    ).order_by(GuestbookEntry.created_at.desc()).limit(20).all()
-    
-    # Get recent messages
-    messages = Message.query.filter(
-        Message.created_at >= since_time,
-        Message.is_hidden == False
-    ).order_by(Message.created_at.desc()).limit(20).all()
-    
-    # Combine and sort all activities
     activities = []
     
-    for photo in photos:
-        activities.append({
-            'type': 'photo',
-            'id': photo.id,
-            'content': {
-                'filename': photo.filename,
-                'uploader_name': photo.uploader_name,
-                'description': photo.description,
-                'upload_date': photo.upload_date.isoformat(),
-                'media_type': photo.media_type,
-                'is_photobooth': photo.is_photobooth
-            },
-            'timestamp': photo.upload_date.isoformat(),
-            'summary': f"New photo uploaded by {photo.uploader_name}"
-        })
+    # Get recent photos if enabled
+    if show_photos:
+        photos = Photo.query.filter(
+            Photo.upload_date >= since_time
+        ).order_by(Photo.upload_date.desc()).limit(max_activities).all()
+        
+        for photo in photos:
+            activities.append({
+                'type': 'photo',
+                'id': photo.id,
+                'content': {
+                    'filename': photo.filename,
+                    'uploader_name': photo.uploader_name,
+                    'description': photo.description,
+                    'upload_date': photo.upload_date.isoformat(),
+                    'media_type': photo.media_type,
+                    'is_photobooth': photo.is_photobooth
+                },
+                'timestamp': photo.upload_date.isoformat(),
+                'summary': f"New photo uploaded by {photo.uploader_name}"
+            })
     
-    for entry in guestbook_entries:
-        activities.append({
-            'type': 'guestbook',
-            'id': entry.id,
-            'content': {
-                'name': entry.name,
-                'message': entry.message,
-                'location': entry.location,
-                'photo_filename': entry.photo_filename,
-                'created_at': entry.created_at.isoformat()
-            },
-            'timestamp': entry.created_at.isoformat(),
-            'summary': f"Guestbook entry from {entry.name}"
-        })
+    # Get recent guestbook entries if enabled
+    if show_guestbook:
+        guestbook_entries = GuestbookEntry.query.filter(
+            GuestbookEntry.created_at >= since_time
+        ).order_by(GuestbookEntry.created_at.desc()).limit(max_activities).all()
+        
+        for entry in guestbook_entries:
+            activities.append({
+                'type': 'guestbook',
+                'id': entry.id,
+                'content': {
+                    'name': entry.name,
+                    'message': entry.message,
+                    'location': entry.location,
+                    'photo_filename': entry.photo_filename,
+                    'created_at': entry.created_at.isoformat()
+                },
+                'timestamp': entry.created_at.isoformat(),
+                'summary': f"Guestbook entry from {entry.name}"
+            })
     
-    for message in messages:
-        activities.append({
-            'type': 'message',
-            'id': message.id,
-            'content': {
-                'author_name': message.author_name,
-                'content': message.content,
-                'photo_filename': message.photo_filename,
-                'created_at': message.created_at.isoformat()
-            },
-            'timestamp': message.created_at.isoformat(),
-            'summary': f"Message from {message.author_name}"
-        })
+    # Get recent messages if enabled
+    if show_messages:
+        messages = Message.query.filter(
+            Message.created_at >= since_time,
+            Message.is_hidden == False
+        ).order_by(Message.created_at.desc()).limit(max_activities).all()
+        
+        for message in messages:
+            activities.append({
+                'type': 'message',
+                'id': message.id,
+                'content': {
+                    'author_name': message.author_name,
+                    'content': message.content,
+                    'photo_filename': message.photo_filename,
+                    'created_at': message.created_at.isoformat()
+                },
+                'timestamp': message.created_at.isoformat(),
+                'summary': f"Message from {message.author_name}"
+            })
     
     # Sort by timestamp (newest first)
     activities.sort(key=lambda x: x['timestamp'], reverse=True)
@@ -140,7 +147,15 @@ def get_slideshow_settings():
         'auto_refresh': 'true',
         'refresh_interval': '900000',  # 15 minutes
         'max_activities': '50',
-        'time_range_hours': '24'
+        'time_range_hours': '24',
+        'enabled': 'true',
+        'speed': '3',
+        'effect': 'fade',
+        'order': 'random',
+        'max_photos': '20',
+        'autoplay': 'true',
+        'loop': 'true',
+        'show_controls': 'true'
     }
     
     for key, default_value in defaults.items():

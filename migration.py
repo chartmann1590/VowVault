@@ -277,6 +277,42 @@ def migrate_database():
         else:
             print("✅ file_integrity table already exists")
 
+        # --- Slideshow Settings Table ---
+        cursor.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='slideshow_settings'")
+        if not cursor.fetchone():
+            print("Creating slideshow_settings table...")
+            cursor.execute("""
+                CREATE TABLE slideshow_settings (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    key VARCHAR(100) UNIQUE NOT NULL,
+                    value TEXT NOT NULL,
+                    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+                )
+            """)
+            conn.commit()
+            print("✅ slideshow_settings table created successfully!")
+        else:
+            print("✅ slideshow_settings table already exists")
+
+        # --- Slideshow Activity Table ---
+        cursor.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='slideshow_activity'")
+        if not cursor.fetchone():
+            print("Creating slideshow_activity table...")
+            cursor.execute("""
+                CREATE TABLE slideshow_activity (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    activity_type VARCHAR(50) NOT NULL,
+                    content_id INTEGER NOT NULL,
+                    content_summary TEXT,
+                    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+                    is_active BOOLEAN DEFAULT TRUE
+                )
+            """)
+            conn.commit()
+            print("✅ slideshow_activity table created successfully!")
+        else:
+            print("✅ slideshow_activity table already exists")
+
         # Create indexes for better performance and security
         print("Creating security-related indexes...")
         
@@ -337,6 +373,13 @@ def migrate_database():
         
         # Settings indexes
         cursor.execute("CREATE INDEX IF NOT EXISTS idx_settings_key ON settings(key)")
+        
+        # Slideshow indexes
+        cursor.execute("CREATE INDEX IF NOT EXISTS idx_slideshow_settings_key ON slideshow_settings(key)")
+        cursor.execute("CREATE INDEX IF NOT EXISTS idx_slideshow_activity_type ON slideshow_activity(activity_type)")
+        cursor.execute("CREATE INDEX IF NOT EXISTS idx_slideshow_activity_created ON slideshow_activity(created_at DESC)")
+        cursor.execute("CREATE INDEX IF NOT EXISTS idx_slideshow_activity_active ON slideshow_activity(is_active)")
+        cursor.execute("CREATE INDEX IF NOT EXISTS idx_slideshow_activity_content ON slideshow_activity(content_id)")
         
         conn.commit()
         print("✅ Database optimization indexes created successfully!")

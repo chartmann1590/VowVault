@@ -725,7 +725,19 @@ class Slideshow {
     
     async loadActivities() {
         try {
-            const response = await fetch('/api/slideshow/activities');
+            // Get settings to determine what to show
+            const settingsResponse = await fetch('/api/slideshow/settings');
+            const settings = await settingsResponse.json();
+            
+            // Build query parameters based on settings
+            const params = new URLSearchParams();
+            if (settings.show_photos === 'true') params.append('show_photos', 'true');
+            if (settings.show_guestbook === 'true') params.append('show_guestbook', 'true');
+            if (settings.show_messages === 'true') params.append('show_messages', 'true');
+            params.append('hours', settings.time_range_hours || 24);
+            params.append('max_activities', settings.max_activities || 50);
+            
+            const response = await fetch(`/api/slideshow/activities?${params.toString()}`);
             const data = await response.json();
             this.slides = data.activities;
             this.updateStats(data.activities);

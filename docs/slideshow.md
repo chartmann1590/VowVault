@@ -51,6 +51,27 @@ The Live Event Slideshow is a dynamic, real-time display feature that automatica
 - Advanced animations create a professional, engaging presentation
 - The slideshow automatically shows the most recent activities without manual intervention
 
+### For Administrators
+1. Access the admin dashboard and navigate to "Slideshow Settings"
+2. Configure the following options:
+   - **Enable/Disable**: Turn the slideshow on or off
+   - **Transition Speed**: Set how long each slide displays (1-10 seconds)
+   - **Slideshow Interval**: Fine-tune the transition timing in milliseconds
+   - **Transition Effect**: Choose between fade, slide, zoom, or none
+   - **Photo Order**: Select random, newest first, oldest first, or most liked
+   - **Maximum Photos**: Limit the number of photos in the slideshow (5-50)
+   - **Autoplay**: Enable/disable automatic slideshow playback
+   - **Loop Continuously**: Enable/disable continuous looping
+   - **Show Navigation Controls**: Display manual navigation buttons
+   - **Content Types**: Choose which content types to display:
+     - Show Photos in Slideshow
+     - Show Guestbook Entries
+     - Show Messages
+   - **Time Range**: Set how far back to look for activities (1-168 hours)
+   - **Maximum Activities**: Limit total activities displayed (5-100)
+3. Save settings to apply changes immediately
+4. Preview the slideshow with current settings using the preview panel
+
 ## Technical Details
 
 ### Database Schema
@@ -78,8 +99,15 @@ CREATE TABLE slideshow_activity (
 ```
 
 ### Default Settings
+- **enabled**: 'true' (slideshow is active)
+- **speed**: '3' (3 seconds between slides)
 - **slideshow_interval**: 5000ms (5 seconds between slides)
-- **transition_effect**: 'fade' (smooth fade transitions)
+- **effect**: 'fade' (smooth fade transitions)
+- **order**: 'random' (random photo ordering)
+- **max_photos**: '20' (maximum photos to display)
+- **autoplay**: 'true' (automatic slideshow playback)
+- **loop**: 'true' (continuous looping)
+- **show_controls**: 'true' (show navigation controls)
 - **show_photos**: 'true' (display photos in slideshow)
 - **show_guestbook**: 'true' (display guestbook entries)
 - **show_messages**: 'true' (display message board posts)
@@ -104,13 +132,48 @@ CREATE TABLE slideshow_activity (
 - **Tablet**: Optimized layout with reduced padding
 - **Mobile**: Simplified controls and touch-friendly interface
 
+## Admin Interface
+
+### Slideshow Settings Page
+The admin interface provides comprehensive control over the slideshow behavior:
+
+#### Basic Controls
+- **Enable/Disable**: Master switch to turn the slideshow on or off
+- **Transition Speed**: Set the duration each slide displays (1-10 seconds)
+- **Slideshow Interval**: Fine-tune the transition timing in milliseconds (1000-30000ms)
+- **Transition Effect**: Choose from fade, slide, zoom, or none
+- **Photo Order**: Select random, newest first, oldest first, or most liked
+
+#### Content Management
+- **Maximum Photos**: Limit photos displayed (5-50)
+- **Show Photos**: Toggle photo display in slideshow
+- **Show Guestbook Entries**: Toggle guestbook entry display
+- **Show Messages**: Toggle message board post display
+- **Time Range**: Set how far back to look for activities (1-168 hours)
+- **Maximum Activities**: Limit total activities displayed (5-100)
+
+#### Playback Controls
+- **Autoplay**: Enable/disable automatic slideshow playback
+- **Loop Continuously**: Enable/disable continuous looping
+- **Show Navigation Controls**: Display manual navigation buttons
+
+#### Preview Panel
+- Real-time preview of slideshow with current settings
+- Interactive controls to test slideshow behavior
+- Live display of current configuration values
+
 ## API Endpoints
 
 ### GET /slideshow
 Main slideshow page with enhanced visual effects
 
 ### GET /api/slideshow/activities
-Returns recent activities for slideshow display
+Returns recent activities for slideshow display with filtering options:
+- `show_photos`: Include photos in results
+- `show_guestbook`: Include guestbook entries
+- `show_messages`: Include message board posts
+- `hours`: Time range in hours (default: 24)
+- `max_activities`: Maximum activities to return (default: 50)
 
 ### GET/POST /api/slideshow/settings
 Manages slideshow configuration settings

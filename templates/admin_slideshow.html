@@ -330,6 +330,18 @@
                         </div>
 
                         <div class="form-group">
+                            <label for="slideshowInterval">Slideshow Interval (milliseconds)</label>
+                            <input type="number" 
+                                   id="slideshowInterval" 
+                                   class="form-control" 
+                                   min="1000" 
+                                   max="30000"
+                                   step="500"
+                                   value="{{ slideshow_settings.get('slideshow_interval', 5000) }}">
+                            <small style="color: #666;">Time between slide transitions (1000ms = 1 second)</small>
+                        </div>
+
+                        <div class="form-group">
                             <label for="slideshowEffect">Transition Effect</label>
                             <select id="slideshowEffect" class="form-control">
                                 <option value="fade" {% if slideshow_settings.get('effect', 'fade') == 'fade' %}selected{% endif %}>Fade</option>
@@ -388,6 +400,58 @@
                                     <span class="slider"></span>
                                 </label>
                             </div>
+                        </div>
+
+                        <div class="form-group">
+                            <div class="switch-wrapper">
+                                <label for="slideshowShowPhotos">Show Photos in Slideshow</label>
+                                <label class="switch">
+                                    <input type="checkbox" id="slideshowShowPhotos" {% if slideshow_settings.get('show_photos', True) %}checked{% endif %}>
+                                    <span class="slider"></span>
+                                </label>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <div class="switch-wrapper">
+                                <label for="slideshowShowGuestbook">Show Guestbook Entries</label>
+                                <label class="switch">
+                                    <input type="checkbox" id="slideshowShowGuestbook" {% if slideshow_settings.get('show_guestbook', True) %}checked{% endif %}>
+                                    <span class="slider"></span>
+                                </label>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <div class="switch-wrapper">
+                                <label for="slideshowShowMessages">Show Messages</label>
+                                <label class="switch">
+                                    <input type="checkbox" id="slideshowShowMessages" {% if slideshow_settings.get('show_messages', True) %}checked{% endif %}>
+                                    <span class="slider"></span>
+                                </label>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="slideshowTimeRange">Time Range (hours)</label>
+                            <input type="number" 
+                                   id="slideshowTimeRange" 
+                                   class="form-control" 
+                                   min="1" 
+                                   max="168"
+                                   value="{{ slideshow_settings.get('time_range_hours', 24) }}">
+                            <small style="color: #666;">How far back to look for activities (1-168 hours)</small>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="slideshowMaxActivities">Maximum Activities</label>
+                            <input type="number" 
+                                   id="slideshowMaxActivities" 
+                                   class="form-control" 
+                                   min="5" 
+                                   max="100"
+                                   value="{{ slideshow_settings.get('max_activities', 50) }}">
+                            <small style="color: #666;">Maximum number of activities to include</small>
                         </div>
 
                         <button type="submit" class="btn btn-primary">
@@ -598,7 +662,13 @@
             max_photos: parseInt(document.getElementById('slideshowMaxPhotos').value),
             autoplay: document.getElementById('slideshowAutoplay').checked,
             loop: document.getElementById('slideshowLoop').checked,
-            show_controls: document.getElementById('slideshowShowControls').checked
+            show_controls: document.getElementById('slideshowShowControls').checked,
+            slideshow_interval: parseInt(document.getElementById('slideshowInterval').value),
+            show_photos: document.getElementById('slideshowShowPhotos').checked,
+            show_guestbook: document.getElementById('slideshowShowGuestbook').checked,
+            show_messages: document.getElementById('slideshowShowMessages').checked,
+            time_range_hours: parseInt(document.getElementById('slideshowTimeRange').value),
+            max_activities: parseInt(document.getElementById('slideshowMaxActivities').value)
         };
         
         fetch(`/admin/save-settings?key=${key}`, {
