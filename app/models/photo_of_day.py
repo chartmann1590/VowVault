@@ -79,16 +79,15 @@ class PhotoOfDay(db.Model):
     # Relationship to the photo
     photo = db.relationship('Photo', backref='photo_of_day_entries')
     
-    # Relationship to votes
-    votes = db.relationship('PhotoOfDayVote', backref='photo_of_day', lazy=True, cascade='all, delete-orphan')
-    
     def __repr__(self):
         return f'<PhotoOfDay {self.date}: Photo {self.photo_id}>'
     
     @property
     def vote_count(self):
-        return len(self.votes)
+        # Legacy model - votes are now handled by the contest system
+        return 0
     
     @property
     def unique_voters(self):
-        return len(set(vote.user_identifier for vote in self.votes)) 
+        # Legacy model - votes are now handled by the contest system
+        return 0 
