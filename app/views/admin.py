@@ -1247,7 +1247,7 @@ def generate_qr_pdf():
     qr_settings = Settings.get('qr_settings', '{}')
     qr_settings = json.loads(qr_settings) if qr_settings else {}
     
-    # Get email settings for the welcome modal
+    # Get email settings
     email_settings = get_email_settings()
     monitor_email = email_settings.get('monitor_email', 'your-email@example.com')
     
@@ -1268,9 +1268,9 @@ def generate_qr_pdf():
     qr_img.save(qr_buffer, format='PNG')
     qr_buffer.seek(0)
     
-    # Create PDF
+    # Create PDF with smaller margins to fit everything
     pdf_buffer = BytesIO()
-    doc = SimpleDocTemplate(pdf_buffer, pagesize=letter, topMargin=1*inch, bottomMargin=1*inch)
+    doc = SimpleDocTemplate(pdf_buffer, pagesize=letter, topMargin=0.5*inch, bottomMargin=0.5*inch, leftMargin=0.5*inch, rightMargin=0.5*inch)
     
     # Styles
     styles = getSampleStyleSheet()
@@ -1279,9 +1279,9 @@ def generate_qr_pdf():
     title_style = ParagraphStyle(
         'CustomTitle',
         parent=styles['Heading1'],
-        fontSize=28,
+        fontSize=24,
         textColor=colors.HexColor('#8b7355'),
-        spaceAfter=8,
+        spaceAfter=6,
         alignment=TA_CENTER,
         fontName='Helvetica-Bold'
     )
@@ -1289,9 +1289,9 @@ def generate_qr_pdf():
     subtitle_style = ParagraphStyle(
         'CustomSubtitle',
         parent=styles['Heading2'],
-        fontSize=16,
+        fontSize=14,
         textColor=colors.HexColor('#6b5d54'),
-        spaceAfter=20,
+        spaceAfter=12,
         alignment=TA_CENTER,
         fontName='Helvetica'
     )
@@ -1299,17 +1299,39 @@ def generate_qr_pdf():
     body_style = ParagraphStyle(
         'CustomBody',
         parent=styles['BodyText'],
-        fontSize=12,
+        fontSize=10,
         textColor=colors.HexColor('#444444'),
         alignment=TA_CENTER,
-        spaceAfter=20,
-        leading=16
+        spaceAfter=8,
+        leading=12
+    )
+    
+    feature_style = ParagraphStyle(
+        'FeatureStyle',
+        parent=styles['BodyText'],
+        fontSize=9,
+        textColor=colors.HexColor('#666666'),
+        alignment=TA_LEFT,
+        spaceAfter=4,
+        leading=11,
+        leftIndent=10
+    )
+    
+    email_style = ParagraphStyle(
+        'EmailStyle',
+        parent=styles['BodyText'],
+        fontSize=10,
+        textColor=colors.HexColor('#8b7355'),
+        alignment=TA_CENTER,
+        spaceAfter=8,
+        leading=12,
+        fontName='Helvetica-Bold'
     )
     
     couple_style = ParagraphStyle(
         'CoupleNames',
         parent=styles['BodyText'],
-        fontSize=14,
+        fontSize=12,
         textColor=colors.HexColor('#8b7355'),
         alignment=TA_CENTER,
         fontName='Helvetica-Oblique'
@@ -1318,53 +1340,99 @@ def generate_qr_pdf():
     url_style = ParagraphStyle(
         'URLStyle',
         parent=styles['BodyText'],
-        fontSize=10,
+        fontSize=8,
         textColor=colors.HexColor('#666666'),
         alignment=TA_CENTER,
-        spaceAfter=15
+        spaceAfter=8
     )
     
     # Build PDF content
     story = []
     
+    # Decorative header
+    header_decoration = Table([['💒 💕 💒']], colWidths=[7*inch])
+    header_decoration.setStyle(TableStyle([
+        ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+        ('FONTNAME', (0, 0), (-1, -1), 'Helvetica'),
+        ('FONTSIZE', (0, 0), (-1, -1), 18),
+        ('TEXTCOLOR', (0, 0), (-1, -1), colors.HexColor('#8b7355')),
+    ]))
+    story.append(header_decoration)
+    story.append(Spacer(1, 0.1*inch))
+    
     # Title
     story.append(Paragraph(title, title_style))
     story.append(Paragraph(subtitle, subtitle_style))
     
-    # Message (shorter version)
+    # Main message
     story.append(Paragraph(message, body_style))
+    story.append(Spacer(1, 0.1*inch))
     
-    # Email instructions (condensed)
-    email_instructions = f"""
-    <b>📧 Email Photos:</b> Send to <b>{monitor_email}</b><br/>
-    <i>Only photos (JPG, PNG, GIF, WebP) accepted</i>
+    # Email upload section
+    email_section = f"""
+    <b>📧 Email Your Photos Directly!</b><br/>
+    Send photos to: <b>{monitor_email}</b><br/>
+    <i>Supports: JPG, PNG, GIF, WebP</i>
     """
-    story.append(Paragraph(email_instructions, body_style))
-    story.append(Spacer(1, 0.2*inch))
+    story.append(Paragraph(email_section, email_style))
+    story.append(Spacer(1, 0.15*inch))
     
-    # QR Code
-    qr_image = Image(qr_buffer, width=2.5*inch, height=2.5*inch)
+    # QR Code (smaller to fit more content)
+    qr_image = Image(qr_buffer, width=2*inch, height=2*inch)
     qr_image.hAlign = 'CENTER'
     story.append(qr_image)
-    
-    story.append(Spacer(1, 0.2*inch))
+    story.append(Spacer(1, 0.1*inch))
     
     # URL
     story.append(Paragraph(f"<i>{public_url}</i>", url_style))
+    story.append(Spacer(1, 0.1*inch))
+    
+    # Features section
+    features_title = Paragraph("<b>🎉 What You Can Do:</b>", body_style)
+    story.append(features_title)
+    story.append(Spacer(1, 0.05*inch))
+    
+    # Features list
+    features = [
+        "📸 Upload photos and videos from your phone",
+        "💬 Leave messages and comments on photos",
+        "📝 Sign our digital guestbook with photos",
+        "🎭 Try our virtual photobooth with fun borders",
+        "👀 Browse the complete wedding gallery",
+        "❤️ Like and react to your favorite photos",
+        "📱 Works great on phones and tablets",
+        "🔔 Get notifications when new photos are added"
+    ]
+    
+    for feature in features:
+        story.append(Paragraph(f"• {feature}", feature_style))
+    
+    story.append(Spacer(1, 0.1*inch))
+    
+    # Instructions
+    instructions = """
+    <b>How to Use:</b><br/>
+    1. Scan the QR code above with your phone camera<br/>
+    2. Or visit the website directly<br/>
+    3. Upload photos, leave messages, and enjoy!<br/>
+    4. No login required - just add your name when uploading
+    """
+    story.append(Paragraph(instructions, body_style))
+    story.append(Spacer(1, 0.1*inch))
     
     # Couple names
     story.append(Paragraph(f"With love,<br/>{couple_names}", couple_style))
     
-    # Add decorative elements
-    decoration = Table([['❤️ ❤️ ❤️']], colWidths=[6*inch])
-    decoration.setStyle(TableStyle([
+    # Decorative footer
+    footer_decoration = Table([['💕 Thank You for Celebrating With Us! 💕']], colWidths=[7*inch])
+    footer_decoration.setStyle(TableStyle([
         ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
         ('FONTNAME', (0, 0), (-1, -1), 'Helvetica'),
-        ('FONTSIZE', (0, 0), (-1, -1), 16),
+        ('FONTSIZE', (0, 0), (-1, -1), 10),
         ('TEXTCOLOR', (0, 0), (-1, -1), colors.HexColor('#8b7355')),
     ]))
-    story.append(Spacer(1, 0.3*inch))
-    story.append(decoration)
+    story.append(Spacer(1, 0.1*inch))
+    story.append(footer_decoration)
     
     # Build PDF
     doc.build(story)
@@ -1375,7 +1443,7 @@ def generate_qr_pdf():
         pdf_buffer,
         mimetype='application/pdf',
         as_attachment=True,
-        download_name='wedding_photo_qr.pdf'
+        download_name='wedding_photo_invitation.pdf'
     )
 
 @admin_bp.route('/pwa-debug')

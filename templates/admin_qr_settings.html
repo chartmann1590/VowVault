@@ -363,6 +363,12 @@
                                     </svg>
                                     Download SVG
                                 </button>
+                                <button class="btn btn-primary" onclick="generatePDF()">
+                                    <svg viewBox="0 0 24 24" width="20" height="20">
+                                        <path d="M14,2H6A2,2 0 0,0 4,4V20A2,2 0 0,0 6,22H18A2,2 0 0,0 20,20V8L14,2M18,20H6V4H13V9H18V20Z" fill="currentColor"/>
+                                    </svg>
+                                    Generate Invitation PDF
+                                </button>
                             </div>
                         </div>
                     {% else %}
@@ -525,6 +531,26 @@
         
         const downloadUrl = `/admin/download-qr?key=${key}&format=${format}&color=${color}`;
         window.open(downloadUrl, '_blank');
+    }
+
+    function generatePDF() {
+        const urlParams = new URLSearchParams(window.location.search);
+        const key = urlParams.get('key');
+        
+        // Show loading state
+        const button = event.target;
+        const originalText = button.innerHTML;
+        button.innerHTML = '<svg viewBox="0 0 24 24" width="20" height="20"><path d="M12,4V2A10,10 0 0,0 2,12H4A8,8 0 0,1 12,4Z" fill="currentColor"/></svg> Generating PDF...';
+        button.disabled = true;
+        
+        const pdfUrl = `/admin/generate-qr-pdf?key=${key}`;
+        window.open(pdfUrl, '_blank');
+        
+        // Reset button after a short delay
+        setTimeout(() => {
+            button.innerHTML = originalText;
+            button.disabled = false;
+        }, 2000);
     }
 </script>
 {% endblock %} 

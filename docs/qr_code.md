@@ -54,6 +54,21 @@ The admin interface provides a live preview of the QR code with the current sett
   - `size`: QR code size (optional)
 - **Returns**: Downloadable file in the specified format
 
+### PDF Invitation Generator
+
+- **URL**: `/admin/generate-qr-pdf`
+- **Parameters**:
+  - `key`: Admin access key
+- **Returns**: Beautiful PDF invitation with QR code and all site features
+
+The PDF invitation includes:
+- Decorative header and footer
+- QR code for easy access
+- Email upload instructions with email address
+- Complete list of site features
+- Usage instructions
+- Professional wedding-themed design
+
 ## 🎨 Technical Implementation
 
 ### QR Code Generation
@@ -97,16 +112,18 @@ The QR code feature includes:
 - **Size Options**: Three different sizes for various use cases
 - **Color Customization**: Six different color options
 - **Custom Text**: Optional text display below the QR code
+- **PDF Invitation**: Generate beautiful invitation-style PDFs with QR code and all features
 
 ## 🖨️ Printing and Display
 
 ### Recommended Uses
 
-1. **Wedding Invitations**: Print QR codes on invitations
-2. **Table Cards**: Add QR codes to table cards
-3. **Venue Display**: Display QR codes at the wedding venue
-4. **Wedding Programs**: Include QR codes in programs
-5. **Thank You Cards**: Add QR codes to thank you cards
+1. **PDF Invitations**: Generate beautiful invitation PDFs with QR codes
+2. **Wedding Invitations**: Print QR codes on invitations
+3. **Table Cards**: Add QR codes to table cards
+4. **Venue Display**: Display QR codes at the wedding venue
+5. **Wedding Programs**: Include QR codes in programs
+6. **Thank You Cards**: Add QR codes to thank you cards
 
 ### Digital Sharing
 
