@@ -330,7 +330,6 @@ def add_photo_candidate():
         return jsonify({'success': False, 'message': 'No JSON data provided'}), 400
     
     photo_id = data.get('photo_id')
-    contest_date = data.get('contest_date', date.today().isoformat())
     
     if not photo_id:
         return jsonify({'success': False, 'message': 'Photo ID required'}), 400
@@ -340,16 +339,11 @@ def add_photo_candidate():
     if not photo:
         return jsonify({'success': False, 'message': 'Photo not found'}), 404
     
-    # Parse contest date
-    try:
-        contest_date = datetime.strptime(contest_date, '%Y-%m-%d').date()
-    except ValueError:
-        return jsonify({'success': False, 'message': 'Invalid date format'}), 400
-    
-    # Get or create contest for this date
-    contest = PhotoOfDayContest.query.filter_by(contest_date=contest_date).first()
+    # Get or create today's contest
+    today = date.today()
+    contest = PhotoOfDayContest.query.filter_by(contest_date=today).first()
     if not contest:
-        contest = PhotoOfDayContest(contest_date=contest_date, is_active=True)
+        contest = PhotoOfDayContest(contest_date=today, is_active=True)
         db.session.add(contest)
         db.session.flush()  # Get the ID
     
@@ -366,7 +360,7 @@ def add_photo_candidate():
     candidate = PhotoOfDayCandidate(
         photo_id=photo_id,
         contest_id=contest.id,
-        date_added=contest_date,
+        date_added=today,
         is_winner=False
     )
     
