@@ -2495,14 +2495,6 @@ def pwa_debug():
     
     return render_template('pwa_debug.html', debug_info=debug_info)
 
-@app.route('/static/manifest.json')
-def serve_manifest():
-    return send_from_directory('static', 'manifest.json', mimetype='application/manifest+json')
-
-@app.route('/sw.js')
-def serve_service_worker():
-    return send_from_directory('static', 'sw.js', mimetype='application/javascript')
-
 @app.route('/privacy-policy')
 def privacy_policy():
     current_date = datetime.now().strftime('%B %d, %Y')

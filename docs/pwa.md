@@ -141,8 +141,9 @@ Multiple icon sizes are provided for different devices:
 
 ### Service Worker 404 Error
 If you see `GET /sw.js HTTP/1.1" 404` in logs:
-- ✅ **Fixed**: Service worker is now properly served at `/sw.js`
-- The route was added to handle service worker requests
+- ✅ **Fixed**: Service worker is now properly served at `/sw.js` via the main blueprint
+- The route was added to `app/views/main.py` to handle service worker requests
+- Uses correct static folder path (`../static`) for modular structure
 - Check browser console for successful registration
 - Verify HTTPS setup for production use
 

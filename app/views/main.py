@@ -234,6 +234,16 @@ def terms_of_use():
     current_date = datetime.now().strftime('%B %d, %Y')
     return render_template('terms_of_use.html', current_date=current_date)
 
+@main_bp.route('/sw.js')
+def serve_service_worker():
+    from flask import send_from_directory
+    return send_from_directory('../static', 'sw.js', mimetype='application/javascript')
+
+@main_bp.route('/static/manifest.json')
+def serve_manifest():
+    from flask import send_from_directory
+    return send_from_directory('../static', 'manifest.json', mimetype='application/manifest+json')
+
 @main_bp.route('/notifications')
 def notifications_page():
     user_name = request.cookies.get('user_name', '')
