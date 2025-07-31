@@ -260,7 +260,7 @@ def admin_photo_of_day():
                              all_photos=all_photos,
                              likes_threshold=likes_threshold,
                              auto_candidate_photos=auto_candidate_photos,
-                             today_date=date.today().isoformat())
+                             today_date=date.today())
     
     except Exception as e:
         print(f"DEBUG: Error in admin_photo_of_day: {e}")

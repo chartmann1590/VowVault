@@ -467,6 +467,8 @@
     <!-- DEBUG: main_contest type = {{ main_contest.__class__.__name__ if main_contest else 'None' }} -->
     <!-- DEBUG: main_contest.contest_date = {{ main_contest.contest_date if main_contest else 'None' }} -->
     <!-- DEBUG: main_contest.contest_date type = {{ main_contest.contest_date.__class__.__name__ if main_contest and main_contest.contest_date else 'None' }} -->
+    <!-- DEBUG: today_date = {{ today_date }} -->
+    <!-- DEBUG: today_date type = {{ today_date.__class__.__name__ if today_date else 'None' }} -->
     <!-- DEBUG: main_candidates count = {{ main_candidates|length }} -->
     {% if main_contest %}
     <div style="background: #e8f5e8; padding: 1rem; border-radius: 10px; margin-bottom: 1rem; border-left: 4px solid #4caf50;">
@@ -533,7 +535,7 @@
             <div class="contest-header">
                 <div class="contest-date">
                     Contest {{ contest.id }} - {{ contest.contest_date.strftime('%B %d, %Y') if contest.contest_date and hasattr(contest.contest_date, 'strftime') else str(contest.contest_date) if contest.contest_date else 'Unknown' }}
-                    {% if contest.contest_date == today_date %}
+                    {% if contest.contest_date and today_date and contest.contest_date == today_date %}
                         <span style="background: #e91e63; color: white; padding: 0.2rem 0.5rem; border-radius: 4px; font-size: 0.8rem; margin-left: 0.5rem;">TODAY</span>
                     {% endif %}
                 </div>
