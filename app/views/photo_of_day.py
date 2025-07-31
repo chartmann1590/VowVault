@@ -178,14 +178,19 @@ def admin_photo_of_day():
     
     # Get the main active contest
     main_contest = PhotoOfDayContest.query.filter_by(is_active=True).first()
+    print(f"DEBUG: Main contest found: {main_contest}")  # Debug line
     
     # Get all contests for history
     all_contests = PhotoOfDayContest.query.order_by(PhotoOfDayContest.contest_date.desc()).all()
+    print(f"DEBUG: Total contests in database: {len(all_contests)}")  # Debug line
     
     # Get candidate photos for the main contest
     main_candidates = []
     if main_contest:
         main_candidates = PhotoOfDayCandidate.query.filter_by(contest_id=main_contest.id).order_by(PhotoOfDayCandidate.date_added.desc()).all()
+        print(f"DEBUG: Main contest candidates: {len(main_candidates)}")  # Debug line
+    else:
+        print("DEBUG: No main contest found")  # Debug line
     
     # Get all photos for selection
     all_photos = Photo.query.order_by(Photo.upload_date.desc()).limit(100).all()
@@ -302,6 +307,23 @@ def delete_contest(contest_id):
     db.session.commit()
     
     return jsonify({'success': True, 'message': 'Contest deleted successfully!'})
+
+@photo_of_day_bp.route('/admin/photo-of-day/close-contest', methods=['POST'])
+def close_contest():
+    """Close the current active contest (set is_active=False)"""
+    admin_key = request.args.get('key')
+    if admin_key != 'wedding2024':
+        return jsonify({'success': False, 'message': 'Unauthorized'}), 403
+    
+    main_contest = PhotoOfDayContest.query.filter_by(is_active=True).first()
+    if not main_contest:
+        return jsonify({'success': False, 'message': 'No active contest found'}), 404
+    
+    main_contest.is_active = False
+    db.session.commit()
+    
+    print(f"DEBUG: Closed contest {main_contest.id}")  # Debug line
+    return jsonify({'success': True, 'message': 'Contest closed successfully!'})
 
 @photo_of_day_bp.route('/admin/photo-of-day/add-candidate', methods=['POST'])
 def add_photo_candidate():

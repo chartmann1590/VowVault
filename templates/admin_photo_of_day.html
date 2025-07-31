@@ -365,6 +365,7 @@
             {% endif %}
         </div>
         <div style="padding: 1rem; border-top: 1px solid #e0e0e0;">
+            <button onclick="closeContest()" class="admin-btn secondary">Close Contest</button>
             <button onclick="deleteContest({{ main_contest.id }})" class="admin-btn delete">Delete Contest</button>
         </div>
     </div>
@@ -562,6 +563,32 @@ function selectWinner(contestId, candidateId) {
     });
 }
 
+function closeContest() {
+    if (!confirm('Are you sure you want to close the current contest? This will allow you to create a new one.')) {
+        return;
+    }
+    
+    fetch('/admin/photo-of-day/close-contest?key=wedding2024', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showNotification('Contest closed successfully!', 'success');
+            setTimeout(() => location.reload(), 1000);
+        } else {
+            showNotification(data.message, 'error');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showNotification('An error occurred', 'error');
+    });
+}
+
 function deleteContest(contestId) {
     if (!confirm('Are you sure you want to delete this contest?')) {
         return;
@@ -576,7 +603,7 @@ function deleteContest(contestId) {
     .then(response => response.json())
     .then(data => {
         if (data.success) {
-            showNotification('Contest deleted successfully!', 'success');
+            showNotification('Contest closed successfully!', 'success');
             setTimeout(() => location.reload(), 1000);
         } else {
             showNotification(data.message, 'error');
