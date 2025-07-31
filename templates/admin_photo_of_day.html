@@ -464,15 +464,18 @@
 <div class="admin-section-card">
     <div class="admin-section-title">Current Main Contest</div>
     <!-- DEBUG: main_contest = {{ main_contest }} -->
+    <!-- DEBUG: main_contest type = {{ main_contest.__class__.__name__ if main_contest else 'None' }} -->
+    <!-- DEBUG: main_contest.contest_date = {{ main_contest.contest_date if main_contest else 'None' }} -->
+    <!-- DEBUG: main_contest.contest_date type = {{ main_contest.contest_date.__class__.__name__ if main_contest and main_contest.contest_date else 'None' }} -->
     <!-- DEBUG: main_candidates count = {{ main_candidates|length }} -->
     {% if main_contest %}
     <div style="background: #e8f5e8; padding: 1rem; border-radius: 10px; margin-bottom: 1rem; border-left: 4px solid #4caf50;">
-        <strong>✅ Active Contest Found:</strong> Contest ID {{ main_contest.id }} from {{ main_contest.contest_date.strftime('%B %d, %Y') if main_contest.contest_date else 'Unknown' }}
+        <strong>✅ Active Contest Found:</strong> Contest ID {{ main_contest.id }} from {{ main_contest.contest_date.strftime('%B %d, %Y') if main_contest.contest_date and hasattr(main_contest.contest_date, 'strftime') else str(main_contest.contest_date) if main_contest.contest_date else 'Unknown' }}
         <br><small>You must close this contest before creating a new one.</small>
     </div>
     <div class="contest-card {% if main_contest.winner_photo_id %}winner{% endif %}">
         <div class="contest-header">
-            <div class="contest-date">Main Contest - {{ main_contest.contest_date.strftime('%B %d, %Y') if main_contest.contest_date else 'Unknown' }}</div>
+            <div class="contest-date">Main Contest - {{ main_contest.contest_date.strftime('%B %d, %Y') if main_contest.contest_date and hasattr(main_contest.contest_date, 'strftime') else str(main_contest.contest_date) if main_contest.contest_date else 'Unknown' }}</div>
             <div class="contest-status {% if main_contest.is_voting_open %}status-open{% else %}status-closed{% endif %}">
                 {% if main_contest.is_voting_open %}
                     🗳️ Voting Open
@@ -529,7 +532,7 @@
         <div class="contest-card {% if contest.is_active %}active{% else %}inactive{% endif %} {% if contest.contest_date == today_date %}todays-contest{% endif %}">
             <div class="contest-header">
                 <div class="contest-date">
-                    Contest {{ contest.id }} - {{ contest.contest_date.strftime('%B %d, %Y') if contest.contest_date else 'Unknown' }}
+                    Contest {{ contest.id }} - {{ contest.contest_date.strftime('%B %d, %Y') if contest.contest_date and hasattr(contest.contest_date, 'strftime') else str(contest.contest_date) if contest.contest_date else 'Unknown' }}
                     {% if contest.contest_date == today_date %}
                         <span style="background: #e91e63; color: white; padding: 0.2rem 0.5rem; border-radius: 4px; font-size: 0.8rem; margin-left: 0.5rem;">TODAY</span>
                     {% endif %}
