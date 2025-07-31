@@ -230,7 +230,7 @@ class SecurityUtils:
         # Check rate limiting
         client_id = SecurityUtils.get_client_identifier()
         rate_ok, rate_msg = SecurityUtils.check_rate_limit(
-            client_id, 'upload', max_requests=5, window_minutes=5
+            client_id, 'upload', max_requests=5, window_minutes=1
         )
         
         if not rate_ok:

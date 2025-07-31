@@ -59,7 +59,7 @@ The following potentially dangerous file types are automatically blocked:
 ### 3. Rate Limiting
 
 #### Application-Level Protection
-- **Upload Rate Limit**: 5 uploads per 5 minutes per client
+- **Upload Rate Limit**: 5 uploads per 1 minute per client
 - **API Rate Limit**: 10 requests per minute per client
 - **Login Rate Limit**: 3 attempts per minute per client
 - **Guestbook Rate Limit**: 3 entries per 5 minutes per client
@@ -101,7 +101,7 @@ ADMIN_KEY=your-secure-admin-key
 
 # Rate Limiting
 RATE_LIMIT_UPLOAD_MAX=5
-RATE_LIMIT_UPLOAD_WINDOW=5
+RATE_LIMIT_UPLOAD_WINDOW=1
 RATE_LIMIT_API_MAX=10
 RATE_LIMIT_API_WINDOW=1
 

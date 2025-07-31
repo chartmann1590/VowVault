@@ -44,7 +44,7 @@ Config Files: .htaccess, .htpasswd, .ini, .log, .tmp, .temp, .bak, .backup
 ### Rate Limiting
 
 #### Application-Level Rate Limiting
-- **Upload Rate Limit**: 5 uploads per 5 minutes per client
+- **Upload Rate Limit**: 5 uploads per 1 minute per client
 - **API Rate Limit**: 10 requests per minute per client
 - **Login Rate Limit**: 3 attempts per minute per client
 - **Guestbook Rate Limit**: 3 entries per 5 minutes per client
@@ -112,7 +112,7 @@ ADMIN_EMAIL=admin@your-domain.com
 
 # Rate Limiting
 RATE_LIMIT_UPLOAD_MAX=5
-RATE_LIMIT_UPLOAD_WINDOW=5
+RATE_LIMIT_UPLOAD_WINDOW=1
 RATE_LIMIT_API_MAX=10
 RATE_LIMIT_API_WINDOW=1
 RATE_LIMIT_LOGIN_MAX=3
