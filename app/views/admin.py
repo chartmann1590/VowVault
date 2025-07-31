@@ -1963,3 +1963,27 @@ def download_qr():
         as_attachment=True,
         download_name=filename
     ) 
+
+@admin_bp.route('/timezone-settings')
+def admin_timezone_settings():
+    # Check for SSO session first
+    sso_user_email = session.get('sso_user_email')
+    sso_user_domain = session.get('sso_user_domain')
+    admin_key = request.args.get('key', '')
+    
+    # Verify admin access
+    if not verify_admin_access(admin_key, sso_user_email, sso_user_domain):
+        return "Unauthorized", 401
+    
+    # Get timezone settings
+    timezone_settings = Settings.get('timezone_settings', '{}')
+    timezone_settings = json.loads(timezone_settings) if timezone_settings else {}
+    
+    # Calculate current time (simple fallback without pytz)
+    from datetime import datetime
+    current_time = datetime.utcnow().strftime('%B %d, %Y at %I:%M %p')
+    
+    return render_template('admin_timezone_settings.html', 
+                         timezone_settings=timezone_settings,
+                         current_time=current_time,
+                         admin_key=admin_key)

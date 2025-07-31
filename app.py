@@ -43,7 +43,7 @@ from app.models.photo_of_day import PhotoOfDayCandidate
 from app.utils.db_optimization import db_optimizer, optimize_photo_queries, get_photo_stats, maintenance_task
 
 # Import system logging utilities
-from app.utils.system_logger import log_system_event, log_info, log_error, log_exception
+from app.utils.system_logger import log_system_event, log_info, log_error, log_exception, log_critical
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', secrets.token_hex(16))
@@ -2492,29 +2492,7 @@ def generate_qr_pdf():
         download_name='wedding_photo_qr.pdf'
     )
 
-@app.route('/admin/timezone-settings')
-def admin_timezone_settings():
-    # Check for SSO session first
-    sso_user_email = session.get('sso_user_email')
-    sso_user_domain = session.get('sso_user_domain')
-    admin_key = request.args.get('key', '')
-    
-    # Verify admin access
-    if not verify_admin_access(admin_key, sso_user_email, sso_user_domain):
-        return "Unauthorized", 401
-    
-    # Get timezone settings
-    timezone_settings = Settings.get('timezone_settings', '{}')
-    timezone_settings = json.loads(timezone_settings) if timezone_settings else {}
-    
-    # Calculate current time (simple fallback without pytz)
-    from datetime import datetime
-    current_time = datetime.utcnow().strftime('%B %d, %Y at %I:%M %p')
-    
-    return render_template('admin_timezone_settings.html', 
-                         timezone_settings=timezone_settings,
-                         current_time=current_time,
-                         admin_key=admin_key)
+
 
 @app.route('/admin/pwa-debug')
 def pwa_debug():
