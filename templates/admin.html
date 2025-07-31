@@ -1048,31 +1048,30 @@
                         <label for="qr_message">Message</label>
                         <textarea id="qr_message" 
                                   placeholder="We would love to see the wedding through your eyes..."
-                                  rows="4">{{ qr_settings.get('message', 'We would love to see the wedding through your eyes! Please scan the QR code below to upload your photos and view the gallery.') }}</textarea>
+                                  rows="4">{{ qr_settings.get('message', 'We would love to see the wedding through your eyes! Please scan this QR code to upload your photos and view the gallery.') }}</textarea>
                     </div>
 
                     <div class="form-group">
                         <label for="couple_names">Couple Names</label>
                         <input type="text" 
                                id="couple_names" 
-                               placeholder="Sarah & John"
-                               value="{{ qr_settings.get('couple_names', 'The Happy Couple') }}">
+                               placeholder="John & Jane"
+                               value="{{ qr_settings.get('couple_names', '') }}">
                     </div>
                 </div>
 
                 <div class="qr-preview">
                     <h4>Preview</h4>
                     <div class="preview-content">
-                        <div class="preview-title" id="previewTitle">Share Your Wedding Photos!</div>
-                        <div class="preview-subtitle" id="previewSubtitle">Scan to Upload & View Photos</div>
-                        <div class="preview-message" id="previewMessage">We would love to see the wedding through your eyes! Please scan the QR code below to upload your photos and view the gallery.</div>
-                        <div style="margin: 1rem 0; padding: 2rem; background: #f0f0f0; border-radius: 10px;">
-                            <small style="color: #999;">QR Code</small>
+                        <h3 class="preview-title" id="previewTitle">Share Your Wedding Photos!</h3>
+                        <p class="preview-subtitle" id="previewSubtitle">Scan to Upload & View Photos</p>
+                        <p class="preview-message" id="previewMessage">We would love to see the wedding through your eyes!</p>
+                        <div class="qr-code-placeholder">
+                            <div style="width: 200px; height: 200px; background: #f0f0f0; border: 2px dashed #ccc; display: flex; align-items: center; justify-content: center; margin: 1rem auto;">
+                                <span style="color: #666;">QR Code</span>
+                            </div>
                         </div>
-                        <div class="preview-couple">
-                            With love,<br>
-                            <span id="previewCouple">The Happy Couple</span>
-                        </div>
+                        <p class="preview-couple" id="previewCouple" style="text-align: center; color: #8b7355; font-weight: bold; margin-top: 1rem;"></p>
                     </div>
                 </div>
             </div>
@@ -1080,6 +1079,47 @@
             <div class="button-group">
                 <button class="btn" onclick="saveAllSettings()">Save Settings</button>
                 <button class="btn btn-secondary" onclick="generatePDF()">Generate PDF</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Timezone Settings Section -->
+    <div class="section-card">
+        <div class="section-header">
+            <h3>Timezone Settings</h3>
+        </div>
+        <div class="section-content">
+            <div class="form-group">
+                <label for="timezone">Admin Timezone</label>
+                <select id="timezone" class="form-control">
+                    <option value="UTC" {% if timezone_settings.get('timezone', 'UTC') == 'UTC' %}selected{% endif %}>UTC (Coordinated Universal Time)</option>
+                    <option value="America/New_York" {% if timezone_settings.get('timezone', 'UTC') == 'America/New_York' %}selected{% endif %}>Eastern Time (ET)</option>
+                    <option value="America/Chicago" {% if timezone_settings.get('timezone', 'UTC') == 'America/Chicago' %}selected{% endif %}>Central Time (CT)</option>
+                    <option value="America/Denver" {% if timezone_settings.get('timezone', 'UTC') == 'America/Denver' %}selected{% endif %}>Mountain Time (MT)</option>
+                    <option value="America/Los_Angeles" {% if timezone_settings.get('timezone', 'UTC') == 'America/Los_Angeles' %}selected{% endif %}>Pacific Time (PT)</option>
+                    <option value="Europe/London" {% if timezone_settings.get('timezone', 'UTC') == 'Europe/London' %}selected{% endif %}>London (GMT/BST)</option>
+                    <option value="Europe/Paris" {% if timezone_settings.get('timezone', 'UTC') == 'Europe/Paris' %}selected{% endif %}>Paris (CET/CEST)</option>
+                    <option value="Europe/Berlin" {% if timezone_settings.get('timezone', 'UTC') == 'Europe/Berlin' %}selected{% endif %}>Berlin (CET/CEST)</option>
+                    <option value="Asia/Tokyo" {% if timezone_settings.get('timezone', 'UTC') == 'Asia/Tokyo' %}selected{% endif %}>Tokyo (JST)</option>
+                    <option value="Asia/Shanghai" {% if timezone_settings.get('timezone', 'UTC') == 'Asia/Shanghai' %}selected{% endif %}>Shanghai (CST)</option>
+                    <option value="Australia/Sydney" {% if timezone_settings.get('timezone', 'UTC') == 'Australia/Sydney' %}selected{% endif %}>Sydney (AEST/AEDT)</option>
+                    <option value="Pacific/Auckland" {% if timezone_settings.get('timezone', 'UTC') == 'Pacific/Auckland' %}selected{% endif %}>Auckland (NZST/NZDT)</option>
+                </select>
+                <small style="color: #666; display: block; margin-top: 0.5rem;">
+                    Select your timezone to display dates and times correctly in the admin interface
+                </small>
+            </div>
+
+            <div class="timezone-preview">
+                <h4 style="color: #8b7355; margin-bottom: 1rem;">Current Time Preview</h4>
+                <div style="background: #f9f5f0; padding: 1rem; border-radius: 8px; margin-bottom: 1rem;">
+                    <p><strong>Current Time:</strong> <span id="currentTimePreview">{{ current_time }}</span></p>
+                    <p><strong>Selected Timezone:</strong> <span id="selectedTimezone">{{ timezone_settings.get('timezone', 'UTC') }}</span></p>
+                </div>
+            </div>
+
+            <div class="button-group">
+                <button class="btn" onclick="saveAllSettings()">Save Timezone Settings</button>
             </div>
         </div>
     </div>
@@ -2084,7 +2124,7 @@
                                 -
                                 {% endif %}
                             </td>
-                            <td>{{ message.created_at.strftime('%b %d, %Y') }}</td>
+                            <td>{{ message.created_at | timezone_format('%b %d, %Y') }}</td>
                             <td>{{ message.likes }}</td>
                             <td>{{ message.message_comments|selectattr('is_hidden', 'false')|list|length }}</td>
                             <td>
@@ -2132,7 +2172,7 @@
                                 -
                                 {% endif %}
                             </td>
-                            <td>{{ message.created_at.strftime('%b %d, %Y') }}</td>
+                            <td>{{ message.created_at | timezone_format('%b %d, %Y') }}</td>
                             <td>Hidden by admin</td>
                             <td>
                                 <button class="show-btn" 
@@ -2192,7 +2232,7 @@
                             -
                             {% endif %}
                         </td>
-                        <td>{{ entry.created_at.strftime('%b %d, %Y') }}</td>
+                        <td>{{ entry.created_at | timezone_format('%b %d, %Y') }}</td>
                         <td>
                             <button class="edit-btn" 
                                     onclick="editGuestbookEntry({{ entry.id }}, '{{ entry.name|e }}', {{ entry.message|tojson }}, '{{ entry.location or '' }}')">
@@ -2543,6 +2583,9 @@
                 upload_enabled: document.getElementById('captcha_upload_enabled').checked,
                 guestbook_enabled: document.getElementById('captcha_guestbook_enabled').checked,
                 message_enabled: document.getElementById('captcha_message_enabled').checked
+            },
+            timezone_settings: {
+                timezone: document.getElementById('timezone').value
             }
         };
 
@@ -2747,6 +2790,15 @@
 
     // Initialize preview on load
     document.getElementById('modal_instructions').dispatchEvent(new Event('input'));
+
+    // Handle timezone changes
+    document.getElementById('timezone').addEventListener('change', function(e) {
+        const selectedTimezone = e.target.value;
+        const timezoneDisplay = document.getElementById('selectedTimezone');
+        if (timezoneDisplay) {
+            timezoneDisplay.textContent = selectedTimezone;
+        }
+    });
 
     // Close modals when clicking outside
     window.addEventListener('click', function(e) {

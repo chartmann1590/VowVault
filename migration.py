@@ -518,6 +518,22 @@ def migrate_database():
         conn.commit()
         print("✅ Security indexes created successfully!")
 
+        # Initialize timezone settings if not exists
+        print("Initializing timezone settings...")
+        cursor.execute("SELECT COUNT(*) FROM settings WHERE key = 'timezone_settings'")
+        timezone_exists = cursor.fetchone()[0]
+        
+        if not timezone_exists:
+            import json
+            default_timezone_settings = {
+                'timezone': 'UTC'
+            }
+            cursor.execute("INSERT INTO settings (key, value) VALUES (?, ?)", 
+                         ('timezone_settings', json.dumps(default_timezone_settings)))
+            print("✅ Default timezone settings initialized!")
+        else:
+            print("✅ Timezone settings already exist")
+
         # Enable WAL mode for better concurrency and data integrity
         cursor.execute("PRAGMA journal_mode=WAL")
         print("✅ WAL mode enabled for better data integrity")

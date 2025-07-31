@@ -42,6 +42,7 @@ A beautiful, modern wedding photo gallery with advanced features including SSO a
 - **Batch Operations**: Bulk download and management
 - **System Monitoring**: Performance and security logs
 - **SSO Management**: Complete SSO configuration interface
+- **Timezone Support**: View all dates/times in your local timezone
 
 ## 🖼️ Screenshots
 

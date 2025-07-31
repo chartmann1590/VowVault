@@ -76,6 +76,13 @@ mail = Mail(app)
 # Initialize database optimizer
 db_optimizer.init_app(app)
 
+# Jinja2 filter for timezone formatting
+@app.template_filter('timezone_format')
+def timezone_format(dt, format_str='%B %d, %Y at %I:%M %p'):
+    """Format datetime in admin's selected timezone"""
+    from app.utils.settings_utils import format_datetime_in_timezone
+    return format_datetime_in_timezone(dt, format_str)
+
 # Ensure upload directories exist
 os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
 os.makedirs(app.config['GUESTBOOK_UPLOAD_FOLDER'], exist_ok=True)
@@ -1597,6 +1604,15 @@ def admin():
     border_settings = Settings.get('photobooth_border', '{}')
     border_settings = json.loads(border_settings) if border_settings else {}
     
+    # Get timezone settings
+    timezone_settings = Settings.get('timezone_settings', '{}')
+    timezone_settings = json.loads(timezone_settings) if timezone_settings else {}
+    
+    # Calculate current time in selected timezone
+    from app.utils.settings_utils import format_datetime_in_timezone
+    from datetime import datetime
+    current_time = format_datetime_in_timezone(datetime.utcnow())
+    
     # Get email settings
     email_settings = {
         'enabled': Settings.get('email_enabled', 'false').lower() == 'true',
@@ -1651,6 +1667,8 @@ def admin():
                          qr_settings=qr_settings,
                          welcome_settings=welcome_settings,
                          border_settings=border_settings,
+                         timezone_settings=timezone_settings,
+                         current_time=current_time,
                          email_settings=email_settings,
                          email_logs=email_logs,
                          immich_settings=immich_settings,
@@ -2143,6 +2161,11 @@ def save_settings():
         Settings.set('sso_allowed_domains', ','.join(sso_data.get('allowed_domains', [])))
         Settings.set('sso_allowed_emails', ','.join(sso_data.get('allowed_emails', [])))
         Settings.set('sso_admin_key_fallback', str(sso_data.get('admin_key_fallback', True)).lower())
+    
+    # Save timezone settings
+    if 'timezone_settings' in data:
+        timezone_data = data['timezone_settings']
+        Settings.set('timezone_settings', json.dumps(timezone_data))
     
     return jsonify({'success': True})
 
