@@ -42,6 +42,9 @@ from app.models.photo_of_day import PhotoOfDayCandidate
 # Import database optimization utilities
 from app.utils.db_optimization import db_optimizer, optimize_photo_queries, get_photo_stats, maintenance_task
 
+# Import system logging utilities
+from app.utils.system_logger import log_system_event, log_info, log_error, log_exception
+
 app = Flask(__name__)
 app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', secrets.token_hex(16))
 app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL', 'sqlite:///wedding_photos.db')
@@ -2508,7 +2511,18 @@ def terms_of_use():
 
 @app.errorhandler(413)
 def too_large(e):
+    log_error('system', 'File upload too large', details={'error': '413', 'max_size': app.config['MAX_CONTENT_LENGTH']})
     return "File is too large. Maximum size is 50MB.", 413
+
+@app.errorhandler(404)
+def not_found(e):
+    log_error('system', 'Page not found', details={'path': request.path, 'method': request.method})
+    return "Page not found", 404
+
+@app.errorhandler(500)
+def internal_error(e):
+    log_critical('system', 'Internal server error', details={'path': request.path, 'method': request.method})
+    return "Internal server error", 500
 
 @app.route('/api/notifications/check')
 def check_notifications():
@@ -2857,6 +2871,13 @@ def debug_push_notification_test():
 if __name__ == '__main__':
     with app.app_context():
         db.create_all()
+        
+        # Log application startup
+        try:
+            log_info('system', 'Application started successfully')
+        except Exception as e:
+            print(f"Failed to log application startup: {e}")
+        
         # Start email monitor if enabled
         try:
             email_settings = get_email_settings()
@@ -2865,8 +2886,10 @@ if __name__ == '__main__':
             if email_settings['enabled'] and email_settings['imap_username'] and email_settings['imap_password']:
                 start_email_monitor()
                 print("Email monitor started successfully")
+                log_info('email', 'Email monitor started successfully')
             else:
                 print("Email monitor not started - not enabled or not configured")
+                log_info('email', 'Email monitor not started - not enabled or not configured')
                 if not email_settings['enabled']:
                     print("  - Email monitoring is disabled")
                 if not email_settings['imap_username']:
@@ -2875,4 +2898,5 @@ if __name__ == '__main__':
                     print("  - IMAP password not configured")
         except Exception as e:
             print(f"Email monitor not started: {e}")
+            log_error('email', f'Email monitor failed to start: {e}')
     app.run(debug=True, host='0.0.0.0')

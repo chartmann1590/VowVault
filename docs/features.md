@@ -99,6 +99,16 @@
 - **Maintenance Tools**: Database cleanup and optimization
 - **Statistics**: Detailed usage analytics
 
+### System Logging & Monitoring
+- **Comprehensive Logging**: Track all system events, errors, and user activities
+- **Multiple Log Types**: Email processing, Immich sync, upload events, and system errors
+- **Admin Dashboard**: View and filter logs through the admin interface
+- **Error Tracking**: Automatic logging of exceptions with stack traces
+- **Security Events**: Monitor security-related activities and potential threats
+- **Performance Monitoring**: Track upload times, processing errors, and system performance
+- **User Activity**: Log user interactions for analytics and debugging
+- **Resolvable Issues**: Mark and track resolution of system problems
+
 ### Photo of the Day
 - **Daily Selection**: Choose a featured photo each day
 - **Voting System**: Guests can vote on candidates

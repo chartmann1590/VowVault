@@ -356,6 +356,77 @@ def migrate_database():
         conn.commit()
         print("✅ Default SSO settings initialized successfully!")
 
+        # --- Email Log Table ---
+        cursor.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='email_log'")
+        if not cursor.fetchone():
+            print("Creating email_log table...")
+            cursor.execute("""
+                CREATE TABLE email_log (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    sender_email VARCHAR(255) NOT NULL,
+                    subject VARCHAR(255),
+                    received_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+                    processed_at DATETIME,
+                    status VARCHAR(50) NOT NULL,
+                    photo_count INTEGER DEFAULT 0,
+                    error_message TEXT,
+                    response_sent BOOLEAN DEFAULT FALSE,
+                    response_type VARCHAR(50)
+                )
+            """)
+            conn.commit()
+            print("✅ email_log table created successfully!")
+        else:
+            print("✅ email_log table already exists")
+
+        # --- Immich Sync Log Table ---
+        cursor.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='immich_sync_log'")
+        if not cursor.fetchone():
+            print("Creating immich_sync_log table...")
+            cursor.execute("""
+                CREATE TABLE immich_sync_log (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    filename VARCHAR(255) NOT NULL,
+                    file_path VARCHAR(500) NOT NULL,
+                    sync_date DATETIME DEFAULT CURRENT_TIMESTAMP,
+                    status VARCHAR(50) NOT NULL,
+                    immich_asset_id VARCHAR(255),
+                    error_message TEXT,
+                    retry_count INTEGER DEFAULT 0,
+                    last_retry DATETIME
+                )
+            """)
+            conn.commit()
+            print("✅ immich_sync_log table created successfully!")
+        else:
+            print("✅ immich_sync_log table already exists")
+
+        # --- System Log Table ---
+        cursor.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='system_log'")
+        if not cursor.fetchone():
+            print("Creating system_log table...")
+            cursor.execute("""
+                CREATE TABLE system_log (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,
+                    level VARCHAR(20) NOT NULL,
+                    category VARCHAR(50) NOT NULL,
+                    message TEXT NOT NULL,
+                    details TEXT,
+                    user_identifier VARCHAR(100),
+                    ip_address VARCHAR(45),
+                    user_agent TEXT,
+                    stack_trace TEXT,
+                    resolved BOOLEAN DEFAULT FALSE,
+                    resolved_at DATETIME,
+                    resolved_by VARCHAR(100)
+                )
+            """)
+            conn.commit()
+            print("✅ system_log table created successfully!")
+        else:
+            print("✅ system_log table already exists")
+
         # Create indexes for better performance and security
         print("Creating security-related indexes...")
         
@@ -423,6 +494,23 @@ def migrate_database():
         cursor.execute("CREATE INDEX IF NOT EXISTS idx_slideshow_activity_created ON slideshow_activity(created_at DESC)")
         cursor.execute("CREATE INDEX IF NOT EXISTS idx_slideshow_activity_active ON slideshow_activity(is_active)")
         cursor.execute("CREATE INDEX IF NOT EXISTS idx_slideshow_activity_content ON slideshow_activity(content_id)")
+        
+        # Log table indexes for better performance
+        print("Creating log table indexes...")
+        cursor.execute("CREATE INDEX IF NOT EXISTS idx_email_log_received_at ON email_log(received_at DESC)")
+        cursor.execute("CREATE INDEX IF NOT EXISTS idx_email_log_status ON email_log(status)")
+        cursor.execute("CREATE INDEX IF NOT EXISTS idx_email_log_sender ON email_log(sender_email)")
+        
+        cursor.execute("CREATE INDEX IF NOT EXISTS idx_immich_sync_log_sync_date ON immich_sync_log(sync_date DESC)")
+        cursor.execute("CREATE INDEX IF NOT EXISTS idx_immich_sync_log_status ON immich_sync_log(status)")
+        cursor.execute("CREATE INDEX IF NOT EXISTS idx_immich_sync_log_filename ON immich_sync_log(filename)")
+        
+        cursor.execute("CREATE INDEX IF NOT EXISTS idx_system_log_timestamp ON system_log(timestamp DESC)")
+        cursor.execute("CREATE INDEX IF NOT EXISTS idx_system_log_level ON system_log(level)")
+        cursor.execute("CREATE INDEX IF NOT EXISTS idx_system_log_category ON system_log(category)")
+        cursor.execute("CREATE INDEX IF NOT EXISTS idx_system_log_resolved ON system_log(resolved)")
+        cursor.execute("CREATE INDEX IF NOT EXISTS idx_system_log_user ON system_log(user_identifier)")
+        cursor.execute("CREATE INDEX IF NOT EXISTS idx_system_log_ip ON system_log(ip_address)")
         
         conn.commit()
         print("✅ Database optimization indexes created successfully!")

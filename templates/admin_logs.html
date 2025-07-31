@@ -350,19 +350,100 @@
         </div>
     </div>
 
-    <!-- System Logs (Placeholder) -->
+    <!-- System Logs -->
     <div class="logs-section">
         <div class="section-header">
             <h3>System Logs <span class="log-count">{{ system_logs|length }}</span></h3>
         </div>
         <div class="section-content">
+            <div class="filter-controls">
+                <button class="filter-btn active" onclick="filterLogs('system', 'all')">All</button>
+                <button class="filter-btn" onclick="filterLogs('system', 'info')">Info</button>
+                <button class="filter-btn" onclick="filterLogs('system', 'warning')">Warning</button>
+                <button class="filter-btn" onclick="filterLogs('system', 'error')">Error</button>
+                <button class="filter-btn" onclick="filterLogs('system', 'critical')">Critical</button>
+                <button class="filter-btn" onclick="filterLogs('system', 'unresolved')">Unresolved</button>
+            </div>
+            
+            {% if system_logs %}
+            <div class="table-responsive">
+                <table class="log-table">
+                    <thead>
+                        <tr>
+                            <th>Timestamp</th>
+                            <th>Level</th>
+                            <th>Category</th>
+                            <th>Message</th>
+                            <th>User</th>
+                            <th>IP</th>
+                            <th>Status</th>
+                            <th>Details</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for log in system_logs %}
+                        <tr class="system-log" data-level="{{ log.level }}" data-resolved="{{ log.resolved|lower }}">
+                            <td>{{ log.timestamp.strftime('%b %d, %Y %H:%M:%S') }}</td>
+                            <td>
+                                {% if log.level == 'info' %}
+                                    <span class="status-success">ℹ Info</span>
+                                {% elif log.level == 'warning' %}
+                                    <span class="status-pending">⚠ Warning</span>
+                                {% elif log.level == 'error' %}
+                                    <span class="status-error">✗ Error</span>
+                                {% elif log.level == 'critical' %}
+                                    <span class="status-error" style="color: #dc3545; font-weight: bold;">🚨 Critical</span>
+                                {% endif %}
+                            </td>
+                            <td>{{ log.category|title }}</td>
+                            <td>
+                                <span class="log-message" title="{{ log.message }}">{{ log.message[:50] }}{% if log.message|length > 50 %}...{% endif %}</span>
+                            </td>
+                            <td>
+                                {% if log.user_identifier %}
+                                    {{ log.user_identifier[:20] }}{% if log.user_identifier|length > 20 %}...{% endif %}
+                                {% else %}
+                                    -
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if log.ip_address %}
+                                    {{ log.ip_address }}
+                                {% else %}
+                                    -
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if log.resolved %}
+                                    <span class="status-success">✓ Resolved</span>
+                                    {% if log.resolved_by %}
+                                        <br><small>by {{ log.resolved_by }}</small>
+                                    {% endif %}
+                                {% else %}
+                                    <span class="status-pending">⏳ Open</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if log.details %}
+                                    <span class="log-message" title="{{ log.details }}">Details</span>
+                                {% else %}
+                                    -
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
             <div class="empty-state">
                 <svg viewBox="0 0 24 24">
                     <path d="M14,2H6A2,2 0 0,0 4,4V20A2,2 0 0,0 6,22H18A2,2 0 0,0 20,20V8L14,2M18,20H6V4H13V9H18V20Z"/>
                 </svg>
-                <h3>System Logs</h3>
-                <p>System logs feature is not yet implemented. This section will show application logs, error logs, and system events.</p>
+                <h3>No System Logs</h3>
+                <p>System logs will appear here once the application starts logging events and errors.</p>
             </div>
+            {% endif %}
         </div>
     </div>
 </div>
@@ -379,11 +460,21 @@
         // Filter table rows
         const rows = document.querySelectorAll(`.${type}-log`);
         rows.forEach(row => {
-            if (status === 'all' || row.dataset.status === status) {
-                row.style.display = '';
+            let show = false;
+            
+            if (type === 'system') {
+                if (status === 'all') {
+                    show = true;
+                } else if (status === 'unresolved') {
+                    show = row.dataset.resolved === 'false';
+                } else {
+                    show = row.dataset.level === status;
+                }
             } else {
-                row.style.display = 'none';
+                show = status === 'all' || row.dataset.status === status;
             }
+            
+            row.style.display = show ? '' : 'none';
         });
     }
 </script>

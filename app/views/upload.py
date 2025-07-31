@@ -9,6 +9,7 @@ from app.utils.file_utils import allowed_file, is_video, is_image, get_video_dur
 from app.utils.settings_utils import get_email_settings, get_immich_settings
 from app.utils.immich_utils import sync_file_to_immich
 from app.utils.captcha_utils import is_captcha_enabled, validate_captcha, generate_captcha, get_captcha_settings
+from app.utils.system_logger import log_upload_event, log_error, log_exception
 
 upload_bp = Blueprint('upload', __name__)
 
@@ -31,13 +32,19 @@ def upload():
                                      error='Incorrect CAPTCHA answer. Please try again.')
         
         if 'photo' not in request.files:
+            log_error('upload', 'No file uploaded', user_identifier=request.cookies.get('user_identifier', ''))
             return redirect(request.url)
         
         file = request.files['photo']
         if file.filename == '':
+            log_error('upload', 'Empty filename provided', user_identifier=request.cookies.get('user_identifier', ''))
             return redirect(request.url)
         
         if file and allowed_file(file.filename):
+            # Log successful upload start
+            log_upload_event(f"Upload started: {file.filename}", 
+                           user_identifier=user_identifier,
+                           details={'filename': file.filename, 'uploader_name': uploader_name})
             filename = secure_filename(file.filename)
             timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
             
@@ -60,6 +67,9 @@ def upload():
                 duration = get_video_duration(filepath)
                 if duration and duration > current_app.config['MAX_VIDEO_DURATION']:
                     os.remove(filepath)
+                    log_error('upload', f'Video too long: {duration}s > {current_app.config["MAX_VIDEO_DURATION"]}s', 
+                             user_identifier=user_identifier,
+                             details={'filename': file.filename, 'duration': duration})
                     return render_template('upload.html', 
                                          user_name=request.cookies.get('user_name', ''),
                                          error=f'Video must be {current_app.config["MAX_VIDEO_DURATION"]} seconds or less')
@@ -101,6 +111,11 @@ def upload():
             db.session.add(photo)
             db.session.commit()
             
+            # Log successful upload
+            log_upload_event(f"Upload completed: {photo.filename}", 
+                           user_identifier=user_identifier,
+                           details={'photo_id': photo.id, 'media_type': photo.media_type, 'file_size': os.path.getsize(filepath)})
+            
             # Sync to Immich if enabled
             try:
                 immich_settings = get_immich_settings()
@@ -118,6 +133,7 @@ def upload():
                             description += f" - {photo.description}"
                         sync_file_to_immich(file_path, photo.filename, description)
             except Exception as e:
+                log_exception('immich', f"Error syncing to Immich: {e}", exception=e, user_identifier=user_identifier)
                 print(f"Error syncing to Immich: {e}")
             
             # Save user name in cookie

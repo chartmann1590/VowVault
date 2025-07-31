@@ -1759,8 +1759,9 @@ def admin_logs():
     # Get Immich sync logs
     immich_sync_logs = ImmichSyncLog.query.order_by(ImmichSyncLog.sync_date.desc()).limit(100).all()
     
-    # Get system logs (if any)
-    system_logs = []  # Placeholder for system logs
+    # Get system logs
+    from app.models.email import SystemLog
+    system_logs = SystemLog.query.order_by(SystemLog.timestamp.desc()).limit(100).all()
     
     return render_template('admin_logs.html',
                          email_logs=email_logs,
