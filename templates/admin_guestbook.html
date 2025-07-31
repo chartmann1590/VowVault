@@ -426,7 +426,7 @@
                                 -
                                 {% endif %}
                             </td>
-                            <td>{{ entry.created_at.strftime('%b %d, %Y') }}</td>
+                            <td>{{ entry.created_at | timezone_format('%b %d, %Y') }}</td>
                             <td>
                                 <button class="edit-btn" 
                                         onclick="editEntry({{ entry.id }}, '{{ entry.name|e }}', {{ entry.message|tojson }}, '{{ entry.location or '' }}')">

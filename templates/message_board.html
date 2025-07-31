@@ -317,7 +317,7 @@
         <div class="message-card">
             <div class="message-header">
                 <span class="message-author">{{ message.author_name }}</span>
-                <span class="message-date">{{ message.created_at.strftime('%B %d, %Y at %I:%M %p') }}</span>
+                                        <span class="message-date">{{ message.created_at | timezone_format('%B %d, %Y at %I:%M %p') }}</span>
             </div>
             
             <div class="message-content">{{ message.content }}</div>
@@ -353,7 +353,7 @@
                         <div class="comment">
                             <div class="comment-header">
                                 <span class="comment-author">{{ comment.commenter_name }}</span>
-                                <span class="comment-time">{{ comment.created_at.strftime('%b %d at %I:%M %p') }}</span>
+                                <span class="comment-time">{{ comment.created_at | timezone_format('%b %d at %I:%M %p') }}</span>
                             </div>
                             <div class="comment-content">{{ comment.content }}</div>
                         </div>

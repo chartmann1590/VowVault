@@ -232,7 +232,7 @@
                         <tr class="email-log" data-status="{{ log.status }}">
                             <td>{{ log.sender_email }}</td>
                             <td>{{ log.subject[:50] }}{% if log.subject|length > 50 %}...{% endif %}</td>
-                            <td>{{ log.received_at.strftime('%b %d, %Y %H:%M') }}</td>
+                            <td>{{ log.received_at | timezone_format('%b %d, %Y %H:%M') }}</td>
                             <td>
                                 {% if log.status == 'success' %}
                                     <span class="status-success">✓ Success</span>
@@ -309,7 +309,7 @@
                         {% for log in immich_sync_logs %}
                         <tr class="immich-log" data-status="{{ log.status }}">
                             <td>{{ log.filename }}</td>
-                            <td>{{ log.sync_date.strftime('%b %d, %Y %H:%M') }}</td>
+                            <td>{{ log.sync_date | timezone_format('%b %d, %Y %H:%M') }}</td>
                             <td>
                                 {% if log.status == 'success' %}
                                     <span class="status-success">✓ Success</span>
@@ -383,7 +383,7 @@
                     <tbody>
                         {% for log in system_logs %}
                         <tr class="system-log" data-level="{{ log.level }}" data-resolved="{{ log.resolved|lower }}">
-                            <td>{{ log.timestamp.strftime('%b %d, %Y %H:%M:%S') }}</td>
+                            <td>{{ log.timestamp | timezone_format('%b %d, %Y %H:%M:%S') }}</td>
                             <td>
                                 {% if log.level == 'info' %}
                                     <span class="status-success">ℹ Info</span>

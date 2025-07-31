@@ -537,7 +537,7 @@
                         <tr>
                             <td>{{ log.sender_email }}</td>
                             <td>{{ log.subject[:50] }}{% if log.subject|length > 50 %}...{% endif %}</td>
-                            <td>{{ log.received_at.strftime('%b %d, %Y %H:%M') }}</td>
+                            <td>{{ log.received_at | timezone_format('%b %d, %Y %H:%M') }}</td>
                             <td>
                                 {% if log.status == 'success' %}
                                     <span class="status-success">✓ Success</span>

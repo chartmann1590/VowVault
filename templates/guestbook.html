@@ -242,7 +242,7 @@
                         <span class="entry-location">from {{ entry.location }}</span>
                         {% endif %}
                     </div>
-                    <span class="entry-date">{{ entry.created_at.strftime('%B %d, %Y') }}</span>
+                                            <span class="entry-date">{{ entry.created_at | timezone_format('%B %d, %Y') }}</span>
                 </div>
                 <div class="entry-message">{{ entry.message }}</div>
             </div>

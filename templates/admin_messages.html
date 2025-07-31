@@ -420,7 +420,7 @@
                                     -
                                     {% endif %}
                                 </td>
-                                <td>{{ message.created_at.strftime('%b %d, %Y') }}</td>
+                                <td>{{ message.created_at | timezone_format('%b %d, %Y') }}</td>
                                 <td>{{ message.likes }}</td>
                                 <td>{{ message.message_comments|selectattr('is_hidden', 'false')|list|length }}</td>
                                 <td>
@@ -467,7 +467,7 @@
                                     -
                                     {% endif %}
                                 </td>
-                                <td>{{ message.created_at.strftime('%b %d, %Y') }}</td>
+                                <td>{{ message.created_at | timezone_format('%b %d, %Y') }}</td>
                                 <td>Hidden by admin</td>
                                 <td>
                                     <button class="show-btn" 

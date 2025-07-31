@@ -970,7 +970,7 @@
             <div class="photo-info">
                 <div class="photo-meta">
                     <span class="uploader-name">{{ photo.uploader_name }}</span>
-                    <span class="upload-date">{{ photo.upload_date.strftime('%b %d, %Y') }}</span>
+                    <span class="upload-date">{{ photo.upload_date | timezone_format('%b %d, %Y') }}</span>
                 </div>
                 {% if photo.description %}
                 <p class="description-preview">{{ photo.description }}</p>

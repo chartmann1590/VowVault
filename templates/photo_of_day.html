@@ -208,7 +208,7 @@
 <div class="featured-photo-section">
     <div style="text-align:center; margin-bottom: 1.5rem;">
         <h2 style="font-family:'Playfair Display',serif;font-size:2rem;color:#8b7355;margin-bottom:0.2rem;">Today's Featured Photo</h2>
-        <p style="color:#6b5d54;">{{ today_photo.date.strftime('%B %d, %Y') }}</p>
+                        <p style="color:#6b5d54;">{{ today_photo.date | timezone_format('%B %d, %Y') }}</p>
     </div>
     <div class="featured-photo-grid">
         <div class="featured-photo-media">
@@ -249,7 +249,7 @@
                 </div>
             {% endif %}
             <div class="photo-details-box" style="margin-top:1.2rem;">
-                <strong>Uploaded:</strong> {{ today_photo.photo.upload_date.strftime('%B %d, %Y') }}<br>
+                <strong>Uploaded:</strong> {{ today_photo.photo.upload_date | timezone_format('%B %d, %Y') }}<br>
                 {% if today_photo.photo.description %}
                 <strong>Description:</strong> {{ today_photo.photo.description }}<br>
                 {% endif %}
@@ -285,7 +285,7 @@
                 {% else %}
                 <img src="{{ url_for('static', filename='uploads/' + photo_of_day.photo.filename) }}" alt="Photo of the Day">
                 {% endif %}
-                <div class="recent-photo-date">{{ photo_of_day.date.strftime('%b %d') }}</div>
+                <div class="recent-photo-date">{{ photo_of_day.date | timezone_format('%b %d') }}</div>
             </div>
             <div class="recent-photo-info">
                 <div class="uploader">by {{ photo_of_day.photo.uploader_name }}</div>

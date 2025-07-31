@@ -358,7 +358,7 @@
             <div class="photo-header">
                 <div class="photo-meta">
                     <div class="uploader-info">Shared by {{ photo.uploader_name }}</div>
-                    <div class="upload-time">{{ photo.upload_date.strftime('%B %d, %Y at %I:%M %p') }}</div>
+                    <div class="upload-time">{{ photo.upload_date | timezone_format('%B %d, %Y at %I:%M %p') }}</div>
                     {% if photo.media_type == 'video' and photo.duration %}
                     <div class="media-duration">Duration: {{ '%d:%02d' | format((photo.duration // 60)|int, (photo.duration % 60)|int) }}</div>
                     {% endif %}
@@ -413,7 +413,7 @@
                 <div class="comment">
                     <div class="comment-header">
                         <span class="comment-author">{{ comment.commenter_name }}</span>
-                        <span class="comment-time">{{ comment.created_at.strftime('%B %d, %Y at %I:%M %p') }}</span>
+                        <span class="comment-time">{{ comment.created_at | timezone_format('%B %d, %Y at %I:%M %p') }}</span>
                     </div>
                     <div class="comment-content">{{ comment.content }}</div>
                 </div>

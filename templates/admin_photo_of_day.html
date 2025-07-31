@@ -301,7 +301,7 @@
             <select id="photo-select" class="admin-form-select">
                 <option value="">Choose a photo...</option>
                 {% for photo in all_photos %}
-                <option value="{{ photo.id }}" data-uploader="{{ photo.uploader_name }}" data-date="{{ photo.upload_date.strftime('%Y-%m-%d') }}">
+                <option value="{{ photo.id }}" data-uploader="{{ photo.uploader_name }}" data-date="{{ photo.upload_date | timezone_format('%Y-%m-%d') }}">
                     {{ photo.original_filename }} (by {{ photo.uploader_name }})
                 </option>
                 {% endfor %}
@@ -339,7 +339,7 @@
                 {% else %}
                 <img src="{{ url_for('static', filename='uploads/' + photo_of_day.photo.filename) }}" alt="Photo of the Day">
                 {% endif %}
-                <div class="admin-photo-date">{{ photo_of_day.date.strftime('%b %d') }}</div>
+                <div class="admin-photo-date">{{ photo_of_day.date | timezone_format('%b %d') }}</div>
             </div>
             <div class="admin-photo-info">
                 <div class="uploader">by {{ photo_of_day.photo.uploader_name }}</div>
@@ -380,7 +380,7 @@
             </div>
             <div class="admin-photo-info">
                 <div class="uploader">by {{ candidate.photo.uploader_name }}</div>
-                <div class="admin-photo-candidate-date">Added: {{ candidate.date_added.strftime('%b %d, %Y') }}</div>
+                <div class="admin-photo-candidate-date">Added: {{ candidate.date_added | timezone_format('%b %d, %Y') }}</div>
                 <button onclick="selectAsPhotoOfDay({{ candidate.photo.id }})" class="admin-btn candidate">Select as Photo of Day</button>
             </div>
         </div>

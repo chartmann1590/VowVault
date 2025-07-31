@@ -514,7 +514,7 @@
                         {% for log in immich_sync_logs %}
                         <tr>
                             <td>{{ log.filename }}</td>
-                            <td>{{ log.sync_date.strftime('%b %d, %Y %H:%M') }}</td>
+                            <td>{{ log.sync_date | timezone_format('%b %d, %Y %H:%M') }}</td>
                             <td>
                                 {% if log.status == 'success' %}
                                     <span class="status-success">✓ Success</span>

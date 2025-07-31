@@ -547,7 +547,7 @@
                 {% if captcha_logs %}
                     {% for log in captcha_logs %}
                     <div class="log-entry {{ 'log-success' if log.success else 'log-failure' }}">
-                        <div class="log-time">{{ log.timestamp.strftime('%Y-%m-%d %H:%M:%S') }}</div>
+                        <div class="log-time">{{ log.timestamp | timezone_format('%Y-%m-%d %H:%M:%S') }}</div>
                         <div class="log-message">
                             {% if log.success %}
                                 ✅ Successful CAPTCHA verification from {{ log.ip_address }}

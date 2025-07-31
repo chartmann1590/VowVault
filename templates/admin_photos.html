@@ -372,7 +372,7 @@
                                 {% endif %}
                             </td>
                             <td>{{ photo.uploader_name }}</td>
-                            <td>{{ photo.upload_date.strftime('%b %d, %Y') }}</td>
+                            <td>{{ photo.upload_date | timezone_format('%b %d, %Y') }}</td>
                             <td>
                                 {% if photo.media_type == 'video' %}
                                     <span class="video-badge">Video</span>

@@ -325,7 +325,7 @@
                                 {% if user.notifications_enabled %}Enabled{% else %}Disabled{% endif %}
                             </span>
                         </td>
-                        <td>{{ user.last_seen.strftime('%b %d, %Y at %I:%M %p') if user.last_seen else 'Never' }}</td>
+                        <td>{{ user.last_seen | timezone_format('%b %d, %Y at %I:%M %p') if user.last_seen else 'Never' }}</td>
                         <td>{{ user.device_info[:50] + '...' if user.device_info and user.device_info|length > 50 else user.device_info or 'Unknown' }}</td>
                         <td>
                             <button class="btn btn-secondary individual-notification-btn" data-user-id="{{ user.user_identifier }}" data-user-name="{{ user.user_name }}">
