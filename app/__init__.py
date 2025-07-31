@@ -51,6 +51,13 @@ def create_app(config_name='default'):
     # Initialize extensions
     db.init_app(app)
     mail.init_app(app)
+    
+    # Register Jinja2 filter for timezone formatting
+    @app.template_filter('timezone_format')
+    def timezone_format(dt, format_str='%B %d, %Y at %I:%M %p'):
+        """Format datetime in admin's selected timezone"""
+        from app.utils.settings_utils import format_datetime_in_timezone
+        return format_datetime_in_timezone(dt, format_str)
 
     # Ensure upload directories exist
     os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
