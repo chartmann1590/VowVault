@@ -241,6 +241,15 @@ class DatabaseOptimizer:
                 'entries': len(self.cache),
                 'size_mb': sum(len(str(v)) for v in self.cache.values()) / (1024 * 1024)
             }
+    
+    def is_enabled(self):
+        """Check if database optimization is enabled"""
+        return True  # Always enabled for now
+    
+    def get_cache_size(self):
+        """Get current cache size in MB"""
+        stats = self.get_cache_stats()
+        return round(stats['size_mb'], 2)
 
 # Global optimizer instance
 db_optimizer = DatabaseOptimizer()

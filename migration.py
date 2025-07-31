@@ -297,6 +297,50 @@ def migrate_database():
         cursor.execute("CREATE INDEX IF NOT EXISTS idx_photo_upload_ip ON photo(upload_ip)")
         cursor.execute("CREATE INDEX IF NOT EXISTS idx_photo_file_hash ON photo(file_hash)")
         
+        # Database optimization indexes for better performance
+        print("Creating database optimization indexes...")
+        
+        # Photo table indexes for optimal query performance
+        cursor.execute("CREATE INDEX IF NOT EXISTS idx_photo_upload_date ON photo(upload_date DESC)")
+        cursor.execute("CREATE INDEX IF NOT EXISTS idx_photo_media_type ON photo(media_type)")
+        cursor.execute("CREATE INDEX IF NOT EXISTS idx_photo_is_photobooth ON photo(is_photobooth)")
+        cursor.execute("CREATE INDEX IF NOT EXISTS idx_photo_likes ON photo(likes DESC)")
+        cursor.execute("CREATE INDEX IF NOT EXISTS idx_photo_uploader_name ON photo(uploader_name)")
+        cursor.execute("CREATE INDEX IF NOT EXISTS idx_photo_description ON photo(description)")
+        cursor.execute("CREATE INDEX IF NOT EXISTS idx_photo_tags ON photo(tags)")
+        cursor.execute("CREATE INDEX IF NOT EXISTS idx_photo_media_upload ON photo(media_type, upload_date DESC)")
+        cursor.execute("CREATE INDEX IF NOT EXISTS idx_photo_photobooth_upload ON photo(is_photobooth, upload_date DESC)")
+        cursor.execute("CREATE INDEX IF NOT EXISTS idx_photo_likes_upload ON photo(likes DESC, upload_date DESC)")
+        
+        # Comment table indexes
+        cursor.execute("CREATE INDEX IF NOT EXISTS idx_comment_photo_id ON comment(photo_id)")
+        cursor.execute("CREATE INDEX IF NOT EXISTS idx_comment_created_at ON comment(created_at DESC)")
+        
+        # Like table indexes
+        cursor.execute("CREATE INDEX IF NOT EXISTS idx_like_photo_id ON like(photo_id)")
+        cursor.execute("CREATE INDEX IF NOT EXISTS idx_like_user_identifier ON like(user_identifier)")
+        cursor.execute("CREATE INDEX IF NOT EXISTS idx_like_photo_user ON like(photo_id, user_identifier)")
+        
+        # Message table indexes
+        cursor.execute("CREATE INDEX IF NOT EXISTS idx_message_created_at ON message(created_at DESC)")
+        cursor.execute("CREATE INDEX IF NOT EXISTS idx_message_is_hidden ON message(is_hidden)")
+        cursor.execute("CREATE INDEX IF NOT EXISTS idx_message_author ON message(author_name)")
+        
+        # Guestbook indexes
+        cursor.execute("CREATE INDEX IF NOT EXISTS idx_guestbook_created_at ON guestbook_entry(created_at DESC)")
+        cursor.execute("CREATE INDEX IF NOT EXISTS idx_guestbook_name ON guestbook_entry(name)")
+        
+        # Notification indexes
+        cursor.execute("CREATE INDEX IF NOT EXISTS idx_notification_user_created ON notification(user_identifier, created_at DESC)")
+        cursor.execute("CREATE INDEX IF NOT EXISTS idx_notification_is_read ON notification(is_read)")
+        cursor.execute("CREATE INDEX IF NOT EXISTS idx_notification_type ON notification(notification_type)")
+        
+        # Settings indexes
+        cursor.execute("CREATE INDEX IF NOT EXISTS idx_settings_key ON settings(key)")
+        
+        conn.commit()
+        print("✅ Database optimization indexes created successfully!")
+        
         conn.commit()
         print("✅ Security indexes created successfully!")
 
