@@ -462,6 +462,36 @@
                         </div>
 
                         <div class="form-group">
+                            <label for="ssoAuthorizationUrl">Authorization URL</label>
+                            <input type="text" 
+                                   id="ssoAuthorizationUrl" 
+                                   class="form-control" 
+                                   placeholder="https://accounts.google.com/oauth/authorize"
+                                   value="{{ sso_settings.get('authorization_url', '') }}">
+                            <small style="color: #666;">OAuth authorization endpoint URL (optional for predefined providers)</small>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="ssoTokenUrl">Token URL</label>
+                            <input type="text" 
+                                   id="ssoTokenUrl" 
+                                   class="form-control" 
+                                   placeholder="https://oauth2.googleapis.com/token"
+                                   value="{{ sso_settings.get('token_url', '') }}">
+                            <small style="color: #666;">OAuth token endpoint URL (optional for predefined providers)</small>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="ssoUserinfoUrl">User Info URL</label>
+                            <input type="text" 
+                                   id="ssoUserinfoUrl" 
+                                   class="form-control" 
+                                   placeholder="https://www.googleapis.com/oauth2/v2/userinfo"
+                                   value="{{ sso_settings.get('userinfo_url', '') }}">
+                            <small style="color: #666;">OAuth user info endpoint URL (optional for predefined providers)</small>
+                        </div>
+
+                        <div class="form-group">
                             <label for="ssoAllowedEmails">Authorized Email Addresses</label>
                             <textarea id="ssoAllowedEmails" 
                                       rows="4" 
@@ -697,6 +727,9 @@
             client_secret: document.getElementById('ssoClientSecret').value,
             redirect_uri: document.getElementById('ssoRedirectUri').value,
             scope: document.getElementById('ssoScope').value,
+            authorization_url: document.getElementById('ssoAuthorizationUrl').value,
+            token_url: document.getElementById('ssoTokenUrl').value,
+            userinfo_url: document.getElementById('ssoUserinfoUrl').value,
             allowed_emails: document.getElementById('ssoAllowedEmails').value,
             allowed_domains: document.getElementById('ssoAllowedDomains').value,
             admin_key_fallback: document.getElementById('ssoAdminKeyFallback').checked
