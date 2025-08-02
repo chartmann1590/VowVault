@@ -343,6 +343,7 @@ def admin_qr_settings():
             'size': 'medium',
             'color': 'black',
             'custom_text': '',
+            'public_url': '',
             'title': 'Scan to View Our Wedding Gallery',
             'subtitle': 'Share your photos and memories with us',
             'message': 'Thank you for celebrating with us!',
@@ -1231,10 +1232,6 @@ def generate_qr_pdf():
     if not verify_admin_access(admin_key, sso_user_email, sso_user_domain):
         return "Unauthorized", 401
     
-    public_url = Settings.get('public_url', '')
-    if not public_url:
-        return "No public URL set", 400
-    
     qr_settings = Settings.get('qr_settings', '{}')
     qr_settings = json.loads(qr_settings) if qr_settings else {}
     
@@ -1248,9 +1245,15 @@ def generate_qr_pdf():
     message = qr_settings.get('message', 'We would love to see the wedding through your eyes! Please scan the QR code below to upload your photos and view the gallery.')
     couple_names = qr_settings.get('couple_names', 'The Happy Couple')
     
+    # Generate QR code URL
+    public_url = qr_settings.get('public_url', '').strip()
+    if not public_url:
+        # Fall back to current server URL
+        public_url = request.host_url.rstrip('/')
+    
     # Create QR code
     qr = qrcode.QRCode(version=1, box_size=10, border=5)
-    qr.add_data(public_url)
+    qr.add_data(f"{public_url}/?key={admin_key}")
     qr.make(fit=True)
     qr_img = qr.make_image(fill_color="black", back_color="white")
     
@@ -1811,8 +1814,14 @@ def qr_preview():
     size = qr_settings.get('size', 'medium')
     
     # Generate QR code URL
-    base_url = request.host_url.rstrip('/')
-    qr_data = f"{base_url}/?key={admin_key}"
+    public_url = qr_settings.get('public_url', '').strip()
+    if public_url:
+        # Use custom public URL if set
+        qr_data = f"{public_url}/?key={admin_key}"
+    else:
+        # Fall back to current server URL
+        base_url = request.host_url.rstrip('/')
+        qr_data = f"{base_url}/?key={admin_key}"
     
     # Generate QR code
     import qrcode
@@ -1870,8 +1879,14 @@ def download_qr():
     size = qr_settings.get('size', 'medium')
     
     # Generate QR code URL
-    base_url = request.host_url.rstrip('/')
-    qr_data = f"{base_url}/?key={admin_key}"
+    public_url = qr_settings.get('public_url', '').strip()
+    if public_url:
+        # Use custom public URL if set
+        qr_data = f"{public_url}/?key={admin_key}"
+    else:
+        # Fall back to current server URL
+        base_url = request.host_url.rstrip('/')
+        qr_data = f"{base_url}/?key={admin_key}"
     
     # Generate QR code
     import qrcode

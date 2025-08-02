@@ -326,6 +326,16 @@
                             <small style="color: #666;">Text will appear below the QR code</small>
                         </div>
 
+                        <div class="form-group">
+                            <label for="qrPublicUrl">Public URL (Optional)</label>
+                            <input type="url" 
+                                   id="qrPublicUrl" 
+                                   class="form-control" 
+                                   placeholder="https://your-wedding-domain.com"
+                                   value="{{ qr_settings.get('public_url', '') }}">
+                            <small style="color: #666;">Custom URL for the QR code. If not set, will use the current server URL.</small>
+                        </div>
+
                         <button type="submit" class="btn btn-primary">
                             <svg viewBox="0 0 24 24" width="20" height="20">
                                 <path d="M15,9H5V5H15M12,19A3,3 0 0,1 9,16A3,3 0 0,1 12,13A3,3 0 0,1 15,16A3,3 0 0,1 12,19M17,3H5C3.89,3 3,3.89 3,5V19A2,2 0 0,0 5,21H19A2,2 0 0,0 21,19V7L17,3Z" fill="currentColor"/>
@@ -492,7 +502,8 @@
             enabled: document.getElementById('qrEnabled').value === 'true',
             size: document.getElementById('qrSize').value,
             color: document.getElementById('qrColor').value,
-            custom_text: document.getElementById('qrText').value
+            custom_text: document.getElementById('qrText').value,
+            public_url: document.getElementById('qrPublicUrl').value
         };
         
         fetch(`/admin/save-settings?key=${key}`, {
