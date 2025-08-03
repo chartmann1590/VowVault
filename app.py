@@ -45,7 +45,7 @@ from app.utils.db_optimization import db_optimizer, optimize_photo_queries, get_
 from app.utils.system_logger import log_system_event, log_info, log_error, log_exception, log_critical
 
 # Import email utilities
-from app.utils.email_utils import process_email_photos, send_confirmation_email, send_rejection_email
+from app.utils.email_utils import process_email_photos, send_confirmation_email, send_rejection_email, start_email_monitor
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', secrets.token_hex(16))
@@ -578,22 +578,7 @@ def sync_all_to_immich():
 
 
 
-def start_email_monitor():
-    """Start the email monitoring thread"""
-    def monitor_emails():
-        with app.app_context():
-            print("Email monitoring thread started")
-            while True:
-                try:
-                    process_email_photos()
-                    time.sleep(300)  # Check every 5 minutes
-                except Exception as e:
-                    print(f"Email monitor error: {e}")
-                    time.sleep(600)  # Wait 10 minutes on error
-    
-    thread = threading.Thread(target=monitor_emails, daemon=True)
-    thread.start()
-    print("Email monitoring thread created")
+
 
 @app.route('/')
 def index():
