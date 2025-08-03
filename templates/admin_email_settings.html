@@ -458,6 +458,20 @@
                             For Gmail, use an App Password. For other providers, use your regular password.
                         </small>
                     </div>
+
+                    <h5 style="color: #8b7355; margin: 2rem 0 1rem 0;">Gallery URL Settings</h5>
+                    
+                    <div class="form-group">
+                        <label for="email_public_url">Public Gallery URL</label>
+                        <input type="url" 
+                               id="email_public_url" 
+                               class="form-control" 
+                               placeholder="https://your-wedding-domain.com"
+                               value="{{ qr_settings.get('public_url', '') }}">
+                        <small style="color: #666; display: block; margin-top: 0.5rem;">
+                            URL that will be included in email replies to users. This should match your QR code public URL.
+                        </small>
+                    </div>
                 </div>
 
                 <div class="info-panel">
@@ -620,6 +634,9 @@
                 imap_port: document.getElementById('email_imap_port').value,
                 imap_username: document.getElementById('email_imap_username').value,
                 imap_password: document.getElementById('email_imap_password').value
+            },
+            qr_settings: {
+                public_url: document.getElementById('email_public_url').value
             }
         };
 

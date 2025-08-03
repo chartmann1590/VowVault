@@ -206,9 +206,14 @@ def admin_email_settings():
     # Get email logs
     email_logs = EmailLog.query.order_by(EmailLog.received_at.desc()).limit(50).all()
     
+    # Get QR settings for public URL
+    qr_settings = Settings.get('qr_settings', '{}')
+    qr_settings = json.loads(qr_settings) if qr_settings else {}
+    
     return render_template('admin_email_settings.html',
                          email_settings=email_settings,
-                         email_logs=email_logs)
+                         email_logs=email_logs,
+                         qr_settings=qr_settings)
 
 @admin_bp.route('/immich-settings')
 def admin_immich_settings():

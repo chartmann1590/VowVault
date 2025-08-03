@@ -3,6 +3,7 @@ import imaplib
 import email
 import threading
 import time
+import json
 from datetime import datetime
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
@@ -189,7 +190,13 @@ def process_email_photos():
                     db.session.commit()
                     
                     # Send confirmation email
-                    public_url = Settings.get('public_url', '')
+                    # Get QR settings for public URL
+                    qr_settings = Settings.get('qr_settings', '{}')
+                    qr_settings = json.loads(qr_settings) if qr_settings else {}
+                    public_url = qr_settings.get('public_url', '').strip()
+                    if not public_url:
+                        # Fall back to main public URL setting
+                        public_url = Settings.get('public_url', '')
                     if public_url:
                         send_confirmation_email(sender_email, photo_count, public_url)
                 
