@@ -2,6 +2,25 @@
 
 A beautiful, modern wedding photo gallery with advanced features including SSO authentication, PWA support, and comprehensive admin tools.
 
+## ⚠️ Development Status
+
+**This project is under active development.** While we strive for stability, some features may not work as expected or may have bugs. If you encounter issues that aren't already documented or fixed, please help us improve by reporting them.
+
+### 🐛 Reporting Issues
+
+If you find a bug or encounter a problem:
+
+1. **Check existing issues first**: Visit the [GitHub Issues page](https://github.com/chartmann1590/VowVault/issues) to see if your problem has already been reported
+2. **Create a new issue**: If it's a new problem, click the "New Issue" button on the Issues page
+3. **Provide details**: Include:
+   - What you were trying to do
+   - What happened instead
+   - Steps to reproduce the issue
+   - Your system/environment details
+   - Any error messages you saw
+
+Your feedback helps make VowVault better for everyone! 🚀
+
 ## ✨ Features
 
 ### 📸 Photo Management

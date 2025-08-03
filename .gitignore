@@ -230,10 +230,10 @@ EMAIL_SETUP.md
 # Immich setup documentation (optional - remove if you want to track it)
 IMMICH_SETUP.md
 
-# Test files
-test-docker.py
-test_*.py
-*_test.py
+# Test files (removed - keeping test files for development)
+# test-docker.py
+# test_*.py
+# *_test.py
 
 # Migration and setup files (optional - remove if you want to track them)
 migrate_to_modular.py
