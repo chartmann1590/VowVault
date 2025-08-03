@@ -803,7 +803,7 @@
         testButton.textContent = 'Testing...';
         testButton.disabled = true;
         
-        fetch(`/auth/test?key=${key}`)
+        fetch(`/test?key=${key}`)
         .then(response => response.text())
         .then(data => {
             if (data.includes('valid')) {
