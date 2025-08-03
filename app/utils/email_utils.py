@@ -4,6 +4,7 @@ import email
 import threading
 import time
 import json
+import hashlib
 from datetime import datetime
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
@@ -15,6 +16,10 @@ from app.models.photo import Photo
 from app.models.email import EmailLog
 from app.utils.settings_utils import get_email_settings
 import os
+
+# Global set to track processed emails in current session to prevent duplicates
+_processed_emails = set()
+_processed_emails_timestamps = {}  # Track when emails were processed
 
 def send_confirmation_email(recipient_email, photo_count, gallery_url):
     """Send confirmation email to user who uploaded photos via email"""
@@ -137,6 +142,42 @@ def process_email_photos():
                 # Extract email from "Name <email@domain.com>" format
                 if '<' in sender_email and '>' in sender_email:
                     sender_email = sender_email.split('<')[1].split('>')[0]
+                
+                # Create a unique identifier for this email to prevent duplicates
+                email_id = f"{sender_email}_{subject}_{email_message.get('date', '')}"
+                email_hash = hashlib.md5(email_id.encode()).hexdigest()
+                
+                # Check if this email was already processed in current session
+                if email_hash in _processed_emails:
+                    print(f"DUPLICATE PREVENTION: Email from {sender_email} with subject '{subject}' was already processed in this session. Skipping.")
+                    # Mark as read to prevent future processing
+                    mail.store(num, '+FLAGS', '\\Seen')
+                    continue
+                
+                # Check if this email was already processed recently (within last 24 hours)
+                from datetime import timedelta
+                recent_log = EmailLog.query.filter(
+                    EmailLog.sender_email == sender_email,
+                    EmailLog.subject == subject,
+                    EmailLog.received_at >= datetime.utcnow() - timedelta(hours=24)
+                ).first()
+                
+                if recent_log:
+                    print(f"DUPLICATE PREVENTION: Email from {sender_email} with subject '{subject}' was already processed recently. Skipping.")
+                    # Mark as read to prevent future processing
+                    mail.store(num, '+FLAGS', '\\Seen')
+                    continue
+                
+                # Add to processed emails set with timestamp
+                _processed_emails.add(email_hash)
+                _processed_emails_timestamps[email_hash] = datetime.utcnow()
+                
+                # Clean up old entries (older than 1 hour) to prevent memory bloat
+                cutoff_time = datetime.utcnow() - timedelta(hours=1)
+                old_hashes = [h for h, ts in _processed_emails_timestamps.items() if ts < cutoff_time]
+                for old_hash in old_hashes:
+                    _processed_emails.discard(old_hash)
+                    del _processed_emails_timestamps[old_hash]
                 
                 photo_count = 0
                 has_photos = False
