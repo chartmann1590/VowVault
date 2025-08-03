@@ -496,7 +496,7 @@
                             <textarea id="ssoAllowedEmails" 
                                       rows="4" 
                                       class="form-control" 
-                                      placeholder="Enter email addresses (one per line) that are allowed to access admin">{{ sso_settings.get('allowed_emails', '') }}</textarea>
+                                      placeholder="Enter email addresses (one per line) that are allowed to access admin">{{ sso_settings.get('allowed_emails', [])|join('\n') }}</textarea>
                             <small style="color: #666;">Only these email addresses will be granted admin access</small>
                         </div>
 
@@ -505,7 +505,7 @@
                             <textarea id="ssoAllowedDomains" 
                                       rows="3" 
                                       class="form-control" 
-                                      placeholder="Enter domains (one per line) that are allowed to access admin">{{ sso_settings.get('allowed_domains', '') }}</textarea>
+                                      placeholder="Enter domains (one per line) that are allowed to access admin">{{ sso_settings.get('allowed_domains', [])|join('\n') }}</textarea>
                             <small style="color: #666;">Allow entire domains (e.g., company.com) to access admin</small>
                         </div>
 

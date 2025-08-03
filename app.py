@@ -330,8 +330,8 @@ def get_sso_settings():
             'userinfo_url': Settings.get('sso_userinfo_url', ''),
             'redirect_uri': Settings.get('sso_redirect_uri', ''),
             'scope': Settings.get('sso_scope', 'openid email profile'),
-            'allowed_domains': Settings.get('sso_allowed_domains', '').split(','),
-            'allowed_emails': Settings.get('sso_allowed_emails', '').split(','),
+            'allowed_domains': Settings.get('sso_allowed_domains', '').split(',') if Settings.get('sso_allowed_domains') else [],
+            'allowed_emails': Settings.get('sso_allowed_emails', '').split(',') if Settings.get('sso_allowed_emails') else [],
             'admin_key_fallback': Settings.get('sso_admin_key_fallback', 'true').lower() == 'true'
         }
     except Exception as e:
@@ -2138,8 +2138,21 @@ def save_settings():
         Settings.set('sso_userinfo_url', sso_data.get('userinfo_url', ''))
         Settings.set('sso_redirect_uri', sso_data.get('redirect_uri', ''))
         Settings.set('sso_scope', sso_data.get('scope', 'openid email profile'))
-        Settings.set('sso_allowed_domains', ','.join(sso_data.get('allowed_domains', [])))
-        Settings.set('sso_allowed_emails', ','.join(sso_data.get('allowed_emails', [])))
+        # Handle allowed domains - split by newlines and filter empty lines
+        allowed_domains = sso_data.get('allowed_domains', '')
+        if isinstance(allowed_domains, str):
+            domains_list = [domain.strip() for domain in allowed_domains.split('\n') if domain.strip()]
+        else:
+            domains_list = allowed_domains if isinstance(allowed_domains, list) else []
+        Settings.set('sso_allowed_domains', ','.join(domains_list))
+        
+        # Handle allowed emails - split by newlines and filter empty lines
+        allowed_emails = sso_data.get('allowed_emails', '')
+        if isinstance(allowed_emails, str):
+            emails_list = [email.strip() for email in allowed_emails.split('\n') if email.strip()]
+        else:
+            emails_list = allowed_emails if isinstance(allowed_emails, list) else []
+        Settings.set('sso_allowed_emails', ','.join(emails_list))
         Settings.set('sso_admin_key_fallback', str(sso_data.get('admin_key_fallback', True)).lower())
     
     # Save timezone settings
