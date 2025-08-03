@@ -1318,8 +1318,27 @@
         });
     }
 
+    // Check if PWA install prompt was dismissed
+    function isPwaPromptDismissed() {
+        return document.cookie.split(';').some(item => item.trim().startsWith('pwa_prompt_dismissed='));
+    }
+
+    // Set cookie to remember PWA prompt dismissal
+    function setPwaPromptDismissed() {
+        // Set cookie to expire in 30 days
+        const expiryDate = new Date();
+        expiryDate.setDate(expiryDate.getDate() + 30);
+        document.cookie = `pwa_prompt_dismissed=true; expires=${expiryDate.toUTCString()}; path=/; SameSite=Lax`;
+    }
+
     // Show install prompt
     function showInstallPrompt() {
+        // Check if user has dismissed the prompt before
+        if (isPwaPromptDismissed()) {
+            console.log('PWA Debug: Install prompt dismissed previously, not showing');
+            return;
+        }
+        
         if (deferredPrompt && !isPwaInstalled()) {
             // Create and show install prompt
             const prompt = document.createElement('div');
@@ -1362,6 +1381,8 @@
     // Dismiss install prompt
     function dismissInstallPrompt() {
         hideInstallPrompt();
+        // Set cookie to remember dismissal for 30 days
+        setPwaPromptDismissed();
         // Hide install button for this session (only if not already installed)
         if (pwaInstallItem && !isPwaInstalled()) {
             pwaInstallItem.style.display = 'none';

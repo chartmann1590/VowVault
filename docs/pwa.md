@@ -10,6 +10,7 @@ VowVault includes full Progressive Web App functionality, allowing guests to ins
 - **📱 Mobile-First** - Designed specifically for mobile devices
 - **🎨 Custom Icons** - Beautiful wedding-themed app icons
 - **🔗 App Shortcuts** - Quick access to Upload, Photobooth, and Messages
+- **🍪 Smart Reminders** - Remembers when users dismiss installation prompts
 
 ## Installation Instructions
 
@@ -58,6 +59,13 @@ The admin panel includes comprehensive PWA debugging tools:
 - **Quick Actions** - Direct links to manifest and service worker files
 
 ## Technical Implementation
+
+### Smart Installation Prompts
+The PWA system includes intelligent prompt management:
+- **Cookie-Based Memory** - Remembers when users dismiss installation prompts
+- **30-Day Expiration** - Prompts reappear after 30 days if dismissed
+- **Session Persistence** - Dismissal remembered across browser sessions
+- **Privacy-Friendly** - Uses SameSite=Lax cookies for security
 
 ### Manifest File
 The `manifest.json` file defines the PWA properties:
