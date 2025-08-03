@@ -230,7 +230,7 @@ EMAIL_SETUP.md
 # Immich setup documentation (optional - remove if you want to track it)
 IMMICH_SETUP.md
 
-# Test files
+# Test files and directories
 test-docker.py
 test_*.py
 *_test.py
