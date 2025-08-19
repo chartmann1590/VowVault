@@ -1,0 +1,70 @@
+version: '3.8'
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    container_name: vowvault-dev
+    ports:
+      - "5000:5000"
+    volumes:
+      # Mount source code for live reloading
+      - .:/app
+      # Mount uploads directory
+      - ./uploads:/app/static/uploads
+      # Mount data directory
+      - ./data:/app/data
+      # Mount logs directory
+      - ./logs:/app/logs
+    environment:
+      - FLASK_ENV=development
+      - FLASK_DEBUG=1
+      - PYTHONDONTWRITEBYTECODE=1
+      - PYTHONUNBUFFERED=1
+      - DATABASE_URL=sqlite:////app/data/wedding_photos_dev.db
+    restart: unless-stopped
+    command: python run.py
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5000/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  # Optional: Add PostgreSQL for development
+  db:
+    image: postgres:13-alpine
+    container_name: vowvault-db-dev
+    environment:
+      POSTGRES_DB: vowvault_dev
+      POSTGRES_USER: dev
+      POSTGRES_PASSWORD: dev123
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_dev_data:/var/lib/postgresql/data
+    restart: unless-stopped
+
+  # Optional: Add Redis for caching
+  redis:
+    image: redis:7-alpine
+    container_name: vowvault-redis-dev
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_dev_data:/data
+    restart: unless-stopped
+
+  # Optional: Add MailHog for email testing
+  mailhog:
+    image: mailhog/mailhog:latest
+    container_name: vowvault-mailhog-dev
+    ports:
+      - "1025:1025"  # SMTP
+      - "8025:8025"  # Web UI
+    restart: unless-stopped
+
+volumes:
+  postgres_dev_data:
+  redis_dev_data:

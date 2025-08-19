@@ -1,6 +1,21 @@
 # VowVault - Wedding Photo Gallery
 
+[![Python](https://img.shields.io/badge/Python-3.8+-blue.svg)](https://www.python.org/downloads/)
+[![Flask](https://img.shields.io/badge/Flask-3.0.0-green.svg)](https://flask.palletsprojects.com/)
+[![Docker](https://img.shields.io/badge/Docker-3.8+-blue.svg)](https://www.docker.com/)
+[![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
+[![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](CONTRIBUTING.md)
+
 A beautiful, modern wedding photo gallery with advanced features including SSO authentication, PWA support, and comprehensive admin tools.
+
+## 📋 Table of Contents
+
+- [Features](#-features)
+- [Quick Start](#-quick-start)
+- [Documentation](#-documentation)
+- [Configuration](#-configuration)
+- [Contributing](#-contributing)
+- [License](#-license)
 
 ## ⚠️ Development Status
 
@@ -27,7 +42,6 @@ Your feedback helps make VowVault better for everyone! 🚀
 - **Drag & Drop Upload**: Easy photo and video uploads
 - **Auto-Organization**: Automatic sorting by upload date
 - **Like & Comment System**: Interactive engagement features
-
 - **Virtual Photobooth**: Custom wedding-themed photo capture
 - **Video Support**: Full video upload and playback support
 
@@ -98,9 +112,11 @@ Your feedback helps make VowVault better for everyone! 🚀
 ![Guestbook](docs/screenshots/guestbook.png)
 *Digital guestbook with photo attachments*
 
-
-
 ## 🚀 Quick Start
+
+### Prerequisites
+- Python 3.8+ or Docker
+- Git
 
 ### Using Docker (Recommended)
 ```bash
@@ -121,9 +137,9 @@ python run.py
 ```
 
 **Access:** 
-- Gallery: http://localhost
-- Admin: http://localhost/admin?key=wedding2024
-- SSO Login: http://localhost/sso/login (when SSO is enabled)
+- Gallery: http://localhost:5000
+- Admin: http://localhost:5000/admin?key=wedding2024
+- SSO Login: http://localhost:5000/sso/login (when SSO is enabled)
 
 ## 📚 Documentation
 
@@ -134,7 +150,8 @@ For detailed information, see our comprehensive documentation:
 - **[SSO Setup](docs/sso_setup.md)** - Configure secure admin authentication with enhanced security
 - **[Usage Guide](docs/usage.md)** - Step-by-step user instructions
 - **[PWA Guide](docs/pwa.md)** - Progressive Web App setup and troubleshooting
-
+- **[Docker Setup](docs/DOCKER_SETUP.md)** - Docker deployment and configuration
+- **[Security Guide](docs/SECURITY.md)** - Security best practices and configuration
 
 ## 🔧 Configuration
 
@@ -153,10 +170,24 @@ Copy `env.example` to `.env` and configure:
 
 ## 🤝 Contributing
 
+We welcome contributions! Please see our [Contributing Guide](CONTRIBUTING.md) for details.
+
 1. Fork the repository
-2. Create a feature branch
-3. Make your changes
-4. Submit a pull request
+2. Create a feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'Add some amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
+
+### Development Setup
+```bash
+git clone https://github.com/your-username/VowVault.git
+cd VowVault
+python -m venv venv
+source venv/bin/activate
+pip install -r requirements.txt
+pip install -r requirements-dev.txt  # Development dependencies
+python run.py
+```
 
 ## 📄 License
 
