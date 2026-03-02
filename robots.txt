@@ -1,0 +1,6 @@
+User-agent: *
+Allow: /
+Sitemap: https://chartmann1590.github.io/VowVault/sitemap.xml
+
+# Crawl-delay for respectful crawling
+Crawl-delay: 1
