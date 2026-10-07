@@ -22,9 +22,19 @@ def create_app(config_name="default"):
     database_url = os.environ.get("DATABASE_URL")
     if database_url:
         app.config["SQLALCHEMY_DATABASE_URI"] = database_url
+        # Make sure the folder for an on-disk SQLite database exists
+        if database_url.startswith("sqlite:///") and ":memory:" not in database_url:
+            db_dir = os.path.dirname(database_url[len("sqlite:///") :])
+            if db_dir:
+                os.makedirs(db_dir, exist_ok=True)
     else:
-        # Default to local development path
-        app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///instance/wedding_photos.db"
+        # Default to local development path: <instance folder>/wedding_photos.db.
+        # (A relative "sqlite:///instance/..." URI resolves inside the instance folder,
+        # i.e. instance/instance/..., which doesn't exist, so the app couldn't start.)
+        os.makedirs(app.instance_path, exist_ok=True)
+        app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///" + os.path.join(
+            app.instance_path, "wedding_photos.db"
+        )
 
     app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
     app.config["UPLOAD_FOLDER"] = "static/uploads"

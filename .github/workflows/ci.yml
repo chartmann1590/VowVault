@@ -140,9 +140,13 @@ jobs:
     - name: Test Docker image
       run: |
         docker run --rm -d --name test-vowvault -p 5000:5000 vowvault:test
-        sleep 10
-        curl -f http://localhost:5000/ || exit 1
-        docker stop test-vowvault
+        for i in $(seq 1 30); do
+          if curl -fsS -o /dev/null http://localhost:5000/; then echo "App is up"; docker stop test-vowvault; exit 0; fi
+          sleep 2
+        done
+        echo "App did not come up"; docker logs test-vowvault || true
+        docker stop test-vowvault || true
+        exit 1
 
   dependency-review:
     name: Dependency Review
