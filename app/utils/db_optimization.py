@@ -111,14 +111,10 @@ class DatabaseOptimizer:
         try:
             with db.engine.connect() as conn:
                 # Get table statistics
-                result = conn.execute(
-                    text(
-                        """
+                result = conn.execute(text("""
                     SELECT name, sql FROM sqlite_master 
                     WHERE type='table' AND name NOT LIKE 'sqlite_%'
-                """
-                    )
-                )
+                """))
                 tables = result.fetchall()
 
                 analysis = {

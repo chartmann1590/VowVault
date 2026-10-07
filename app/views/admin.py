@@ -1760,9 +1760,9 @@ def debug_notification_users():
                     "push_permission_granted": user.push_permission_granted,
                     "unread_count": unread_count,
                     "last_seen": user.last_seen.isoformat() if user.last_seen else None,
-                    "created_at": user.created_at.isoformat()
-                    if user.created_at
-                    else None,
+                    "created_at": (
+                        user.created_at.isoformat() if user.created_at else None
+                    ),
                 }
             )
 
