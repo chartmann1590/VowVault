@@ -307,9 +307,9 @@ def process_email_photos():
                 # Log the error
                 try:
                     email_log = EmailLog(
-                        sender_email=sender_email
-                        if "sender_email" in locals()
-                        else "Unknown",
+                        sender_email=(
+                            sender_email if "sender_email" in locals() else "Unknown"
+                        ),
                         subject=subject if "subject" in locals() else "",
                         processed_at=datetime.utcnow(),
                         status="error",

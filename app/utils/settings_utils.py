@@ -82,12 +82,16 @@ def get_sso_settings():
         "userinfo_url": Settings.get("sso_userinfo_url", ""),
         "redirect_uri": Settings.get("sso_redirect_uri", ""),
         "scope": Settings.get("sso_scope", "openid email profile"),
-        "allowed_domains": Settings.get("sso_allowed_domains", "").split(",")
-        if Settings.get("sso_allowed_domains")
-        else [],
-        "allowed_emails": Settings.get("sso_allowed_emails", "").split(",")
-        if Settings.get("sso_allowed_emails")
-        else [],
+        "allowed_domains": (
+            Settings.get("sso_allowed_domains", "").split(",")
+            if Settings.get("sso_allowed_domains")
+            else []
+        ),
+        "allowed_emails": (
+            Settings.get("sso_allowed_emails", "").split(",")
+            if Settings.get("sso_allowed_emails")
+            else []
+        ),
         "admin_key_fallback": Settings.get("sso_admin_key_fallback", "true").lower()
         == "true",
     }
