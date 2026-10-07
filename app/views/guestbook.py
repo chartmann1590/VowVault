@@ -1,93 +1,120 @@
-from flask import Blueprint, render_template, request, make_response, redirect, url_for, current_app
-from werkzeug.utils import secure_filename
-from datetime import datetime
 import os
-from app.models.guestbook import GuestbookEntry
+from datetime import datetime
+
+from flask import (
+    Blueprint,
+    current_app,
+    make_response,
+    redirect,
+    render_template,
+    request,
+    url_for,
+)
+from werkzeug.utils import secure_filename
+
 from app import db
+from app.models.guestbook import GuestbookEntry
+from app.utils.captcha_utils import (
+    generate_captcha,
+    get_captcha_settings,
+    validate_captcha,
+)
 from app.utils.file_utils import allowed_file
-from app.utils.settings_utils import get_immich_settings
 from app.utils.immich_utils import sync_file_to_immich
-from app.utils.captcha_utils import get_captcha_settings, validate_captcha, generate_captcha
+from app.utils.settings_utils import get_immich_settings
 
-guestbook_bp = Blueprint('guestbook', __name__)
+guestbook_bp = Blueprint("guestbook", __name__)
 
-@guestbook_bp.route('/')
+
+@guestbook_bp.route("/")
 def guestbook():
-    user_name = request.cookies.get('user_name', '')
+    user_name = request.cookies.get("user_name", "")
     entries = GuestbookEntry.query.order_by(GuestbookEntry.created_at.desc()).all()
-    return render_template('guestbook.html', user_name=user_name, entries=entries)
+    return render_template("guestbook.html", user_name=user_name, entries=entries)
 
-@guestbook_bp.route('/sign', methods=['GET', 'POST'])
+
+@guestbook_bp.route("/sign", methods=["GET", "POST"])
 def sign_guestbook():
-    if request.method == 'POST':
+    if request.method == "POST":
         # Check CAPTCHA if enabled
         captcha_settings = get_captcha_settings()
-        if captcha_settings['enabled'] and captcha_settings['guestbook_enabled']:
-            challenge_id = request.form.get('captcha_challenge_id')
-            user_answer = request.form.get('captcha_answer')
-            
+        if captcha_settings["enabled"] and captcha_settings["guestbook_enabled"]:
+            challenge_id = request.form.get("captcha_challenge_id")
+            user_answer = request.form.get("captcha_answer")
+
             if not validate_captcha(challenge_id, user_answer):
                 # Generate new CAPTCHA for retry
                 captcha = generate_captcha()
-                return render_template('sign_guestbook.html', 
-                                     user_name=request.cookies.get('user_name', ''),
-                                     captcha=captcha,
-                                     error='Incorrect CAPTCHA answer. Please try again.')
-        
-        name = request.form.get('name', '').strip()
-        message = request.form.get('message', '').strip()
-        location = request.form.get('location', '').strip()
-        
+                return render_template(
+                    "sign_guestbook.html",
+                    user_name=request.cookies.get("user_name", ""),
+                    captcha=captcha,
+                    error="Incorrect CAPTCHA answer. Please try again.",
+                )
+
+        name = request.form.get("name", "").strip()
+        message = request.form.get("message", "").strip()
+        location = request.form.get("location", "").strip()
+
         if name and message:
             # Handle optional photo upload
             photo_filename = None
-            if 'photo' in request.files:
-                file = request.files['photo']
-                if file and file.filename != '' and allowed_file(file.filename):
+            if "photo" in request.files:
+                file = request.files["photo"]
+                if file and file.filename != "" and allowed_file(file.filename):
                     filename = secure_filename(file.filename)
-                    timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+                    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
                     filename = f"guestbook_{timestamp}_{filename}"
-                    filepath = os.path.join(current_app.config['GUESTBOOK_UPLOAD_FOLDER'], filename)
+                    filepath = os.path.join(
+                        current_app.config["GUESTBOOK_UPLOAD_FOLDER"], filename
+                    )
                     file.save(filepath)
                     photo_filename = filename
-            
+
             entry = GuestbookEntry(
                 name=name,
                 message=message,
                 location=location,
-                photo_filename=photo_filename
+                photo_filename=photo_filename,
             )
             db.session.add(entry)
             db.session.commit()
-            
+
             # Sync guestbook photo to Immich if enabled
             if photo_filename:
                 try:
                     immich_settings = get_immich_settings()
-                    if immich_settings['enabled'] and immich_settings['sync_guestbook']:
-                        file_path = os.path.join(current_app.config['GUESTBOOK_UPLOAD_FOLDER'], photo_filename)
-                        description = f"Guestbook photo by {entry.name} from {entry.location}"
+                    if immich_settings["enabled"] and immich_settings["sync_guestbook"]:
+                        file_path = os.path.join(
+                            current_app.config["GUESTBOOK_UPLOAD_FOLDER"],
+                            photo_filename,
+                        )
+                        description = (
+                            f"Guestbook photo by {entry.name} from {entry.location}"
+                        )
                         if entry.message:
                             description += f" - {entry.message[:100]}"
                         sync_file_to_immich(file_path, photo_filename, description)
                 except Exception as e:
                     print(f"Error syncing guestbook photo to Immich: {e}")
-            
+
             # Save user name in cookie
-            resp = make_response(redirect(url_for('guestbook.guestbook')))
-            resp.set_cookie('user_name', name, max_age=30*24*60*60)  # 30 days
+            resp = make_response(redirect(url_for("guestbook.guestbook")))
+            resp.set_cookie("user_name", name, max_age=30 * 24 * 60 * 60)  # 30 days
             return resp
         else:
-            return render_template('sign_guestbook.html', 
-                                 user_name=request.cookies.get('user_name', ''),
-                                 error='Name and message are required')
-    
-    user_name = request.cookies.get('user_name', '')
+            return render_template(
+                "sign_guestbook.html",
+                user_name=request.cookies.get("user_name", ""),
+                error="Name and message are required",
+            )
+
+    user_name = request.cookies.get("user_name", "")
     captcha_settings = get_captcha_settings()
-    
+
     # Generate CAPTCHA if enabled
     captcha = None
-    if captcha_settings['enabled'] and captcha_settings['guestbook_enabled']:
+    if captcha_settings["enabled"] and captcha_settings["guestbook_enabled"]:
         captcha = generate_captcha()
-    
-    return render_template('sign_guestbook.html', user_name=user_name, captcha=captcha) 
+
+    return render_template("sign_guestbook.html", user_name=user_name, captcha=captcha)

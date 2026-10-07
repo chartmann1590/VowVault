@@ -1,5 +1,7 @@
-from app import db
 from datetime import datetime
+
+from app import db
+
 
 class GuestbookEntry(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -7,4 +9,4 @@ class GuestbookEntry(db.Model):
     message = db.Column(db.Text, nullable=False)
     location = db.Column(db.String(100))
     photo_filename = db.Column(db.String(255))
-    created_at = db.Column(db.DateTime, default=datetime.utcnow) 
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
