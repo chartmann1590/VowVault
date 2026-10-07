@@ -1,38 +1,41 @@
-import smtplib
-import imaplib
 import email
+import hashlib
+import imaplib
+import json
+import os
+import smtplib
 import threading
 import time
-import json
-import hashlib
 from datetime import datetime
-from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
-from werkzeug.utils import secure_filename
+from email.mime.text import MIMEText
+
 from flask import current_app
+from werkzeug.utils import secure_filename
+
 from app import db
-from app.models.settings import Settings
-from app.models.photo import Photo
 from app.models.email import EmailLog
+from app.models.photo import Photo
+from app.models.settings import Settings
 from app.utils.settings_utils import get_email_settings
-import os
 
 # Global set to track processed emails in current session to prevent duplicates
 _processed_emails = set()
 _processed_emails_timestamps = {}  # Track when emails were processed
 
+
 def send_confirmation_email(recipient_email, photo_count, gallery_url):
     """Send confirmation email to user who uploaded photos via email"""
     try:
         email_settings = get_email_settings()
-        if not email_settings['enabled'] or not email_settings['smtp_username']:
+        if not email_settings["enabled"] or not email_settings["smtp_username"]:
             return False
-            
+
         msg = MIMEMultipart()
-        msg['From'] = email_settings['smtp_username']
-        msg['To'] = recipient_email
-        msg['Subject'] = "Thank you for sharing your wedding photos!"
-        
+        msg["From"] = email_settings["smtp_username"]
+        msg["To"] = recipient_email
+        msg["Subject"] = "Thank you for sharing your wedding photos!"
+
         body = f"""
         Hi there!
         
@@ -45,33 +48,36 @@ def send_confirmation_email(recipient_email, photo_count, gallery_url):
         Best wishes,
         The Happy Couple
         """
-        
-        msg.attach(MIMEText(body, 'plain'))
-        
+
+        msg.attach(MIMEText(body, "plain"))
+
         # Send email
-        server = smtplib.SMTP(email_settings['smtp_server'], int(email_settings['smtp_port']))
+        server = smtplib.SMTP(
+            email_settings["smtp_server"], int(email_settings["smtp_port"])
+        )
         server.starttls()
-        server.login(email_settings['smtp_username'], email_settings['smtp_password'])
+        server.login(email_settings["smtp_username"], email_settings["smtp_password"])
         server.send_message(msg)
         server.quit()
-        
+
         return True
     except Exception as e:
         print(f"Error sending confirmation email: {e}")
         return False
 
+
 def send_rejection_email(recipient_email, reason):
     """Send rejection email to user who sent non-photo content"""
     try:
         email_settings = get_email_settings()
-        if not email_settings['enabled'] or not email_settings['smtp_username']:
+        if not email_settings["enabled"] or not email_settings["smtp_username"]:
             return False
-            
+
         msg = MIMEMultipart()
-        msg['From'] = email_settings['smtp_username']
-        msg['To'] = recipient_email
-        msg['Subject'] = "Photo upload - only photos accepted"
-        
+        msg["From"] = email_settings["smtp_username"]
+        msg["To"] = recipient_email
+        msg["Subject"] = "Photo upload - only photos accepted"
+
         body = f"""
         Hi there!
         
@@ -86,173 +92,200 @@ def send_rejection_email(recipient_email, reason):
         Best wishes,
         The Happy Couple
         """
-        
-        msg.attach(MIMEText(body, 'plain'))
-        
+
+        msg.attach(MIMEText(body, "plain"))
+
         # Send email
-        server = smtplib.SMTP(email_settings['smtp_server'], int(email_settings['smtp_port']))
+        server = smtplib.SMTP(
+            email_settings["smtp_server"], int(email_settings["smtp_port"])
+        )
         server.starttls()
-        server.login(email_settings['smtp_username'], email_settings['smtp_password'])
+        server.login(email_settings["smtp_username"], email_settings["smtp_password"])
         server.send_message(msg)
         server.quit()
-        
+
         return True
     except Exception as e:
         print(f"Error sending rejection email: {e}")
         return False
 
+
 def process_email_photos():
     """Process incoming emails and extract photos"""
     try:
         email_settings = get_email_settings()
-        if not email_settings['enabled'] or not email_settings['imap_username']:
-            print("Email processing skipped - not enabled or IMAP username not configured")
+        if not email_settings["enabled"] or not email_settings["imap_username"]:
+            print(
+                "Email processing skipped - not enabled or IMAP username not configured"
+            )
             return
-            
+
         # Connect to IMAP server
-        print(f"Connecting to IMAP server: {email_settings['imap_server']}:{email_settings['imap_port']}")
-        mail = imaplib.IMAP4_SSL(email_settings['imap_server'], int(email_settings['imap_port']))
-        mail.login(email_settings['imap_username'], email_settings['imap_password'])
-        mail.select('INBOX')
-        
+        print(
+            f"Connecting to IMAP server: {email_settings['imap_server']}:{email_settings['imap_port']}"
+        )
+        mail = imaplib.IMAP4_SSL(
+            email_settings["imap_server"], int(email_settings["imap_port"])
+        )
+        mail.login(email_settings["imap_username"], email_settings["imap_password"])
+        mail.select("INBOX")
+
         # Search for unread emails
-        status, messages = mail.search(None, 'UNSEEN')
-        
-        if status != 'OK':
+        status, messages = mail.search(None, "UNSEEN")
+
+        if status != "OK":
             print(f"IMAP search failed with status: {status}")
             return
-            
+
         if not messages[0]:
             print("No unread emails found")
             return
-            
+
         print(f"Found {len(messages[0].split())} unread email(s)")
-            
+
         for num in messages[0].split():
             try:
-                status, msg_data = mail.fetch(num, '(RFC822)')
-                if status != 'OK':
+                status, msg_data = mail.fetch(num, "(RFC822)")
+                if status != "OK":
                     continue
-                    
+
                 email_body = msg_data[0][1]
                 email_message = email.message_from_bytes(email_body)
-                
-                sender_email = email_message['from']
-                subject = email_message.get('subject', '')
+
+                sender_email = email_message["from"]
+                subject = email_message.get("subject", "")
                 # Extract email from "Name <email@domain.com>" format
-                if '<' in sender_email and '>' in sender_email:
-                    sender_email = sender_email.split('<')[1].split('>')[0]
-                
+                if "<" in sender_email and ">" in sender_email:
+                    sender_email = sender_email.split("<")[1].split(">")[0]
+
                 # Create a unique identifier for this email to prevent duplicates
                 email_id = f"{sender_email}_{subject}_{email_message.get('date', '')}"
                 email_hash = hashlib.md5(email_id.encode()).hexdigest()
-                
+
                 # Check if this email was already processed in current session
                 if email_hash in _processed_emails:
-                    print(f"DUPLICATE PREVENTION: Email from {sender_email} with subject '{subject}' was already processed in this session. Skipping.")
+                    print(
+                        f"DUPLICATE PREVENTION: Email from {sender_email} with subject '{subject}' was already processed in this session. Skipping."
+                    )
                     # Mark as read to prevent future processing
-                    mail.store(num, '+FLAGS', '\\Seen')
+                    mail.store(num, "+FLAGS", "\\Seen")
                     continue
-                
+
                 # Check if this email was already processed recently (within last 24 hours)
                 from datetime import timedelta
+
                 recent_log = EmailLog.query.filter(
                     EmailLog.sender_email == sender_email,
                     EmailLog.subject == subject,
-                    EmailLog.received_at >= datetime.utcnow() - timedelta(hours=24)
+                    EmailLog.received_at >= datetime.utcnow() - timedelta(hours=24),
                 ).first()
-                
+
                 if recent_log:
-                    print(f"DUPLICATE PREVENTION: Email from {sender_email} with subject '{subject}' was already processed recently. Skipping.")
+                    print(
+                        f"DUPLICATE PREVENTION: Email from {sender_email} with subject '{subject}' was already processed recently. Skipping."
+                    )
                     # Mark as read to prevent future processing
-                    mail.store(num, '+FLAGS', '\\Seen')
+                    mail.store(num, "+FLAGS", "\\Seen")
                     continue
-                
+
                 # Add to processed emails set with timestamp
                 _processed_emails.add(email_hash)
                 _processed_emails_timestamps[email_hash] = datetime.utcnow()
-                
+
                 # Clean up old entries (older than 1 hour) to prevent memory bloat
                 cutoff_time = datetime.utcnow() - timedelta(hours=1)
-                old_hashes = [h for h, ts in _processed_emails_timestamps.items() if ts < cutoff_time]
+                old_hashes = [
+                    h
+                    for h, ts in _processed_emails_timestamps.items()
+                    if ts < cutoff_time
+                ]
                 for old_hash in old_hashes:
                     _processed_emails.discard(old_hash)
                     del _processed_emails_timestamps[old_hash]
-                
+
                 photo_count = 0
                 has_photos = False
                 has_non_photos = False
                 error_message = None
-                
+
                 # Process attachments
                 for part in email_message.walk():
-                    if part.get_content_maintype() == 'multipart':
+                    if part.get_content_maintype() == "multipart":
                         continue
-                    if part.get('Content-Disposition') is None:
+                    if part.get("Content-Disposition") is None:
                         continue
-                        
+
                     filename = part.get_filename()
                     if filename:
                         # Check if it's a photo
                         from app.utils.file_utils import is_image
+
                         if is_image(filename):
                             has_photos = True
                             # Save the photo
                             file_data = part.get_payload(decode=True)
                             if file_data:
                                 # Generate unique filename
-                                timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+                                timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
                                 safe_filename = secure_filename(filename)
                                 unique_filename = f"{timestamp}_{safe_filename}"
-                                file_path = os.path.join(current_app.config['UPLOAD_FOLDER'], unique_filename)
-                                
-                                with open(file_path, 'wb') as f:
+                                file_path = os.path.join(
+                                    current_app.config["UPLOAD_FOLDER"], unique_filename
+                                )
+
+                                with open(file_path, "wb") as f:
                                     f.write(file_data)
-                                
+
                                 # Create database entry
                                 photo = Photo(
                                     filename=unique_filename,
                                     original_filename=filename,
                                     uploader_name=sender_email,
-                                    upload_date=datetime.utcnow()
+                                    upload_date=datetime.utcnow(),
                                 )
                                 db.session.add(photo)
                                 photo_count += 1
                         else:
                             has_non_photos = True
-                
+
                 # Determine status and create log entry
                 if photo_count > 0:
-                    status = 'success'
-                    response_type = 'confirmation'
+                    status = "success"
+                    response_type = "confirmation"
                     response_sent = True
-                    
+
                     # Commit database changes
                     db.session.commit()
-                    
+
                     # Send confirmation email
                     # Get QR settings for public URL
-                    qr_settings = Settings.get('qr_settings', '{}')
+                    qr_settings = Settings.get("qr_settings", "{}")
                     qr_settings = json.loads(qr_settings) if qr_settings else {}
-                    public_url = qr_settings.get('public_url', '').strip()
+                    public_url = qr_settings.get("public_url", "").strip()
                     if not public_url:
                         # Fall back to main public URL setting
-                        public_url = Settings.get('public_url', '')
+                        public_url = Settings.get("public_url", "")
                     if public_url:
                         send_confirmation_email(sender_email, photo_count, public_url)
-                
+
                 elif has_non_photos and not has_photos:
-                    status = 'rejected'
-                    response_type = 'rejection'
+                    status = "rejected"
+                    response_type = "rejection"
                     response_sent = True
-                    send_rejection_email(sender_email, "We received your email but it didn't contain any photo attachments.")
-                
+                    send_rejection_email(
+                        sender_email,
+                        "We received your email but it didn't contain any photo attachments.",
+                    )
+
                 else:
-                    status = 'rejected'
-                    response_type = 'rejection'
+                    status = "rejected"
+                    response_type = "rejection"
                     response_sent = True
-                    send_rejection_email(sender_email, "We received your email but it didn't contain any photo attachments.")
-                
+                    send_rejection_email(
+                        sender_email,
+                        "We received your email but it didn't contain any photo attachments.",
+                    )
+
                 # Create email log entry
                 email_log = EmailLog(
                     sender_email=sender_email,
@@ -261,36 +294,38 @@ def process_email_photos():
                     status=status,
                     photo_count=photo_count,
                     response_sent=response_sent,
-                    response_type=response_type
+                    response_type=response_type,
                 )
                 db.session.add(email_log)
                 db.session.commit()
-                
+
                 # Mark email as read
-                mail.store(num, '+FLAGS', '\\Seen')
-                
+                mail.store(num, "+FLAGS", "\\Seen")
+
             except Exception as e:
                 print(f"Error processing email: {e}")
                 # Log the error
                 try:
                     email_log = EmailLog(
-                        sender_email=sender_email if 'sender_email' in locals() else 'Unknown',
-                        subject=subject if 'subject' in locals() else '',
+                        sender_email=sender_email
+                        if "sender_email" in locals()
+                        else "Unknown",
+                        subject=subject if "subject" in locals() else "",
                         processed_at=datetime.utcnow(),
-                        status='error',
+                        status="error",
                         error_message=str(e),
-                        response_sent=False
+                        response_sent=False,
                     )
                     db.session.add(email_log)
                     db.session.commit()
                 except Exception as log_error:
                     print(f"Error logging email error: {log_error}")
                 continue
-        
+
         mail.close()
         mail.logout()
         print("Email processing completed")
-        
+
     except Exception as e:
         print(f"Error in email processing: {e}")
         # Ensure we don't leave any uncommitted database changes
@@ -299,10 +334,13 @@ def process_email_photos():
         except Exception as rollback_error:
             print(f"Error during rollback: {rollback_error}")
 
+
 def start_email_monitor():
     """Start the email monitoring thread"""
+
     def monitor_emails():
         from app import create_app
+
         app = create_app()
         with app.app_context():
             print("Email monitoring thread started")
@@ -313,7 +351,7 @@ def start_email_monitor():
                 except Exception as e:
                     print(f"Email monitor error: {e}")
                     time.sleep(600)  # Wait 10 minutes on error
-    
+
     thread = threading.Thread(target=monitor_emails, daemon=True)
     thread.start()
-    print("Email monitoring thread created") 
+    print("Email monitoring thread created")
